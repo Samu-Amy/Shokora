@@ -9,6 +9,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+  <title>Shokora</title>
 </svelte:head>
 
 <nav class="py-4 bg-slate-800 text-white flex gap-4 justify-center items-center">

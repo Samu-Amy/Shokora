@@ -15,7 +15,7 @@ const config = {
 			pages: 'build',
 			assets: 'build',
 			fallback: undefined,
-			precompress: true, //TODO: ricorda di attivare "gzip_static on;" e "brotli_static on;" per nginx
+			precompress: false, //TODO: ricorda di attivare "gzip_static on;" e "brotli_static on;" per nginx
 			strict: false
 		}),
 
