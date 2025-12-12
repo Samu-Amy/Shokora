@@ -6,7 +6,7 @@
   let productId = $state<number | undefined>();
 
   onMount(async () => {
-    const res = await fetch("http://localhost:8080/api/v1/menu/product/12", {
+    const res = await fetch("http://192.168.0.46:8080/api/v1/menu/product/12", {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
@@ -18,7 +18,7 @@
     }
 
     let product = await res.json();
-    productId = product.product;
+    productId = product.product; // TODO: test con npx serve build
   });
 
 </script>

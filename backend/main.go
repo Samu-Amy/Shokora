@@ -21,6 +21,9 @@ func main() {
 
 		AllowedOrigins: []string{
 			"http://localhost:5173",
+			"http://192.168.0.46:5173",
+			"http://localhost:3000",
+			"http://192.168.0.46:3000",
 		},
 
 		AllowedMethods: []string{
@@ -40,6 +43,7 @@ func main() {
 	router.Get("/api/v1/menu/product/{productId}", getMenuProduct)
 
 	fmt.Println("Listening on http://localhost:8080")
+	// err := http.ListenAndServe("0.0.0.0:8080", router) // testing on mobile
 	err := http.ListenAndServe(":8080", router)
 
 	if err != nil {
@@ -58,6 +62,8 @@ func getMenu(w http.ResponseWriter, r *http.Request) {
 }
 
 func getMenuProduct(w http.ResponseWriter, r *http.Request) {
+	log.Println("Req")
+
 	productId := chi.URLParam(r, "productId")
 
 	w.Header().Set("Content-Type", "application/json")
