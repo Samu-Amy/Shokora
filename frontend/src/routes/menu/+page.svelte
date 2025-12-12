@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-  <title>Menu - Shokora</title>
+  <title>Il nostro menu | Shokora</title>
 </svelte:head>
 
 <div class="min-w-full min-h-screen flex flex-col justify-center items-center">

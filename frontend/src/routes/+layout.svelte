@@ -4,19 +4,19 @@
 
 	let { children } = $props();
 
-  //TODO: add metadata
+  //TODO: add metadata e sistema titles
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-  <title>Shokora</title>
+  <title>Shokora - La pasticceria</title>
 </svelte:head>
 
 <nav class="py-4 bg-slate-800 text-white flex gap-4 justify-center items-center">
   <a class="hover:text-orange-400" href="/">Home</a>
+  <a class="hover:text-orange-400" href="/menu">Menu</a>
   <a class="hover:text-orange-400" href="/about">About</a>
   <a class="hover:text-orange-400" href="/contacts">Contacts</a>
-  <a class="hover:text-orange-400" href="/menu">Menu</a>
 </nav>
 <main>
   {@render children()}
