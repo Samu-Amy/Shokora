@@ -1,1 +1,58 @@
 @import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* - Theme - */
+
+@theme {
+	--color-foreground: #212121;
+	--color-background: #f2f2f2;
+	--color-error: #b21a17;
+}
+
+@layer theme {
+	.dark {
+		--color-foreground: #f2f2f2;
+		--color-background: #212121;
+		--color-error: rgb(201, 46, 43);
+	}
+}
+
+/* - CSS Reset (on top of the tailwind one) - */
+
+:root {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+* {
+	font: inherit;
+}
+
+p,
+li,
+figcaption {
+	/* text-wrap: pretty; */
+	max-width: 65ch;
+}
+
+img,
+picture,
+svg,
+video {
+	display: block;
+	max-width: 100%;
+}
+
+/* input,
+textarea,
+button,
+select {
+  font: inherit;
+} */
