@@ -1,5 +1,4 @@
 <div class="min-w-full min-h-screen flex flex-col justify-center items-center">
-  <h1>Home: Welcome to SvelteKit</h1>
-  <p>Test page (static)</p>
+  <h1>Menu</h1>
+  <p>Test page (data)</p>
 </div>
-  

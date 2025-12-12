@@ -4,3 +4,4 @@
 // TODO: per tabelle con righe a colori alternati, usa "even:" o "odd:", tipo: "[dark:]even:<color>"
 // TODO: per input usa "invalid:[property]"
 // TODO: per i le liste (es. ingredienti) usare 'role="list"' in <ul> o <ol> per l'accessibilità
+// TODO: paginazione (infinite query) e query normali con Tanstack Query (e testa la previe per verificare che funzioni)
