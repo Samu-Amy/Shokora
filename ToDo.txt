@@ -15,3 +15,6 @@ Comandi:
 // TODO: per input usa "invalid:[property]"
 // TODO: per i le liste (es. ingredienti) usare 'role="list"' in <ul> o <ol> per l'accessibilità
 // TODO: paginazione (infinite query) e query normali con Tanstack Query (e testa la previe per verificare che funzioni)
+
+// TODO: fai account github a parte per github actions (in modo da non usare quelle del mio account)
+// TODO: esegui docker scout per controllare eventuali vulnerabilità
