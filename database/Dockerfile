@@ -1,0 +1,7 @@
+FROM postgres:17
+
+ENV POSTGRES_DB=postgres-dev
+ENV POSTGRES_USER=dev
+ENV POSTGRES_PASSWORD=testdbdevpostgres
+
+EXPOSE 5432

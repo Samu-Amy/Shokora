@@ -11,11 +11,11 @@ COPY go.* ./
 RUN go mod download
 
 # Copy other files
-# TODO: controlla che vada bene (copi solo i file nella cartella backend)
 COPY *.go ./
 
-# TODO: fare build (?)
-RUN go build -o /backend
+# RUN go build -o /backend
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /backend
+
 
 # Expose port 8080
 EXPOSE 8080
@@ -24,4 +24,3 @@ EXPOSE 8080
 CMD ["./backend"]
 
 # TODO: fare la build fuori dal container (localmente o con GitHub Actions) e copiare nel container solo la build (i file generati) (usare crosscompiling e come funziona per i moduli terzi?)
-# TODO: aggiungere live reloading (?)

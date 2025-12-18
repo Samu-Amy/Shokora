@@ -18,3 +18,54 @@ Comandi:
 
 // TODO: fai account github a parte per github actions (in modo da non usare quelle del mio account)
 // TODO: esegui docker scout per controllare eventuali vulnerabilità
+
+
+
+
+
+Reverse Proxy con Nginx:
+- Nginx riceve richieste HTTP/HTTPS → le manda alla tua app Go.
+- SSL/TLS → gestito da Nginx (es. Let’s Encrypt).
+
+Go App:
+- Compilata e in esecuzione come servizio (systemd) → facile restart e logging.
+
+PostgreSQL:
+- Utenti separati per app, no superuser.
+- Solo connessioni locali o da IP autorizzati.
+
+Redis:
+- Protezione con password, bind su localhost.
+- Attenzione a non esporre la porta 6379 pubblicamente.
+
+MinIO:
+- Access Key + Secret Key.
+- Possibilmente dietro Nginx o firewall.
+
+Firewall e sicurezza VPS:
+- UFW o iptables → apri solo porte necessarie (80, 443, 22).
+- Disabilita root login via SSH, usa chiavi SSH.
+
+
+
+Setup VPS
+- SSH key
+- disabilitare login root
+- firewall (UFW)
+
+Deploy applicazioni
+- Docker su VPS
+- Docker Compose
+- reverse proxy
+
+Sicurezza
+- fail2ban
+- aggiornamenti automatici
+- backup
+
+Monitoraggio
+- log
+- uptime
+- risorse
+
+https://chatgpt.com/c/69443035-7fa8-8331-b8b1-c4837d6fd096

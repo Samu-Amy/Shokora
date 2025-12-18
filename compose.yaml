@@ -6,22 +6,23 @@ services:
   #   build: frontend/build
 
   backend:
-    ports:
-      - 8080:8080
+    # ports:
+    #   - 8080:8080
     depends_on:
       db:
         condition: service_healthy # backend working when db working # TODO: va bene o conviene fare in altro modo (?)
     # restart: unless-stopped # TODO: da mettere (anche in altri senvizi) (?)
 
   db:
-    image: postgres:18 # TODO: versione giusta?
+    image: postgres:17
+    # restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - pgdata:/var/lib/postgresql/data # TODO: va bene?
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U samu"] # command to execute to test service -> if it exits with 0 is ok
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"] # command to execute to test service -> if it exits with 0 is ok
       interval: 10s #1m30s
       timeout: 5s #30s
       retries: 5
@@ -29,3 +30,4 @@ services:
 
 volumes:
   pgdata:
+# TODO: chiedi conferma su qualche comunità/gruppo riguardo alla struttura del progetto ed alla configurazione docker
