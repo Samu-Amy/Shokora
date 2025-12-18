@@ -11,6 +11,8 @@ import (
 
 //TODO: JWT in HTTP only cookies (no in local storage per evitare XSS) -> attenzione a CSRF (cross origin requests)
 
+// TODO: fai test con/senza redis (sia con dati in cache che non in cache) calcolando il tempo impiegato
+
 func main() {
 	router := chi.NewRouter()
 
