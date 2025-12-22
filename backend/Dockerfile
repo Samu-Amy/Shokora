@@ -4,6 +4,8 @@ FROM golang:1.25.4-alpine
 # Working Directory
 WORKDIR /app
 
+# TODO: RUN apk update (o comunque fare update?)
+
 # Copy go.mod and go.sum files
 COPY go.* ./
 

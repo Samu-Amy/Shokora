@@ -1,4 +1,5 @@
 # version: "" # TODO: versione docker (?)
+name: shokora
 
 services:
   # frontend:
@@ -6,16 +7,17 @@ services:
   #   build: frontend/build
 
   backend:
+    image: golang:1.25.4-alpine
     # ports:
     #   - 8080:8080
     depends_on:
       db:
         condition: service_healthy # backend working when db working # TODO: va bene o conviene fare in altro modo (?)
-    # restart: unless-stopped # TODO: da mettere (anche in altri senvizi) (?)
+    restart: unless-stopped # TODO: da mettere anche in altri senvizi
 
   db:
+    container_name: postgres-db
     image: postgres:17
-    # restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -27,7 +29,10 @@ services:
       timeout: 5s #30s
       retries: 5
       # start_period: 30s # TODO: da usare?
+    restart: unless-stopped
 
 volumes:
   pgdata:
+# TODO: guarda impostazioni da https://github.com/Melkeydev/yappr (yt: https://www.youtube.com/watch?v=65-y9FaN--s)
+
 # TODO: chiedi conferma su qualche comunità/gruppo riguardo alla struttura del progetto ed alla configurazione docker

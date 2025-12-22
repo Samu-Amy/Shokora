@@ -5,6 +5,7 @@
 	let { children } = $props();
 
   //TODO: add metadata e sistema titles
+  //TODO: fai funzione per le requests che accetta i metodi giusti (oppure funzioni tipo getUser, postProduct, ecc. che hanno già il metodo "incorporato")
 </script>
 
 <svelte:head>
