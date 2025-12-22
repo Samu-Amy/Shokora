@@ -4,8 +4,6 @@ services:
   db:
     container_name: postgres-dev
     image: postgres:17
-    env_file:
-      - .env
     environment:
       POSTGRES_DB: ${DEV_POSTGRES_DB}
       POSTGRES_USER: ${DEV_POSTGRES_USER}
@@ -30,4 +28,6 @@ services:
 
 volumes:
   pgdata:
-# TODO: per avviare usa "docker compose -f compose-dev.yaml up"
+# TODO: per avviare usa "docker compose -f compose-dev.yaml up [-d]"
+# TODO: per fermare usa "docker compose -f compose-dev.yaml down [-v]"
+# TODO: per accedere usa "docker compose -f compose.dev.yaml exec db psql -U ${DEV_POSTGRES_USER} -d {DEV_POSTGRES_DB}" -> poi comandi (es. "\l", "\dt", "\q")
