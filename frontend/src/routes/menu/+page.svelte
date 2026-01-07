@@ -18,7 +18,7 @@
     }
 
     let product = await res.json();
-    productId = product.product; // TODO: test con npx serve build
+    productId = product.product;
   });
 
 </script>

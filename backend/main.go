@@ -30,6 +30,7 @@ func main() {
 	router.Use(middleware.Recoverer)
 
 	router.Use(middleware.Timeout(60 * time.Second)) // Timeout //TODO: ricorda di controllare ctx.Done() per ritornare nel caso di timeout
+	// router.Use(httprate.LimitByIP(100, 1*time.Minute)) // Rate Limiter (?) // TODO: Controlla implementazione (?)
 
 	// CORS
 	router.Use(cors.Handler(cors.Options{
@@ -49,8 +50,14 @@ func main() {
 		},
 
 		AllowedHeaders: []string{
+			// "Accept",
+			"Authorization",
 			"Content-Type",
 		},
+
+		// ExposedHeaders:   []string{"Link"},
+		// AllowCredentials: false,
+		// MaxAge: 300,
 
 		// TODO: continua... (aggiungi altri url, methods, ecc.)
 	}))
@@ -61,22 +68,36 @@ func main() {
 	router.Route("/api/v1", func(r chi.Router) {
 		// Public Routes (commons)
 		r.Get("/", handleRoot)
-		r.Get("/menu", getMenu)
-		r.Get("/menu/product/{productId}", getMenuProduct)
+		r.Get("/menu/products", getMenuProducts)
+		r.Get("/menu/products/{productId}", getMenuProduct)
 
 		// Auth Routes
 		r.Route("/auth", func(r chi.Router) {
+			// r.Post("/login", ...)
+			// r.Post("/refresh", ...)
+			// r.Post("/reset-password", ...)
+			// r.Post("/logout", ...)
+		})
+
+		// Auth-Protected Routes
+		r.Group(func(r chi.Router) {
+			// r.Route("/", func(r chi.Router) { //? Usare Group o Route?
 			// r.Use(AuthMiddleware)
+
 			// Customers Routes
 
-			// Employee Routes
+			// Employee (and Admin) Routes
 			r.Route("/employee", func(r chi.Router) {
+				// r.Use(EmployeeMiddleware)
 
+				// r.Get("/orders", ...)
 			})
 
 			// Admin Routes
 			r.Route("/admin", func(r chi.Router) {
+				// r.Use(AdminMiddleware)
 
+				// r.Get("/users", ...)
 			})
 		})
 	})
@@ -94,7 +115,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello World")
 }
 
-func getMenu(w http.ResponseWriter, r *http.Request) {
+func getMenuProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	w.Write([]byte(`{ "status": "ok" }`))
