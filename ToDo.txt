@@ -1,15 +1,15 @@
 Comandi:
 - cd /backend/
-  - go run main.go
+  - "go run main.go" (o "go run .")
 
 
 - cd /frontend/
-  - npm run dev
-  - npm run build -> npx serve build
+  - "npm run dev"
+  - "npm run build" -> "npx serve build" (nginx-like)
 
 
 // TODO: ricorda di usare tag adatti (es. nav, header, footer, ol/ul, li)
-// TODO: usa anche min(), max(), clamp()
+// TODO: in css usa anche min(), max(), clamp()
 // TODO: definisci colori e valori di base e fai setup theme (dark mode)
 // TODO: per tabelle con righe a colori alternati, usa "even:" o "odd:", tipo: "[dark:]even:<color>"
 // TODO: per input usa "invalid:[property]"
