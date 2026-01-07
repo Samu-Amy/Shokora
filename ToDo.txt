@@ -1,6 +1,6 @@
 Comandi:
 - cd /backend/
-  - "go run main.go" (o "go run .")
+  - "go run cmd/api/main.go"
 
 
 - cd /frontend/
