@@ -79,6 +79,7 @@ func initRouter() *chi.Mux {
 			// Employee (and Admin) Routes
 			r.Route("/employee", func(r chi.Router) {
 				// r.Use(EmployeeMiddleware)
+				// TODO: aggiungi middleware per permessi (?)
 
 				// r.Get("/orders", ...)
 			})
