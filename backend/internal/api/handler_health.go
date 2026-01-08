@@ -1,10 +1,10 @@
-package handlers
+package api
 
 import (
 	"net/http"
 )
 
-func CheckHealth(w http.ResponseWriter, r *http.Request) {
+func (app *App) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	w.Write([]byte(`{ "status": "ok" }`))

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -12,6 +13,7 @@ import (
 type App struct {
 	config Config
 	router *chi.Mux
+	store  store.Storage
 }
 
 type Config struct {
@@ -19,11 +21,12 @@ type Config struct {
 }
 
 // - Functions/Methods -
-func NewApp(config Config) *App {
+func NewApp(config Config, store store.Storage) *App {
 	app := &App{
 		config: config,
-		router: initRouter(),
+		store:  store,
 	}
+	app.router = app.initRouter()
 
 	return app
 }
