@@ -24,7 +24,7 @@ func main() {
 
 	store := store.NewPostgresStorage(nil)
 
-	app := api.NewApp(config, store)
+	app := api.NewApp(config, &store)
 
 	err := app.Run()
 

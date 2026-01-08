@@ -3,6 +3,7 @@ package api
 import (
 	"time"
 
+	"github.com/Samu-Amy/Shokora/internal/api/handlers"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -56,9 +57,9 @@ func (app *App) initRouter() *chi.Mux {
 	// v1
 	router.Route("/api/v1", func(r chi.Router) {
 		// Public Routes (commons)
-		r.Get("/health", app.CheckHealth)
-		r.Get("/menu/products", app.GetAllMenuProducts)
-		r.Get("/menu/products/{productId}", app.GetMenuProduct)
+		r.Get("/health", handlers.CheckHealth)
+		r.Get("/menu/products", handlers.GetAllMenuProducts(app.store))
+		r.Get("/menu/products/{productId}", handlers.GetMenuProduct(app.store))
 
 		// Auth Routes
 		r.Route("/auth", func(r chi.Router) {

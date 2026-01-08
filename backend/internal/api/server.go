@@ -13,7 +13,7 @@ import (
 type App struct {
 	config Config
 	router *chi.Mux
-	store  store.Storage
+	store  *store.Storage
 }
 
 type Config struct {
@@ -21,7 +21,7 @@ type Config struct {
 }
 
 // - Functions/Methods -
-func NewApp(config Config, store store.Storage) *App {
+func NewApp(config Config, store *store.Storage) *App {
 	app := &App{
 		config: config,
 		store:  store,
