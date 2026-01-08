@@ -6,7 +6,7 @@
   let productId = $state<number | undefined>();
 
   onMount(async () => {
-    const res = await fetch("http://192.168.0.46:8080/api/v1/menu/product/12", {
+    const res = await fetch("/api/v1/menu/products/12", {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
@@ -14,7 +14,8 @@
     });
 
     if (!res.ok) {
-      console.log("Error");
+      const text = await res.text
+      console.log(`Error: ${res.status}, ${text}`);
     }
 
     let product = await res.json();

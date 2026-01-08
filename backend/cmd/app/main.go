@@ -10,13 +10,13 @@ import (
 
 // TODO: fai test con/senza redis (sia con dati in cache che non in cache) calcolando il tempo impiegato (?)
 
+// TODO: usa dotenv (con quello che serve per leggere da file .env solo come dev-dependency e non incluse nella build release)
 // DB Connection string
 // connStr := "user=${DEV_POSTGRES_USER} dbname=${DEV_POSTGRES_DB} password=${DEV_POSTGRES_PASSWORD} host=localhost port=5432 sslmode=disable"
 
 func main() {
 	config := api.Config{
-		Addr: "",
-		Port: "8080",
+		Addr: ":8080", // TODO: prendi da env
 	}
 
 	app := api.NewApp(config)

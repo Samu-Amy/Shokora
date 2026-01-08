@@ -1,13 +1,3 @@
-Comandi:
-- cd /backend/
-  - "go run cmd/api/main.go"
-
-
-- cd /frontend/
-  - "npm run dev"
-  - "npm run build" -> "npx serve build" (nginx-like)
-
-
 // TODO: ricorda di usare tag adatti (es. nav, header, footer, ol/ul, li)
 // TODO: in css usa anche min(), max(), clamp()
 // TODO: definisci colori e valori di base e fai setup theme (dark mode)

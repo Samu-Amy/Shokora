@@ -1,0 +1,16 @@
+Run backend:
+- cd /backend/
+  - "go run cmd/app/main.go"
+
+
+Run frontend:
+- cd /frontend/
+  - "npm run dev"
+  - !non più utilizzabile (serve proxy) "npm run build" -> "npx serve build" (nginx-like)
+
+
+Run Docker:
+- "docker compose -f compose[.dev].yaml up"
+
+Access DB in docker:
+- "docker compose -f compose.dev.yaml exec db psql -U {postgres_user} -d {postgres_db}"

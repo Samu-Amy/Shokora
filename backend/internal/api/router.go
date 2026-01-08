@@ -1,13 +1,11 @@
 package api
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/handlers"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
 )
 
 func initRouter() *chi.Mux {
@@ -25,34 +23,34 @@ func initRouter() *chi.Mux {
 	// router.Use(httprate.LimitByIP(100, 1*time.Minute)) // Rate Limiter (?) // TODO: Controlla implementazione (?)
 
 	// CORS
-	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{
-			"http://localhost:5173",
-			"http://192.168.0.46:5173",
-			"http://localhost:3000",
-			"http://192.168.0.46:3000",
-		},
+	// router.Use(cors.Handler(cors.Options{
+	// 	AllowedOrigins: []string{
+	// 		"http://localhost:5173",
+	// 		"http://192.168.0.46:5173",
+	// 		"http://localhost:3000",
+	// 		"http://192.168.0.46:3000",
+	// 	},
 
-		AllowedMethods: []string{
-			http.MethodGet,
-			http.MethodPost,
-			http.MethodPut,
-			http.MethodPatch,
-			http.MethodDelete,
-		},
+	// 	AllowedMethods: []string{
+	// 		http.MethodGet,
+	// 		http.MethodPost,
+	// 		http.MethodPut,
+	// 		http.MethodPatch,
+	// 		http.MethodDelete,
+	// 	},
 
-		AllowedHeaders: []string{
-			// "Accept",
-			"Authorization",
-			"Content-Type",
-		},
+	// 	AllowedHeaders: []string{
+	// 		// "Accept",
+	// 		"Authorization",
+	// 		"Content-Type",
+	// 	},
 
-		// ExposedHeaders:   []string{"Link"},
-		// AllowCredentials: false,
-		// MaxAge: 300,
+	// 	// ExposedHeaders:   []string{"Link"},
+	// 	// AllowCredentials: false,
+	// 	// MaxAge: 300,
 
-		// TODO: continua... (aggiungi altri url, methods, ecc.)
-	}))
+	// 	// TODO: continua... (aggiungi altri url, methods, ecc.)
+	// }))
 
 	//* - Routes - *
 

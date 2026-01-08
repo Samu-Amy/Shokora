@@ -15,7 +15,6 @@ type App struct {
 
 type Config struct {
 	Addr string
-	Port string
 }
 
 // - Functions/Methods -
@@ -34,6 +33,6 @@ func (app *App) Run() error {
 		Handler: app.router,
 	}
 
-	fmt.Printf("Listening on %s:%s", app.config.Addr, app.config.Port)
+	fmt.Printf("Listening on localhost%s", app.config.Addr)
 	return server.ListenAndServe()
 }
