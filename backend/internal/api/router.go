@@ -57,7 +57,7 @@ func initRouter() *chi.Mux {
 	// v1
 	router.Route("/api/v1", func(r chi.Router) {
 		// Public Routes (commons)
-		r.Get("/", handlers.HandleRoot)
+		r.Get("/health", handlers.CheckHealth)
 		r.Get("/menu/products", handlers.GetAllMenuProducts)
 		r.Get("/menu/products/{productId}", handlers.GetMenuProduct)
 

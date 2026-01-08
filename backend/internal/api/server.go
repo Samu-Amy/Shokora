@@ -1,8 +1,9 @@
 package api
 
 import (
-	"fmt"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -28,11 +29,14 @@ func NewApp(config Config) *App {
 }
 
 func (app *App) Run() error {
-	server := http.Server{
-		Addr:    app.config.Addr,
-		Handler: app.router,
+	server := &http.Server{
+		Addr:         app.config.Addr,
+		Handler:      app.router,
+		WriteTimeout: time.Second * 30,
+		ReadTimeout:  time.Second * 10,
+		IdleTimeout:  time.Minute,
 	}
 
-	fmt.Printf("Listening on localhost%s", app.config.Addr)
+	log.Printf("Server started, listening on localhost%s", app.config.Addr)
 	return server.ListenAndServe()
 }

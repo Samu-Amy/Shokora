@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/Samu-Amy/Shokora/internal/api"
+	"github.com/Samu-Amy/Shokora/internal/env"
 )
 
 //TODO: JWT in HTTP only cookies (no in local storage per evitare XSS) -> attenzione a CSRF (cross origin requests)
@@ -15,8 +16,10 @@ import (
 // connStr := "user=${DEV_POSTGRES_USER} dbname=${DEV_POSTGRES_DB} password=${DEV_POSTGRES_PASSWORD} host=localhost port=5432 sslmode=disable"
 
 func main() {
+	env.LoadEnv() //! - Dev Only (use file .env) - !
+
 	config := api.Config{
-		Addr: ":8080", // TODO: prendi da env
+		Addr: env.GetString("SERVER_PORT", ":8080"),
 	}
 
 	app := api.NewApp(config)
