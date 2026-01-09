@@ -23,8 +23,8 @@ func main() {
 	config := api.Config{
 		Addr: env.GetString("SERVER_PORT", ":8080"),
 		Db: api.DbConfig{
-			// Addr:         fmt.Sprintf("postgres://%s:%s@localhost/%s?sslmode=%s", env.GetString("POSTGRES_USER", "user"), env.GetString("POSTGRES_PASSWORD", "password"), env.GetString("POSTGRES_DB", "db"), env.GetString("POSTGRES_SSL_MODE", "disable")),
-			Addr:         fmt.Sprintf("host=localhost port=5432 user=%s password=%s dbname=%s sslmode=disable", env.GetString("POSTGRES_USER", ""), env.GetString("POSTGRES_PASSWORD", ""), env.GetString("POSTGRES_DB", "")),
+			// Addr: fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=%s", env.GetString("POSTGRES_USER", "user"), env.GetString("POSTGRES_PASSWORD", "password"), env.GetString("POSTGRES_DB", "db"), env.GetString("POSTGRES_PORT", "5432"), env.GetString("POSTGRES_SSL_MODE", "disable")),
+			Addr:         fmt.Sprintf("host=localhost port=%s user=%s password=%s dbname=%s sslmode=disable", env.GetString("POSTGRES_PORT", "5432"), env.GetString("POSTGRES_USER", ""), env.GetString("POSTGRES_PASSWORD", ""), env.GetString("POSTGRES_DB", "")),
 			MaxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30), // TODO: usare questi valori o lasciare quelli di base?
 			MaxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			MaxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
