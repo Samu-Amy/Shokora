@@ -18,6 +18,14 @@ type App struct {
 
 type Config struct {
 	Addr string
+	Db   DbConfig
+}
+
+type DbConfig struct {
+	Addr         string
+	MaxOpenConns int
+	MaxIdleConns int
+	MaxIdleTime  string
 }
 
 // - Functions/Methods -

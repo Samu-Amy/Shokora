@@ -8,12 +8,13 @@ import (
 )
 
 type Storage struct {
-	User models.UserRepository
-	// Product models.ProductRepository
+	User    models.UserRepository
+	Product models.ProductRepository
 }
 
 func NewPostgresStorage(db *sql.DB) Storage {
 	return Storage{
-		User: postgres.NewPostgresUserStore(db),
+		User:    postgres.NewPostgresUserStore(db),
+		Product: postgres.NewPostgresProductStore(db),
 	}
 }
