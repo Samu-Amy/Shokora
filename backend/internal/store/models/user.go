@@ -9,6 +9,7 @@ type User struct {
 	Email     string `json:"email"`
 	Password  string `json:"-"`
 	CreatedAt string `json:"created_at"` //! time.Date (?)
+	UpdatedAt string `json:"updated_at"` //! time.Date (?)
 }
 
 type UserRepository interface {

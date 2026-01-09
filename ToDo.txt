@@ -9,6 +9,7 @@
 // TODO: fai account github a parte per github actions (in modo da non usare quelle del mio account)
 // TODO: esegui docker scout per controllare eventuali vulnerabilità
 
+// TODO: come fare backup dei dati (?)
 
 
 
@@ -57,5 +58,7 @@ Monitoraggio
 - log
 - uptime
 - risorse
+
+Backup
 
 https://chatgpt.com/c/69443035-7fa8-8331-b8b1-c4837d6fd096

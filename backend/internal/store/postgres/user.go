@@ -18,7 +18,7 @@ func NewPostgresUserStore(db *sql.DB) *PostgresUserStore {
 func (store *PostgresUserStore) Create(ctx context.Context, user *models.User) error {
 	query := `
 		INSERT INTO users (first_name, last_name, email, password)
-		VALUES ($1, $2, $3, $4) RETURNING id, created_at
+		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at
 	`
 
 	err := store.db.QueryRowContext(
@@ -31,6 +31,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *models.User) e
 	).Scan(
 		&user.ID,
 		&user.CreatedAt,
+		&user.UpdatedAt,
 	)
 
 	if err != nil {
@@ -39,3 +40,5 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *models.User) e
 
 	return nil
 }
+
+// TODO: aggiungi eliminazione account (come gestire l'id che rimane referenziato?)
