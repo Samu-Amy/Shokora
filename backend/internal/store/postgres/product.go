@@ -15,6 +15,7 @@ func NewPostgresProductStore(db *sql.DB) *PostgresProductStore {
 	return &PostgresProductStore{db: db}
 }
 
+// - Methods -
 func (store *PostgresProductStore) Create(ctx context.Context, product *models.Product) error {
 	query := `
 		INSERT INTO products (name, description, image_url, price, discount)

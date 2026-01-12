@@ -82,6 +82,7 @@ func (app *App) initRouter() *chi.Mux {
 				// TODO: aggiungi middleware per permessi (?)
 
 				// r.Get("/orders", ...)
+				r.Post("/products/create", handlers.CreateProduct(app.store)) // TODO: sistema
 			})
 
 			// Admin Routes
