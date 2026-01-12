@@ -8,8 +8,8 @@ type User struct {
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
 	Password  string `json:"-"`
-	CreatedAt string `json:"created_at"` //! time.Date (?)
-	UpdatedAt string `json:"updated_at"` //! time.Date (?)
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 type UserRepository interface {

@@ -3,7 +3,7 @@ package models
 import "context"
 
 type Product struct {
-	ID          string `json:"id"`
+	ID          int64  `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	ImageURL    string `json:"image_url"`
@@ -17,4 +17,5 @@ type Product struct {
 
 type ProductRepository interface {
 	Create(context.Context, *Product) error
+	GetById(context.Context, int64) (*Product, error)
 }

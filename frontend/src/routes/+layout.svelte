@@ -6,6 +6,7 @@
   // TODO: add metadata e sistema titles
   // TODO: fai funzione per le requests che accetta i metodi giusti (oppure funzioni tipo getUser, postProduct, ecc. che hanno già il metodo "incorporato")
   // TODO: per gli sconti accettare sia percentuale che prezzo scontato (mostrando il prezzo scontato/percentuale risultante) -> nel caso si scelga il prezzo scontato si mostra l'equivalente in percentuale e viceversa, sul db si salva in versione percentuale - ATTENZIONE: se il prezzo base cambia, lo sconto rimane uguale (e quindi il prezzo scontato cambia -> al cambio di prezzo mostra anche lo sconto (e il prezzo scontato) per poterlo aggiustare)
+  // TODO: usa Tanstack Query (?) e una libreria per la validazione degli input
 </script>
 
 <svelte:head>

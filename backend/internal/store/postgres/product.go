@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/Samu-Amy/Shokora/internal/store/models"
 )
@@ -41,4 +42,39 @@ func (store *PostgresProductStore) Create(ctx context.Context, product *models.P
 	}
 
 	return nil
+}
+
+func (store *PostgresProductStore) GetById(ctx context.Context, productId int64) (*models.Product, error) {
+	query := `
+		SELECT * FROM products
+		WHERE id = $1
+	`
+
+	var product models.Product
+
+	err := store.db.QueryRowContext(
+		ctx,
+		query,
+		productId,
+	).Scan(
+		&product.ID,
+		&product.Name,
+		&product.Description,
+		&product.ImageURL,
+		&product.Price,
+		&product.Discount,
+		&product.CreatedAt,
+		&product.UpdatedAt,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &product, nil
 }
