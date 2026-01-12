@@ -19,4 +19,21 @@ Access DB outside docker:
 - "docker run --rm -it postgres:17 psql "host=host.docker.internal port=<port> user=<user> dbname=<db> sslmode=disable"
 
 DB Migrations:
-- "migrate -source file://G:/Lavoro/Web/Shokora/backend/cmd/migrate/migrations -database "postgres://devshokora:testdbdevpostgres@localhost:5434/postgresdev?sslmode=disable" up" -> usa goose invece di sta merda
+- create: "goose create <migration_name> sql"
+- execute: "goose <driver (postgres)> <db_string ($1)> up"
+- revert by 1: "goose <driver (postgres)> <db_string ($1)> down"
+- revert to version: "goose <driver (postgres)> <db_string ($1)> down-to <version>"
+- revert to version 0: "goose <driver (postgres)> <db_string ($1)> reset"
+
+to avoid passing the connection string, we can define:
+- "export GOOSE_DRIVER=<driver>"
+- "export GOOSE_DBSTRING=<conn_str>"
+
+
+DB strings formats:
+- $1 "postgresql://[user[:password]@][host][:port][/dbname][?param1=value1&param2=value2]"
+- $2 "host=localhost port=5432 dbname=mydatabase user=myuser password=mypassword"
+
+In this case:
+- "postgresql://<user>:<password>@localhost:<port>/<db_name>?sslmode=<sll_mode (disable)>"
+- "host=localhost port=<port> user=<user> password=<password> dbname=<db_name> sslmode=<ssl_mode>"

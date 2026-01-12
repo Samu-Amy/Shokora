@@ -13,6 +13,7 @@ func GetAllMenuProducts(store *store.Storage) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 
 		w.Write([]byte(`{ "status": "ok" }`))
+		// TODO: sostituisci con writeJSON
 	}
 }
 

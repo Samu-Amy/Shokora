@@ -19,6 +19,7 @@ type App struct {
 type Config struct {
 	Addr string
 	Db   DbConfig
+	// Env  string
 }
 
 type DbConfig struct {
