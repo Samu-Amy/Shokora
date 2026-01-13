@@ -3,7 +3,6 @@ package api
 import (
 	"time"
 
-	"github.com/Samu-Amy/Shokora/internal/api/handlers"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -57,9 +56,9 @@ func (app *App) initRouter() *chi.Mux {
 	// v1
 	router.Route("/api/v1", func(r chi.Router) {
 		// Public Routes (commons)
-		r.Get("/health", handlers.CheckHealth)
-		r.Get("/menu/products", handlers.GetAllMenuProducts(app.store))
-		r.Get("/menu/products/{productId}", handlers.GetProduct(app.store)) // TODO: per ora prende da product invece che da menu (va bene?)
+		r.Get("/health", CheckHealth)
+		r.Get("/menu/products", app.GetAllMenuProducts)
+		r.Get("/menu/products/{productId}", app.GetProduct) // TODO: per ora prende da product invece che da menu (va bene?)
 
 		// Auth Routes
 		r.Route("/auth", func(r chi.Router) {
@@ -82,7 +81,7 @@ func (app *App) initRouter() *chi.Mux {
 				// TODO: aggiungi middleware per permessi (?)
 
 				// r.Get("/orders", ...)
-				r.Post("/products/create", handlers.CreateProduct(app.store)) // TODO: sistema
+				r.Post("/products/create", app.CreateProduct) // TODO: sistema
 			})
 
 			// Admin Routes
