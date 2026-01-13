@@ -78,3 +78,5 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 
 	return &product, nil
 }
+
+// TODO: guarda immagine cheatsheet sql

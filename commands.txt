@@ -25,6 +25,8 @@ DB Migrations:
 - revert to version: "goose <driver (postgres)> <db_string ($1)> down-to <version>"
 - revert to version 0: "goose <driver (postgres)> <db_string ($1)> reset"
 
+Nota: la versione è quella nel nome della migration (è un timestamp, quindi da <version> o fino a <version> esegue/revert tutte quelle prima/dopo)
+
 to avoid passing the connection string, we can define:
 - "export GOOSE_DRIVER=<driver>"
 - "export GOOSE_DBSTRING=<conn_str>"
