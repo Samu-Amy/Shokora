@@ -56,7 +56,7 @@ func (app *App) initRouter() *chi.Mux {
 	// v1
 	router.Route("/api/v1", func(r chi.Router) {
 		// Public Routes (commons)
-		r.Get("/health", CheckHealth)
+		r.Get("/health", app.CheckHealth)
 		r.Get("/menu/products", app.GetAllMenuProducts)
 		r.Get("/menu/products/{productId}", app.GetProduct) // TODO: per ora prende da product invece che da menu (va bene?)
 

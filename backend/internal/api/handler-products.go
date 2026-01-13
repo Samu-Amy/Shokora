@@ -13,11 +13,11 @@ import (
 // ----- CREATE -----
 
 type CreateProductPayload struct {
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
+	Name        string  `json:"name" validate:"required,max=150"`
+	Description string  `json:"description" validate:"required,max=2500"`
 	ImageURL    string  `json:"image_url"`
-	Price       float64 `json:"price"`
-	Discount    float64 `json:"discount"`
+	Price       float64 `json:"price" validate:"gt=0"`
+	Discount    float64 `json:"discount" validate:"gte=0,lte=1"`
 }
 
 func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
@@ -25,11 +25,16 @@ func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var payload CreateProductPayload
 
 	if err := readJSON(w, r, &payload); err != nil {
-		writeJSONError(w, http.StatusBadRequest, err.Error())
+		app.badRequestResponse(w, r, err)
 		return
 	}
 
-	// TODO: validaizone (e setta valori di default (?))
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// TODO: setta valori di default (?)
 
 	// Create product from payload data
 	product := &models.Product{
@@ -50,13 +55,13 @@ func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
 
 	// Create the product on db (and update product with missing data (id, created_at, updated_at) from db)
 	if err := app.store.Product.Create(ctx, product); err != nil {
-		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		app.internalServerError(w, r, err)
 		return
 	}
 
 	// Send product data to frontend
 	if err := writeJSON(w, http.StatusCreated, product); err != nil {
-		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		app.internalServerError(w, r, err)
 		return
 	}
 
@@ -68,7 +73,7 @@ func (app *App) GetProduct(w http.ResponseWriter, r *http.Request) {
 
 	postId, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
-		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		app.internalServerError(w, r, err)
 		return
 	}
 
@@ -79,16 +84,16 @@ func (app *App) GetProduct(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, postgres.ErrNotFound):
-			writeJSONError(w, http.StatusNotFound, err.Error())
+			app.notFoundResponse(w, r, err)
 		default:
-			writeJSONError(w, http.StatusInternalServerError, err.Error())
+			app.internalServerError(w, r, err)
 		}
 		return
 	}
 
 	// Send product data to frontend
 	if err := writeJSON(w, http.StatusCreated, product); err != nil {
-		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		app.internalServerError(w, r, err)
 		return
 	}
 
