@@ -18,4 +18,6 @@ type Product struct {
 type ProductRepository interface {
 	Create(context.Context, *Product) error
 	GetById(context.Context, int64) (*Product, error)
+	Update(context.Context, int64) (*Product, error)
+	Delete(context.Context, int64) error
 }

@@ -55,12 +55,16 @@ func (app *App) initRouter() *chi.Mux {
 
 	// v1
 	router.Route("/api/v1", func(r chi.Router) {
-		// Public Routes (commons)
+		// - Public Routes (commons) -
 		r.Get("/health", app.CheckHealth)
-		r.Get("/menu/products", app.GetAllMenuProducts)
-		r.Get("/menu/products/{productId}", app.GetProduct) // TODO: per ora prende da product invece che da menu (va bene?)
 
-		// Auth Routes
+		// Menu
+		r.Route("/menu/products", func(r chi.Router) {
+			r.Get("/", app.GetAllMenuProducts)
+			r.Get("/{productId}", app.GetProduct) // TODO: per ora prende da product invece che da menu (va bene?)
+		})
+
+		// - Auth Routes -
 		r.Route("/auth", func(r chi.Router) {
 			// r.Post("/login", ...)
 			// r.Post("/refresh", ...)
@@ -68,23 +72,35 @@ func (app *App) initRouter() *chi.Mux {
 			// r.Post("/logout", ...)
 		})
 
-		// Auth-Protected Routes
+		// - Auth-Protected Routes -
 		r.Group(func(r chi.Router) {
 			// r.Use(AuthMiddleware)
 			// TODO: controllo modifiche -> gli utenti possono modificare solo il proprio profilo (solo le info di base, non ruolo o altro (quelli modificabili solo da admin))
 
-			// Customers Routes
+			// - Customers Routes -
 
-			// Employee (and Admin) Routes
+			// - Employee (and Admin) Routes -
 			r.Route("/employee", func(r chi.Router) {
 				// r.Use(EmployeeMiddleware)
 				// TODO: aggiungi middleware per permessi (?)
 
 				// r.Get("/orders", ...)
-				r.Post("/products/create", app.CreateProduct) // TODO: sistema
+
+				// Products
+				r.Route("/products", func(r chi.Router) {
+					r.Post("/", app.CreateProduct)
+					r.Patch("/{productId}", app.UpdateProduct)
+					r.Delete("/{productId}", app.DeleteProduct)
+
+					// TODO: come sopra (singoli) o raggruppati (sotto)?
+					// r.Route("/{productId}", func(r chi.Router) {
+					// 	r.Patch("/", app.UpdateProduct)
+					// 	r.Delete("/", app.DeleteProduct)
+					// })
+				})
 			})
 
-			// Admin Routes
+			// - Admin Routes -
 			r.Route("/admin", func(r chi.Router) {
 				// r.Use(AdminMiddleware)
 
