@@ -56,12 +56,18 @@ func (app *App) initRouter() *chi.Mux {
 	// v1
 	router.Route("/api/v1", func(r chi.Router) {
 		// - Public Routes (commons) -
+
 		r.Get("/health", app.CheckHealth)
 
-		// Menu
-		r.Route("/menu/products", func(r chi.Router) {
-			r.Get("/", app.GetAllMenuProducts)
-			r.Get("/{productId}", app.GetProduct) // TODO: per ora prende da product invece che da menu (va bene?)
+		// Products
+		r.Get("/menu/products", app.GetMenuProducts)
+		// r.Get("/shop/products", app.GetShopProducts)
+		// r.Get("/featured/products", app.GetFeaturedProducts) // quelli in "vetrina" sul sito
+
+		r.Route("/products/{productId}", func(r chi.Router) {
+			r.Use(app.getProductMiddleware)
+
+			r.Get("/", app.GetProduct) // TODO: per ora prende da product invece che da menu (va bene?)
 		})
 
 		// - Auth Routes -
@@ -79,6 +85,10 @@ func (app *App) initRouter() *chi.Mux {
 
 			// - Customers Routes -
 
+			// Menu Orders
+
+			// Shop Orders
+
 			// - Employee (and Admin) Routes -
 			r.Route("/employee", func(r chi.Router) {
 				// r.Use(EmployeeMiddleware)
@@ -89,14 +99,13 @@ func (app *App) initRouter() *chi.Mux {
 				// Products
 				r.Route("/products", func(r chi.Router) {
 					r.Post("/", app.CreateProduct)
-					r.Patch("/{productId}", app.UpdateProduct)
-					r.Delete("/{productId}", app.DeleteProduct)
 
-					// TODO: come sopra (singoli) o raggruppati (sotto)?
-					// r.Route("/{productId}", func(r chi.Router) {
-					// 	r.Patch("/", app.UpdateProduct)
-					// 	r.Delete("/", app.DeleteProduct)
-					// })
+					r.Route("/{productId}", func(r chi.Router) {
+						r.Use(app.getProductMiddleware)
+
+						r.Patch("/", app.UpdateProduct)
+						r.Delete("/", app.DeleteProduct)
+					})
 				})
 			})
 

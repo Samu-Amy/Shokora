@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -10,14 +11,18 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+type productKey string
+
+const productCtx productKey = "product"
+
 // ----- CREATE -----
 
 type CreateProductPayload struct {
-	Name        string  `json:"name" validate:"required,max=150"`
+	Name        string  `json:"name" validate:"required,min=1,max=150"`
 	Description string  `json:"description" validate:"required,max=2500"`
-	ImageURL    string  `json:"image_url"`
-	Price       float64 `json:"price" validate:"gt=0"`
-	Discount    float64 `json:"discount" validate:"gte=0,lte=1"`
+	ImageURL    string  `json:"image_url" validate:"required"`
+	Price       float64 `json:"price" validate:"required,gt=0"`
+	Discount    float64 `json:"discount" validate:"required,gte=0,lte=1"`
 }
 
 func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
@@ -54,13 +59,12 @@ func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	// Create the product on db (and update product with missing data (id, created_at, updated_at) from db)
+	// Create and return
 	if err := app.store.Product.Create(ctx, product); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
-	// Send product data to frontend
 	if err := writeJSON(w, http.StatusCreated, product); err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -71,28 +75,7 @@ func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
 // ----- GET -----
 
 func (app *App) GetProduct(w http.ResponseWriter, r *http.Request) {
-	// Get param and convert it
-	idParam := chi.URLParam(r, "productId")
-
-	productId, err := strconv.ParseInt(idParam, 10, 64)
-	if err != nil {
-		app.internalServerError(w, r, err)
-		return
-	}
-
-	ctx := r.Context()
-
-	// Get product
-	product, err := app.store.Product.GetById(ctx, productId)
-	if err != nil {
-		switch {
-		case errors.Is(err, postgres.ErrNotFound):
-			app.notFoundError(w, r, err)
-		default:
-			app.internalServerError(w, r, err)
-		}
-		return
-	}
+	product := getProductFromContext(r)
 
 	// Send product data to frontend
 	if err := writeJSON(w, http.StatusCreated, product); err != nil {
@@ -105,18 +88,18 @@ func (app *App) GetProduct(w http.ResponseWriter, r *http.Request) {
 // ----- UPDATE -----
 
 type UpdateProductPayload struct {
-	ID          int64    `json:"id" validate:"required"`
-	Name        *string  `json:"name,omitempty" validate:"max=150"`
-	Description *string  `json:"description,omitempty" validate:"max=2500"`
-	ImageURL    *string  `json:"image_url,omitempty"`
-	Price       *float64 `json:"price,omitempty" validate:"gt=0"`
-	Discount    *float64 `json:"discount,omitempty" validate:"gte=0,lte=1"`
+	Name        *string  `json:"name,omitempty" validate:"omitempty,min=1,max=150"`
+	Description *string  `json:"description,omitempty" validate:"omitempty,max=2500"`
+	ImageURL    *string  `json:"image_url,omitempty" validate:"omitempty"`
+	Price       *float64 `json:"price,omitempty" validate:"omitempty,gt=0"`
+	Discount    *float64 `json:"discount,omitempty" validate:"omitempty,gte=0,lte=1"`
 }
 
 func (app *App) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	// Get payload data
-	var payload UpdateProductPayload
+	product := getProductFromContext(r)
 
+	var payload UpdateProductPayload
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
@@ -128,31 +111,38 @@ func (app *App) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: setta valori di default (?)
+	//
+	if payload.Name != nil {
+		product.Name = *payload.Name
+	}
 
-	// Create product from payload data
-	// product := &models.Product{
-	// 	Name:        payload.Name,
-	// 	Description: payload.Description,
-	// 	ImageURL:    payload.ImageURL,
-	// 	Price:       payload.Price,
-	// 	Discount:    payload.Discount,
-	// }
+	if payload.Description != nil {
+		product.Description = *payload.Description
+	}
 
-	// ctx := r.Context()
+	if payload.ImageURL != nil {
+		product.ImageURL = *payload.ImageURL
+	}
 
-	// // Create the product on db (and update product with missing data (id, created_at, updated_at) from db)
-	// if err := app.store.Product.Create(ctx, product); err != nil {
-	// 	app.internalServerError(w, r, err)
-	// 	return
-	// }
+	if payload.Price != nil {
+		product.Price = *payload.Price
+	}
 
-	// // Send product data to frontend
-	// if err := writeJSON(w, http.StatusCreated, product); err != nil {
-	// 	app.internalServerError(w, r, err)
-	// 	return
-	// }
+	if payload.Discount != nil {
+		product.Discount = *payload.Discount
+	}
 
+	// Update and return
+	if err := app.store.Product.Update(r.Context(), product); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	// TODO: ritornare il prodotto completo aggiornato (?)
+
+	if err := writeJSON(w, http.StatusOK, product); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
 
 // ----- DELETE -----
@@ -179,4 +169,42 @@ func (app *App) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// ----- UTILS -----
+
+// Get product and saves it in context
+func (app *App) getProductMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Get param and convert it
+		idParam := chi.URLParam(r, "productId")
+
+		productId, err := strconv.ParseInt(idParam, 10, 64)
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		ctx := r.Context()
+
+		// Get product
+		product, err := app.store.Product.GetById(ctx, productId)
+		if err != nil {
+			switch {
+			case errors.Is(err, postgres.ErrNotFound):
+				app.notFoundError(w, r, err)
+			default:
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+
+		ctx = context.WithValue(ctx, productCtx, product)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func getProductFromContext(r *http.Request) *models.Product {
+	product, _ := r.Context().Value(productCtx).(*models.Product)
+	return product
 }

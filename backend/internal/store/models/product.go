@@ -11,13 +11,13 @@ type Product struct {
 	// Badges    []string `json:badges` // TODO: string di enum invece che string (oppure si usano enums ma si salvano come string nel db) (?)
 	Price     float64 `json:"price"`
 	Discount  float64 `json:"discount"`
-	CreatedAt string  `json:"created_at"`
+	CreatedAt string  `json:"created_at"` // TODO: usare time.Time (?)
 	UpdatedAt string  `json:"updated_at"`
 }
 
 type ProductRepository interface {
 	Create(context.Context, *Product) error
 	GetById(context.Context, int64) (*Product, error)
-	Update(context.Context, int64) (*Product, error)
+	Update(context.Context, *Product) error
 	Delete(context.Context, int64) error
 }
