@@ -11,7 +11,7 @@ type Product struct {
 	// Badges    []string `json:badges` // TODO: string di enum invece che string (oppure si usano enums ma si salvano come string nel db) (?)
 	Price     float64 `json:"price"`
 	Discount  float64 `json:"discount"`
-	CreatedAt string  `json:"created_at"` // TODO: usare time.Time (?)
+	CreatedAt string  `json:"created_at"`
 	UpdatedAt string  `json:"updated_at"`
 }
 

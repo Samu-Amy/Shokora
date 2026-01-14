@@ -20,9 +20,9 @@ const productCtx productKey = "product"
 type CreateProductPayload struct {
 	Name        string  `json:"name" validate:"required,min=1,max=150"`
 	Description string  `json:"description" validate:"required,max=2500"`
-	ImageURL    string  `json:"image_url" validate:"required"`
+	ImageURL    string  `json:"image_url" validate:"omitempty"`
 	Price       float64 `json:"price" validate:"required,gt=0"`
-	Discount    float64 `json:"discount" validate:"required,gte=0,lte=1"`
+	Discount    float64 `json:"discount" validate:"gte=0,lte=1"`
 }
 
 func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +111,7 @@ func (app *App) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//
+	// Update fields in product (only the ones specified in the payload)
 	if payload.Name != nil {
 		product.Name = *payload.Name
 	}

@@ -85,6 +85,7 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *models.P
 		SET name = $1, description = $2, image_url = $3, price = $4, discount = $5
 		WHERE id = $6
 	` // aggiorna tutte le colonne, ma dato che l'update non dovrebbe essere eseguito spesso, non ha senso ottimizzare per ora
+
 	// TODO: eventualmente per aggiornare solo visibilità fare route, handler e metodo a parte
 	// TODO: aggiorna updated_at
 
