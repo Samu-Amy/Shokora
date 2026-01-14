@@ -5,11 +5,13 @@ import (
 )
 
 func (app *App) GetMenuProducts(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	data := map[string]string{
+		"status": "ok",
+	}
 
-	w.Write([]byte(`{ "status": "ok" }`))
-	// TODO: sostituisci con writeJSON
-
+	if err := app.jsonResponse(w, http.StatusOK, data); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
 
 // func GetMenuProduct(store *store.Storage) http.HandlerFunc {

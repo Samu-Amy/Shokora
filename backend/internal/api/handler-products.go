@@ -51,17 +51,17 @@ func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	// Create and return
+	// Create product
 	if err := app.store.Product.Create(ctx, product); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
-	if err := writeJSON(w, http.StatusCreated, product); err != nil {
+	// Return product
+	if err := app.jsonResponse(w, http.StatusCreated, product); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
-
 }
 
 // ----- GET -----
@@ -69,12 +69,11 @@ func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
 func (app *App) GetProduct(w http.ResponseWriter, r *http.Request) {
 	product := getProductFromContext(r)
 
-	// Send product data to frontend
-	if err := writeJSON(w, http.StatusCreated, product); err != nil {
+	// Return product
+	if err := app.jsonResponse(w, http.StatusCreated, product); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
-
 }
 
 // ----- UPDATE -----
@@ -130,10 +129,10 @@ func (app *App) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: ritornare il prodotto completo aggiornato (?)
-
-	if err := writeJSON(w, http.StatusOK, product); err != nil {
+	// Return product
+	if err := app.jsonResponse(w, http.StatusCreated, product); err != nil {
 		app.internalServerError(w, r, err)
+		return
 	}
 }
 
