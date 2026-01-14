@@ -18,11 +18,11 @@ const productCtx productKey = "product"
 // ----- CREATE -----
 
 type CreateProductPayload struct {
-	Name        string  `json:"name" validate:"required,min=1,max=150"`
-	Description string  `json:"description" validate:"required,max=2500"`
-	ImageURL    string  `json:"image_url" validate:"omitempty"`
-	Price       float64 `json:"price" validate:"required,gt=0"`
-	Discount    float64 `json:"discount" validate:"gte=0,lte=1"`
+	Name        string  `json:"name" validate:"required,min=1,max=150"` // Required
+	Description string  `json:"description" validate:"max=2500"`        // Default ""
+	ImageURL    string  `json:"image_url" validate:"omitempty"`         // Default "" // TODO: aggiungi (anche in Update struct) "url" al validate se l'url per accedere alle foto soddisfa la validazione del validator
+	Price       float64 `json:"price" validate:"required,gt=0"`         // Required
+	Discount    float64 `json:"discount" validate:"gte=0,lte=1"`        // Default 0
 }
 
 func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
@@ -40,8 +40,6 @@ func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: setta valori di default e gestisci price (required) e discount (not required) (?)
-
 	// Create product from payload data
 	product := &models.Product{
 		Name:        payload.Name,
@@ -50,12 +48,6 @@ func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		Price:       payload.Price,
 		Discount:    payload.Discount,
 	}
-
-	// if payload.Discount != nil {
-	// 	product.Discount = payload.Discount
-	// } else {
-	// 	product.Discount = 0
-	// }
 
 	ctx := r.Context()
 

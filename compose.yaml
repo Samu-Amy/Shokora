@@ -36,6 +36,8 @@ services:
       # start_period: 30s # TODO: da usare?
     restart: unless-stopped
 
+    # TODO: per MinIO potrebbe servire un modo per accedere alle foto dall'esterno tramite URL (https?, si può usare nginx per proxy?)
+
 volumes:
   pgdata:
 # TODO: guarda impostazioni da https://github.com/Melkeydev/yappr (yt: https://www.youtube.com/watch?v=65-y9FaN--s)
