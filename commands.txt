@@ -14,6 +14,10 @@ Run Docker:
 
 Access DB in docker:
 - "docker compose -f compose.dev.yaml exec db psql -U {postgres_user} -d {postgres_db}"
+- "\l" -> list databases
+- "\c -> <db_name>" select db
+- "\dt" -> list tables
+- "<SQL_commands>" -> execute command
 
 Access DB outside docker:
 - "docker run --rm -it postgres:17 psql "host=host.docker.internal port=<port> user=<user> dbname=<db> sslmode=disable"

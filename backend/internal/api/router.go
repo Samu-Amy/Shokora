@@ -18,7 +18,8 @@ func (app *App) initRouter() *chi.Mux {
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
-	router.Use(middleware.Timeout(60 * time.Second)) // Timeout //TODO: ricorda di controllare ctx.Done() per ritornare nel caso di timeout
+	// router.Use(middleware.Timeout(60 * time.Second)) // Timeout
+	router.Use(middleware.Timeout(1 * time.Microsecond)) // Timeout
 	// router.Use(httprate.LimitByIP(100, 1*time.Minute)) // Rate Limiter (?) // TODO: Controlla implementazione (?)
 
 	// CORS
@@ -101,10 +102,12 @@ func (app *App) initRouter() *chi.Mux {
 					r.Post("/", app.CreateProduct)
 
 					r.Route("/{productId}", func(r chi.Router) {
-						r.Use(app.getProductMiddleware)
-
-						r.Patch("/", app.UpdateProduct)
 						r.Delete("/", app.DeleteProduct)
+
+						r.Group(func(r chi.Router) {
+							r.Use(app.getProductMiddleware)
+							r.Patch("/", app.UpdateProduct)
+						})
 					})
 				})
 			})

@@ -2,12 +2,10 @@ package api
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/Samu-Amy/Shokora/internal/store/models"
-	"github.com/Samu-Amy/Shokora/internal/store/postgres"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -53,11 +51,11 @@ func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
 
 	// Create product
 	if err := app.store.Product.Create(ctx, product); err != nil {
-		app.internalServerError(w, r, err)
+		app.parseError(w, r, err)
 		return
 	}
 
-	// Return product
+	//* Return product
 	if err := app.jsonResponse(w, http.StatusCreated, product); err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -69,7 +67,7 @@ func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
 func (app *App) GetProduct(w http.ResponseWriter, r *http.Request) {
 	product := getProductFromContext(r)
 
-	// Return product
+	//* Return product
 	if err := app.jsonResponse(w, http.StatusCreated, product); err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -124,12 +122,13 @@ func (app *App) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update and return
-	if err := app.store.Product.Update(r.Context(), product); err != nil {
-		app.internalServerError(w, r, err)
+	err := app.store.Product.Update(r.Context(), product)
+	if err != nil {
+		app.parseError(w, r, err)
 		return
 	}
 
-	// Return product
+	//* Return product
 	if err := app.jsonResponse(w, http.StatusCreated, product); err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -150,15 +149,11 @@ func (app *App) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	if err := app.store.Product.Delete(ctx, productId); err != nil {
-		switch {
-		case errors.Is(err, postgres.ErrNotFound):
-			app.notFoundError(w, r, err)
-		default:
-			app.internalServerError(w, r, err)
-		}
+		app.parseError(w, r, err)
 		return
 	}
 
+	//* No content (product deleted)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -181,15 +176,11 @@ func (app *App) getProductMiddleware(next http.Handler) http.Handler {
 		// Get product
 		product, err := app.store.Product.GetById(ctx, productId)
 		if err != nil {
-			switch {
-			case errors.Is(err, postgres.ErrNotFound):
-				app.notFoundError(w, r, err)
-			default:
-				app.internalServerError(w, r, err)
-			}
+			app.parseError(w, r, err)
 			return
 		}
 
+		// Put product in context
 		ctx = context.WithValue(ctx, productCtx, product)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

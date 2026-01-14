@@ -1,0 +1,6 @@
+Test da fare:
+- singole query (metodi dello store)
+- fetch API (con modifiche al db, e middlewares (auth e ruoli/permessi))
+
+Ricorda:
+- Testa anche concurrent updates (goroutines per modificare lo stesso prodotto nello stesso momento)

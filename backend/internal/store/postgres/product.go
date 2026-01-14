@@ -46,7 +46,8 @@ func (store *PostgresProductStore) Create(ctx context.Context, product *models.P
 
 func (store *PostgresProductStore) GetById(ctx context.Context, productId int64) (*models.Product, error) {
 	query := `
-		SELECT * FROM products
+		SELECT id, name, description, image_url, price, discount, version, created_at, updated_at
+		FROM products
 		WHERE id = $1
 	`
 
@@ -63,6 +64,7 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 		&product.ImageURL,
 		&product.Price,
 		&product.Discount,
+		&product.Version,
 		&product.CreatedAt,
 		&product.UpdatedAt,
 	)
@@ -82,14 +84,14 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 func (store *PostgresProductStore) Update(ctx context.Context, product *models.Product) error {
 	query := `
 		UPDATE products
-		SET name = $1, description = $2, image_url = $3, price = $4, discount = $5
-		WHERE id = $6
-	` // aggiorna tutte le colonne, ma dato che l'update non dovrebbe essere eseguito spesso, non ha senso ottimizzare per ora
+		SET name = $1, description = $2, image_url = $3, price = $4, discount = $5, version = version + 1
+		WHERE id = $6 AND version = $7
+		RETURNING version
+	`
 
-	// TODO: eventualmente per aggiornare solo visibilità fare route, handler e metodo a parte
-	// TODO: aggiorna updated_at
+	// TODO: modifica e rendi "modulare" per aggiornare solo ciò che serve (e magari fai un controllo più accurato sulle modifiche fatte e non solo sulla versione)
 
-	_, err := store.db.ExecContext(
+	err := store.db.QueryRowContext(
 		ctx,
 		query,
 		product.Name,
@@ -98,9 +100,23 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *models.P
 		product.Price,
 		product.Discount,
 		product.ID,
+		product.Version,
+	).Scan(
+		&product.Version,
 	)
 	if err != nil {
-		return err
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			// TODO: fai check di esistenza del prodotto per distinguere tra not found e conflict (version)
+			// sia in caso di prodotto (id) non trovato, sia in caso di versione vecchia
+
+			// ...check if product exists...
+			// return ErrVersionConlflict
+
+			return ErrNotFound
+		default:
+			return err
+		}
 	}
 
 	return nil
