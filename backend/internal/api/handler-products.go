@@ -3,15 +3,11 @@ package api
 import (
 	"context"
 	"net/http"
-	"strconv"
 
 	"github.com/Samu-Amy/Shokora/internal/store/models"
-	"github.com/go-chi/chi/v5"
 )
 
-type productKey string
-
-const productCtx productKey = "product"
+var productIdParam = "productId"
 
 // ----- CREATE -----
 
@@ -24,6 +20,8 @@ type CreateProductPayload struct {
 }
 
 func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	// Get payload data
 	var payload CreateProductPayload
 
@@ -47,8 +45,6 @@ func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		Discount:    payload.Discount,
 	}
 
-	ctx := r.Context()
-
 	// Create product
 	if err := app.store.Product.Create(ctx, product); err != nil {
 		app.parseError(w, r, err)
@@ -65,10 +61,24 @@ func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
 // ----- GET -----
 
 func (app *App) GetProduct(w http.ResponseWriter, r *http.Request) {
-	product := getProductFromContext(r)
+	ctx := r.Context()
+
+	// Get product id
+	productId, err := app.getIdFromParam(r, productIdParam)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	// Get product
+	product, err := app.getProduct(ctx, productId)
+	if err != nil {
+		app.parseError(w, r, err)
+		return
+	}
 
 	//* Return product
-	if err := app.jsonResponse(w, http.StatusCreated, product); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, product); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
@@ -85,9 +95,23 @@ type UpdateProductPayload struct {
 }
 
 func (app *App) UpdateProduct(w http.ResponseWriter, r *http.Request) {
-	// Get payload data
-	product := getProductFromContext(r)
+	ctx := r.Context()
 
+	// Get product id
+	productId, err := app.getIdFromParam(r, productIdParam)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	// Get product
+	product, err := app.getProduct(ctx, productId)
+	if err != nil {
+		app.parseError(w, r, err)
+		return
+	}
+
+	// Get payload data
 	var payload UpdateProductPayload
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
@@ -122,8 +146,7 @@ func (app *App) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update and return
-	err := app.store.Product.Update(r.Context(), product)
-	if err != nil {
+	if err := app.store.Product.Update(r.Context(), product); err != nil {
 		app.parseError(w, r, err)
 		return
 	}
@@ -138,15 +161,14 @@ func (app *App) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 // ----- DELETE -----
 
 func (app *App) DeleteProduct(w http.ResponseWriter, r *http.Request) {
-	idParam := chi.URLParam(r, "productId")
+	ctx := r.Context()
 
-	productId, err := strconv.ParseInt(idParam, 10, 64)
+	// Get product id
+	productId, err := app.getIdFromParam(r, productIdParam)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
-
-	ctx := r.Context()
 
 	if err := app.store.Product.Delete(ctx, productId); err != nil {
 		app.parseError(w, r, err)
@@ -159,34 +181,11 @@ func (app *App) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 
 // ----- UTILS -----
 
-// Get product and saves it in context
-func (app *App) getProductMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Get param and convert it
-		idParam := chi.URLParam(r, "productId")
+func (app *App) getProduct(ctx context.Context, productId int64) (*models.Product, error) {
+	product, err := app.store.Product.GetById(ctx, productId)
+	if err != nil {
+		return nil, err
+	}
 
-		productId, err := strconv.ParseInt(idParam, 10, 64)
-		if err != nil {
-			app.internalServerError(w, r, err)
-			return
-		}
-
-		ctx := r.Context()
-
-		// Get product
-		product, err := app.store.Product.GetById(ctx, productId)
-		if err != nil {
-			app.parseError(w, r, err)
-			return
-		}
-
-		// Put product in context
-		ctx = context.WithValue(ctx, productCtx, product)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-func getProductFromContext(r *http.Request) *models.Product {
-	product, _ := r.Context().Value(productCtx).(*models.Product)
-	return product
+	return product, nil
 }

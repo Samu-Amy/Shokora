@@ -18,8 +18,7 @@ func (app *App) initRouter() *chi.Mux {
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
-	// router.Use(middleware.Timeout(60 * time.Second)) // Timeout
-	router.Use(middleware.Timeout(1 * time.Microsecond)) // Timeout
+	router.Use(middleware.Timeout(60 * time.Second)) // Timeout
 	// router.Use(httprate.LimitByIP(100, 1*time.Minute)) // Rate Limiter (?) // TODO: Controlla implementazione (?)
 
 	// CORS
@@ -65,11 +64,7 @@ func (app *App) initRouter() *chi.Mux {
 		// r.Get("/shop/products", app.GetShopProducts)
 		// r.Get("/featured/products", app.GetFeaturedProducts) // quelli in "vetrina" sul sito
 
-		r.Route("/products/{productId}", func(r chi.Router) {
-			r.Use(app.getProductMiddleware)
-
-			r.Get("/", app.GetProduct) // TODO: per ora prende da product invece che da menu (va bene?)
-		})
+		r.Get("/products/{productId}", app.GetProduct) // TODO: per ora prende da product invece che da menu (va bene?)
 
 		// - Auth Routes -
 		r.Route("/auth", func(r chi.Router) {
@@ -102,12 +97,8 @@ func (app *App) initRouter() *chi.Mux {
 					r.Post("/", app.CreateProduct)
 
 					r.Route("/{productId}", func(r chi.Router) {
+						r.Patch("/", app.UpdateProduct)
 						r.Delete("/", app.DeleteProduct)
-
-						r.Group(func(r chi.Router) {
-							r.Use(app.getProductMiddleware)
-							r.Patch("/", app.UpdateProduct)
-						})
 					})
 				})
 			})
