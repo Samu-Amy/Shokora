@@ -4,12 +4,18 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Samu-Amy/Shokora/internal/store/models"
+	"github.com/Samu-Amy/Shokora/internal/store"
 )
 
 // TODO: poter modificare dati utente (soprattutto moter mettere nome/cognome dopo la registrazione con google per poter fixarli nel caso non fossero giusti nell'account google)
 
 var userIdParam = "userId"
+
+// ----- CREATE -----
+
+func (app *App) createUserHandler(w http.ResponseWriter, r *http.Request) {
+
+}
 
 // ----- GET -----
 
@@ -39,7 +45,7 @@ func (app *App) getUserHandler(w http.ResponseWriter, r *http.Request) {
 
 // ----- UTILS -----
 
-func (app *App) getUserById(ctx context.Context, userId int64) (*models.User, error) {
+func (app *App) getUserById(ctx context.Context, userId int64) (*store.User, error) {
 	user, err := app.store.User.GetById(ctx, userId)
 	if err != nil {
 		return nil, err

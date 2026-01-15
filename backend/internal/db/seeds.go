@@ -7,7 +7,6 @@ import (
 	"math/rand"
 
 	"github.com/Samu-Amy/Shokora/internal/store"
-	"github.com/Samu-Amy/Shokora/internal/store/models"
 )
 
 var first_names = []string{"Michael", "Gianni", "Anna", "Sam", "Maria", "Franco", "Matteo", "Bobby"}
@@ -127,14 +126,14 @@ func Seed(store store.Storage) {
 	}
 }
 
-func generateUsers(num int) []*models.User {
-	users := make([]*models.User, num)
+func generateUsers(num int) []*store.User {
+	users := make([]*store.User, num)
 
 	for i := 0; i < num; i++ {
 		first_name := first_names[i%len(first_names)] + fmt.Sprintf("_%d", i)
 		last_name := last_names[i%len(last_names)] + fmt.Sprintf("_%d", i)
 
-		users[i] = &models.User{
+		users[i] = &store.User{
 			FirstName: first_name,
 			LastName:  last_name,
 			Email:     fmt.Sprintf("%s@%s.%s", first_name, email_suffix[i%len(email_suffix)], email_domain[i%len(email_domain)]),
@@ -145,14 +144,14 @@ func generateUsers(num int) []*models.User {
 	return users
 }
 
-func generateProducts(num int) []*models.Product {
-	product := make([]*models.Product, num)
+func generateProducts(num int) []*store.Product {
+	product := make([]*store.Product, num)
 
 	for i := 0; i < num; i++ {
 		product_name := product_names[i%len(product_names)]
 		product_description := product_descriptions[i%len(product_descriptions)]
 
-		product[i] = &models.Product{
+		product[i] = &store.Product{
 			Name:        product_name,
 			Description: product_description,
 			ImageURL:    "",
@@ -164,15 +163,15 @@ func generateProducts(num int) []*models.Product {
 	return product
 }
 
-// func generateMenuOrders(num int, products []*models.Product, users []*models.User) []*models.User {
-// 	orders := make([]*models.MenuOrder, num)
+// func generateMenuOrders(num int, products []*store.Product, users []*store.User) []*store.User {
+// 	orders := make([]*store.MenuOrder, num)
 
 // 	for i := 0; i < num; i++ {
 // 		// Get random product and user
 // 		product := products[rand.Intn(len(products))]
 // 		user := users[rand.Intn(len(users))]
 
-// 		menuOrder[i] = &models.User{
+// 		menuOrder[i] = &store.User{
 // 			//...
 // 		}
 // 	}

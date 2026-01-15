@@ -16,9 +16,11 @@ FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
 -- +goose StatementEnd
 
--- TODO: (email) - aggiungi index (anche se in teoria con unique lo aggiunge già) (?)
+-- TODO: (email) - aggiungi index (con gin extension?) (anche se in teoria con unique lo aggiunge già) (?)
 -- TODO: (password) - usare TEXT (?)
+-- CREATE INDEX IF NOT EXISTS idx_users_id ON users(id);
 -- CREATE INDEX IF NOT EXISTS idx_users_email ON users(email); -- TODO: aggiungere per index (?)
+-- TODO: per foreign keys usare "FOREIGN KEY (<field>) REFERENCES <table> (<field>) ON DELETE <delete_option>" -- attenzione all'opzione di delete
 
 
 -- +goose Down

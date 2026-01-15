@@ -2,26 +2,45 @@ package api
 
 import (
 	"net/http"
+
+	"github.com/Samu-Amy/Shokora/internal/store"
 )
 
 func (app *App) getMenuProductsHandler(w http.ResponseWriter, r *http.Request) {
-	data := map[string]string{
-		"status": "ok",
+	ctx := r.Context()
+
+	// - Pagination, filters and sorting -
+
+	// Define default values
+	queryPaginationOptions := store.QueryPaginationOptions{
+		Limit:  10,
+		Offset: 0,
+		Sort:   "desc",
 	}
 
-	if err := app.jsonResponse(w, http.StatusOK, data); err != nil {
+	queryPaginationOptions, err := queryPaginationOptions.Parse(r)
+	if err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(queryPaginationOptions); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// - Query -
+
+	// Get menu products
+	products, err := app.store.Product.GetMenuProducts(ctx, queryPaginationOptions)
+	if err != nil {
+		app.parseError(w, r, err)
+		return
+	}
+
+	//* Return product
+	if err := app.jsonResponse(w, http.StatusOK, products); err != nil {
 		app.internalServerError(w, r, err)
+		return
 	}
 }
-
-// func GetMenuProduct(store *store.Storage) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		log.Println("Req")
-
-// 		productId := chi.URLParam(r, "productId")
-
-// 		w.Header().Set("Content-Type", "application/json")
-
-// 		w.Write([]byte(`{ "product":` + productId + ` }`))
-// 	}
-// }

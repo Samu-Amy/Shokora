@@ -1,6 +1,8 @@
-package models
+package store
 
-import "context"
+import (
+	"context"
+)
 
 type Product struct {
 	ID          int64  `json:"id"`
@@ -19,6 +21,7 @@ type Product struct {
 type ProductRepository interface {
 	Create(context.Context, *Product) error
 	GetById(context.Context, int64) (*Product, error)
+	GetMenuProducts(context.Context, QueryPaginationOptions) ([]Product, error)
 	Update(context.Context, *Product) error
 	Delete(context.Context, int64) error
 }

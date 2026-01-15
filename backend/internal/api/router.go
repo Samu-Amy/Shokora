@@ -97,6 +97,7 @@ func (app *App) initRouter() *chi.Mux {
 					r.Get("/", app.getUserHandler)
 				})
 
+				// TODO: spostare gestione prodotti in admin (employyes non possono modificare questi dati)
 				// Products
 				r.Route("/products", func(r chi.Router) {
 					r.Post("/", app.createProductHandler)

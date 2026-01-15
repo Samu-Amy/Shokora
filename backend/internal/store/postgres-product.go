@@ -1,11 +1,9 @@
-package postgres
+package store
 
 import (
 	"context"
 	"database/sql"
 	"errors"
-
-	"github.com/Samu-Amy/Shokora/internal/store/models"
 )
 
 type PostgresProductStore struct {
@@ -16,8 +14,9 @@ func NewPostgresProductStore(db *sql.DB) *PostgresProductStore {
 	return &PostgresProductStore{db: db}
 }
 
-// - Methods -
-func (store *PostgresProductStore) Create(ctx context.Context, product *models.Product) error {
+// ----- CREATE -----
+
+func (store *PostgresProductStore) Create(ctx context.Context, product *Product) error {
 	query := `
 		INSERT INTO products (name, description, image_url, price, discount)
 		VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at, updated_at
@@ -47,7 +46,10 @@ func (store *PostgresProductStore) Create(ctx context.Context, product *models.P
 	return nil
 }
 
-func (store *PostgresProductStore) GetById(ctx context.Context, productId int64) (*models.Product, error) {
+// ----- GET -----
+
+// TODO: crea diversi metodi per ottenere dati (uno per gli utenti (da menu/shop/sito) quando guardano i dettagli di un prodotto e uno per gli admin quando vogliono vedere i dati (completi, con anche version, created_at, updated_at, ecc.) di un prodotto)
+func (store *PostgresProductStore) GetById(ctx context.Context, productId int64) (*Product, error) {
 	query := `
 		SELECT id, name, description, image_url, price, discount, version, created_at, updated_at
 		FROM products
@@ -57,7 +59,7 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	var product models.Product
+	var product Product
 
 	err := store.db.QueryRowContext(
 		ctx,
@@ -87,7 +89,9 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 	return &product, nil
 }
 
-func (store *PostgresProductStore) Update(ctx context.Context, product *models.Product) error {
+// ----- UPDATE -----
+
+func (store *PostgresProductStore) Update(ctx context.Context, product *Product) error {
 	query := `
 		UPDATE products
 		SET name = $1, description = $2, image_url = $3, price = $4, discount = $5, version = version + 1
@@ -130,6 +134,8 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *models.P
 
 	return nil
 }
+
+// ----- DELETE -----
 
 func (store *PostgresProductStore) Delete(ctx context.Context, productId int64) error {
 	query := `DELETE FROM products WHERE id = $1`

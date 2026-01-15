@@ -1,11 +1,9 @@
-package postgres
+package store
 
 import (
 	"context"
 	"database/sql"
 	"errors"
-
-	"github.com/Samu-Amy/Shokora/internal/store/models"
 )
 
 type PostgresUserStore struct {
@@ -18,7 +16,9 @@ func NewPostgresUserStore(db *sql.DB) *PostgresUserStore {
 
 // TODO: add version (for update check)
 
-func (store *PostgresUserStore) Create(ctx context.Context, user *models.User) error {
+// ----- CREATE -----
+
+func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 	query := `
 		INSERT INTO users (first_name, last_name, email, password)
 		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at
@@ -47,7 +47,9 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *models.User) e
 	return nil
 }
 
-func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*models.User, error) {
+// ----- GET -----
+
+func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*User, error) {
 	query := `
 		SELECT id, first_name, last_name, email, password, created_at, updated_at
 		FROM users
@@ -57,7 +59,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*mod
 	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	var user models.User
+	var user User
 
 	err := store.db.QueryRowContext(
 		ctx,

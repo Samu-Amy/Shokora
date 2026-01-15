@@ -18,6 +18,8 @@ FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
 -- +goose StatementEnd
 
+-- CREATE INDEX IF NOT EXISTS idx_products_id ON products(id); -- TODO: usa (?)
+
 -- +goose Down
 -- +goose StatementBegin
 DROP TRIGGER IF EXISTS update_products_updated_at ON products;

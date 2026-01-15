@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Samu-Amy/Shokora/internal/store/postgres"
+	"github.com/Samu-Amy/Shokora/internal/store"
 )
 
 // - Return an error -
@@ -46,10 +46,10 @@ func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 	case errors.Is(err, context.DeadlineExceeded):
 		app.requestTimeoutError(w, r, err)
 
-	case errors.Is(err, postgres.ErrNotFound):
+	case errors.Is(err, store.ErrNotFound):
 		app.notFoundError(w, r, err)
 
-	case errors.Is(err, postgres.ErrVersionConlflict):
+	case errors.Is(err, store.ErrVersionConlflict):
 		app.conflictError(w, r, err)
 
 	default:

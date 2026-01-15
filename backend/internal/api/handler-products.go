@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Samu-Amy/Shokora/internal/store/models"
+	"github.com/Samu-Amy/Shokora/internal/store"
 )
 
 var productIdParam = "productId"
@@ -37,7 +37,7 @@ func (app *App) createProductHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create product from payload data
-	product := &models.Product{
+	product := &store.Product{
 		Name:        payload.Name,
 		Description: payload.Description,
 		ImageURL:    payload.ImageURL,
@@ -181,7 +181,7 @@ func (app *App) deleteProductHandler(w http.ResponseWriter, r *http.Request) {
 
 // ----- UTILS -----
 
-func (app *App) getProductById(ctx context.Context, productId int64) (*models.Product, error) {
+func (app *App) getProductById(ctx context.Context, productId int64) (*store.Product, error) {
 	product, err := app.store.Product.GetById(ctx, productId)
 	if err != nil {
 		return nil, err
