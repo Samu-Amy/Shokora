@@ -21,6 +21,9 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *models.User) e
 		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at
 	`
 
+	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
 	err := store.db.QueryRowContext(
 		ctx,
 		query,

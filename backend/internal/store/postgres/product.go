@@ -23,6 +23,9 @@ func (store *PostgresProductStore) Create(ctx context.Context, product *models.P
 		VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at, updated_at
 	`
 
+	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
 	err := store.db.QueryRowContext(
 		ctx,
 		query,
@@ -50,6 +53,9 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 		FROM products
 		WHERE id = $1
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
 
 	var product models.Product
 
@@ -89,6 +95,9 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *models.P
 		RETURNING version
 	`
 
+	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
 	// TODO: modifica e rendi "modulare" per aggiornare solo ciò che serve (e magari fai un controllo più accurato sulle modifiche fatte e non solo sulla versione)
 
 	err := store.db.QueryRowContext(
@@ -124,6 +133,9 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *models.P
 
 func (store *PostgresProductStore) Delete(ctx context.Context, productId int64) error {
 	query := `DELETE FROM products WHERE id = $1`
+
+	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
 
 	res, err := store.db.ExecContext(ctx, query, productId)
 	if err != nil {
