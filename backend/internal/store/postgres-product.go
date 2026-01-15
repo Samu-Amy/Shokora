@@ -89,6 +89,61 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 	return &product, nil
 }
 
+func (store *PostgresProductStore) GetProducts(ctx context.Context, queryPaginationOptions QueryPaginationOptions, productsFilters ProductsFilters) ([]Product, error) {
+	// TODO: sistema implementazione (come GetMenuProducts -> guarda i TODO lì)
+
+	// For added safety I don't use the sort parameter directly (even if there's validation)
+	sort := "ASC"
+	if queryPaginationOptions.Sort == "desc" {
+		sort = "DESC"
+	}
+
+	query := `
+		SELECT id, name, description, image_url, price, discount, version, created_at, updated_at
+		FROM products
+		ORDER BY name ` + sort + `
+		LIMIT $1 OFFSET $2
+	`
+
+	rows, err := store.db.QueryContext(
+		ctx,
+		query,
+		queryPaginationOptions.Limit,
+		queryPaginationOptions.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var products []Product
+
+	for rows.Next() {
+		var product Product
+
+		err := rows.Scan(
+			&product.ID,
+			&product.Name,
+			&product.Description,
+			&product.ImageURL,
+			&product.Price,
+			&product.Discount,
+			&product.Version,
+			&product.CreatedAt,
+			&product.UpdatedAt,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		products = append(products, product)
+	}
+
+	return products, nil
+}
+
 // ----- UPDATE -----
 
 func (store *PostgresProductStore) Update(ctx context.Context, product *Product) error {

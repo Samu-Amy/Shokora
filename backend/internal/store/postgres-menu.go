@@ -6,13 +6,15 @@ import (
 
 // ----- GET -----
 
-func (store *PostgresProductStore) GetMenuProducts(ctx context.Context, queryPaginationOptions QueryPaginationOptions) ([]Product, error) {
+func (store *PostgresProductStore) GetMenuProducts(ctx context.Context, queryPaginationOptions QueryPaginationOptions, menuFilters MenuFilters) ([]Product, error) {
 	// TODO: (forse si possono togliere i dati che non servono (version, update_at, ecc.)
 	// TODO: aggiungi dati con JOIN (badges, ingredients, ecc.) -> fai
 	// TODO: dividere/raggruppare per categoria (es. "menuSectionId"?) e come ordinarli (?)
-	sort := "ASC"
 
 	// TODO: aggiungi opzioni per scelta su quale parametro usare per sorting
+
+	// For added safety I don't use the sort parameter directly (even if there's validation)
+	sort := "ASC"
 	if queryPaginationOptions.Sort == "desc" {
 		sort = "DESC"
 	}

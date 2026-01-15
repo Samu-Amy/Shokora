@@ -21,7 +21,8 @@ type Product struct {
 type ProductRepository interface {
 	Create(context.Context, *Product) error
 	GetById(context.Context, int64) (*Product, error)
-	GetMenuProducts(context.Context, QueryPaginationOptions) ([]Product, error)
+	GetProducts(context.Context, QueryPaginationOptions, ProductsFilters) ([]Product, error)
+	GetMenuProducts(context.Context, QueryPaginationOptions, MenuFilters) ([]Product, error)
 	Update(context.Context, *Product) error
 	Delete(context.Context, int64) error
 }
