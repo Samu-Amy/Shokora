@@ -101,13 +101,15 @@ func (store *PostgresProductStore) GetProducts(ctx context.Context, queryPaginat
 	query := `
 		SELECT id, name, description, image_url, price, discount, version, created_at, updated_at
 		FROM products
+		WHERE (name ILIKE '%' || $1 || '%' OR description ILIKE '%' || $1 || '%')
 		ORDER BY name ` + sort + `
-		LIMIT $1 OFFSET $2
+		LIMIT $2 OFFSET $3
 	`
 
 	rows, err := store.db.QueryContext(
 		ctx,
 		query,
+		productsFilters.Search,
 		queryPaginationOptions.Limit,
 		queryPaginationOptions.Offset,
 	)
