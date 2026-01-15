@@ -10,12 +10,26 @@ func (store *PostgresProductStore) GetMenuProducts(ctx context.Context, queryPag
 	// TODO: (forse si possono togliere i dati che non servono (version, update_at, ecc.)
 	// TODO: aggiungi dati con JOIN (badges, ingredients, ecc.) -> fai
 	// TODO: dividere/raggruppare per categoria (es. "menuSectionId"?) e come ordinarli (?)
+	sort := "ASC"
+
+	// TODO: aggiungi opzioni per scelta su quale parametro usare per sorting
+	if queryPaginationOptions.Sort == "desc" {
+		sort = "DESC"
+	}
+
 	query := `
 		SELECT id, name, description, image_url, price, discount, version, created_at, updated_at
 		FROM products
+		ORDER BY name ` + sort + `
+		LIMIT $1 OFFSET $2
 	`
 
-	rows, err := store.db.QueryContext(ctx, query)
+	rows, err := store.db.QueryContext(
+		ctx,
+		query,
+		queryPaginationOptions.Limit,
+		queryPaginationOptions.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}
