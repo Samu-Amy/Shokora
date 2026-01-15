@@ -19,7 +19,7 @@ type CreateProductPayload struct {
 	Discount    float64 `json:"discount" validate:"gte=0,lte=1"`        // Default 0
 }
 
-func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
+func (app *App) createProductHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
@@ -60,18 +60,18 @@ func (app *App) CreateProduct(w http.ResponseWriter, r *http.Request) {
 
 // ----- GET -----
 
-func (app *App) GetProduct(w http.ResponseWriter, r *http.Request) {
+func (app *App) getProductHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get product id
 	productId, err := app.getIdFromParam(r, productIdParam)
 	if err != nil {
-		app.internalServerError(w, r, err)
+		app.badRequestError(w, r, err)
 		return
 	}
 
 	// Get product
-	product, err := app.getProduct(ctx, productId)
+	product, err := app.getProductById(ctx, productId)
 	if err != nil {
 		app.parseError(w, r, err)
 		return
@@ -94,18 +94,18 @@ type UpdateProductPayload struct {
 	Discount    *float64 `json:"discount,omitempty" validate:"omitempty,gte=0,lte=1"`
 }
 
-func (app *App) UpdateProduct(w http.ResponseWriter, r *http.Request) {
+func (app *App) updateProductHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get product id
 	productId, err := app.getIdFromParam(r, productIdParam)
 	if err != nil {
-		app.internalServerError(w, r, err)
+		app.badRequestError(w, r, err)
 		return
 	}
 
 	// Get product
-	product, err := app.getProduct(ctx, productId)
+	product, err := app.getProductById(ctx, productId)
 	if err != nil {
 		app.parseError(w, r, err)
 		return
@@ -160,13 +160,13 @@ func (app *App) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 // ----- DELETE -----
 
-func (app *App) DeleteProduct(w http.ResponseWriter, r *http.Request) {
+func (app *App) deleteProductHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get product id
 	productId, err := app.getIdFromParam(r, productIdParam)
 	if err != nil {
-		app.internalServerError(w, r, err)
+		app.badRequestError(w, r, err)
 		return
 	}
 
@@ -181,7 +181,7 @@ func (app *App) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 
 // ----- UTILS -----
 
-func (app *App) getProduct(ctx context.Context, productId int64) (*models.Product, error) {
+func (app *App) getProductById(ctx context.Context, productId int64) (*models.Product, error) {
 	product, err := app.store.Product.GetById(ctx, productId)
 	if err != nil {
 		return nil, err

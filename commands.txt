@@ -2,6 +2,10 @@ Run backend:
 - cd /backend/
   - "go run cmd/app/main.go"
 
+Run database seeding:
+- cd /backend/
+  - "go run cmd/migrate/main.go"
+
 
 Run frontend:
 - cd /frontend/

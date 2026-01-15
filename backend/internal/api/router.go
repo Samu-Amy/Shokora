@@ -57,14 +57,14 @@ func (app *App) initRouter() *chi.Mux {
 	router.Route("/api/v1", func(r chi.Router) {
 		// - Public Routes (commons) -
 
-		r.Get("/health", app.CheckHealth)
+		r.Get("/health", app.checkHealthHandler)
 
 		// Products
-		r.Get("/menu/products", app.GetMenuProducts)
+		r.Get("/menu/products", app.getMenuProductsHandler)
 		// r.Get("/shop/products", app.GetShopProducts)
 		// r.Get("/featured/products", app.GetFeaturedProducts) // quelli in "vetrina" sul sito
 
-		r.Get("/products/{productId}", app.GetProduct) // TODO: per ora prende da product invece che da menu (va bene?)
+		r.Get("/products/{productId}", app.getProductHandler) // TODO: per ora prende da product invece che da menu (va bene?)
 
 		// - Auth Routes -
 		r.Route("/auth", func(r chi.Router) {
@@ -92,13 +92,18 @@ func (app *App) initRouter() *chi.Mux {
 
 				// r.Get("/orders", ...)
 
+				// Users
+				r.Route("/users/{userId}", func(r chi.Router) {
+					r.Get("/", app.getUserHandler)
+				})
+
 				// Products
 				r.Route("/products", func(r chi.Router) {
-					r.Post("/", app.CreateProduct)
+					r.Post("/", app.createProductHandler)
 
 					r.Route("/{productId}", func(r chi.Router) {
-						r.Patch("/", app.UpdateProduct)
-						r.Delete("/", app.DeleteProduct)
+						r.Patch("/", app.updateProductHandler)
+						r.Delete("/", app.deleteProductHandler)
 					})
 				})
 			})

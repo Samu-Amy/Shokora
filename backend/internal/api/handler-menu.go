@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func (app *App) GetMenuProducts(w http.ResponseWriter, r *http.Request) {
+func (app *App) getMenuProductsHandler(w http.ResponseWriter, r *http.Request) {
 	data := map[string]string{
 		"status": "ok",
 	}
