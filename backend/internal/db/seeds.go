@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"math/rand"
@@ -100,20 +101,24 @@ var product_descriptions = []string{
 	"Succo ottenuto da frutta selezionata.",
 }
 
-func Seed(store store.Storage) {
+func Seed(store store.Storage, db *sql.DB) {
 	ctx := context.Background()
 
 	// TODO: aggiorna (per le tabelle aggiunte dopo)
 
 	// Users
-	// users := generateUsers(100)
+	users := generateUsers(100)
+	transaction, _ := db.BeginTx(ctx, nil)
 
-	// for _, user := range users {
-	// 	if err := store.User.Create(ctx, user); err != nil {
-	// 		log.Println("Error creating user: ", err)
-	// 		return
-	// 	}
-	// }
+	for _, user := range users {
+		if err := store.User.Create(ctx, transaction, user); err != nil {
+			_ = transaction.Rollback()
+			log.Println("Error creating user: ", err)
+			return
+		}
+	}
+
+	transaction.Commit()
 
 	// Products
 	products := generateProducts(40)
@@ -137,7 +142,6 @@ func generateUsers(num int) []*store.User {
 			FirstName: first_name,
 			LastName:  last_name,
 			Email:     fmt.Sprintf("%s@%s.%s", first_name, email_suffix[i%len(email_suffix)], email_domain[i%len(email_domain)]),
-			// Password:  "Psw&1234", // TODO: sistema
 		}
 	}
 

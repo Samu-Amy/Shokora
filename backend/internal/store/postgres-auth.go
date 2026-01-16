@@ -3,12 +3,13 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 )
 
 // - CREATE -
 
-func (store *PostgresUserStore) CreateAndSendVerification(ctx context.Context, user *User, token string, verificationExp time.Duration) error {
+func (store *PostgresUserStore) CreateUserAndSendVerification(ctx context.Context, user *User, hashedToken string, verificationExp time.Duration) error {
 	// Transaction wrapper
 	return withTransaction(store.db, ctx, func(transaction *sql.Tx) error {
 		// Create user
@@ -17,7 +18,7 @@ func (store *PostgresUserStore) CreateAndSendVerification(ctx context.Context, u
 		}
 
 		// Create verification
-		if err := store.createUserVerification(ctx, transaction, token, verificationExp, user.ID); err != nil {
+		if err := store.createEmailVerification(ctx, transaction, hashedToken, verificationExp, user.ID); err != nil {
 			return err
 		}
 
@@ -25,9 +26,9 @@ func (store *PostgresUserStore) CreateAndSendVerification(ctx context.Context, u
 	})
 }
 
-func (store *PostgresUserStore) createUserVerification(ctx context.Context, transaction *sql.Tx, token string, verificationExp time.Duration, userId int64) error {
+func (store *PostgresUserStore) createEmailVerification(ctx context.Context, transaction *sql.Tx, hashedToken string, verificationExp time.Duration, userId int64) error {
 	query := `
-		INSERT INTO user_verification_tokens (token, user_id, expiry)
+		INSERT INTO email_verification_tokens (token, user_id, expiry)
 		VALUES ($1, $2, $3)
 	`
 
@@ -37,12 +38,109 @@ func (store *PostgresUserStore) createUserVerification(ctx context.Context, tran
 	_, err := transaction.ExecContext(
 		ctx,
 		query,
-		token,
+		hashedToken,
 		userId,
 		time.Now().Add(verificationExp),
 	)
 
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// - VERIFY EMAIL -
+
+func (store *PostgresUserStore) VerifyEmail(ctx context.Context, plainToken string) error {
+	return withTransaction(store.db, ctx, func(transaction *sql.Tx) error {
+		// Find user related to the token
+		user, err := store.getUserFromEmailVerificationToken(ctx, transaction, plainToken)
+		if err != nil {
+			return err
+		}
+
+		// Update user (email verified)
+		user.IsVerified = true
+		if err := store.setUserIsVerified(ctx, transaction, user.ID); err != nil {
+			return err
+		}
+
+		// Clean email verification token
+		if err := store.deleteEmailVerificationToken(ctx, transaction, user.ID); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (store *PostgresUserStore) getUserFromEmailVerificationToken(ctx context.Context, transaction *sql.Tx, plainToken string) (*User, error) {
+	query := `
+	SELECT u.id, u.first_name, u.last_name, u.email, u.is_verified, u.created_at, u.updated_at
+	FROM users u
+	JOIN email_verification_tokens e ON u.id = e.user_id
+	WHERE e.token = $1 AND e.expiry > $2
+	`
+	// TODO: nel caso sia scaduto (bisogna fare un controllo separato ed eliminare sia token che user - mandare un errore ErrExpired)?
+
+	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
+	user := &User{}
+
+	err := transaction.QueryRowContext(
+		ctx,
+		query,
+		HashToken(plainToken),
+		time.Now(),
+	).Scan(
+		&user.ID,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+		&user.IsVerified,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return user, nil
+}
+
+func (store *PostgresUserStore) setUserIsVerified(ctx context.Context, transaction *sql.Tx, userId int64) error {
+	query := `
+		UPDATE users
+		SET is_verified = true
+		WHERE id = $1
+	`
+
+	_, err := transaction.ExecContext(ctx, query, userId)
+	if err != nil {
+		// TODO: migliorare error handling (?)
+		return err
+	}
+
+	return nil
+}
+
+func (store *PostgresUserStore) deleteEmailVerificationToken(ctx context.Context, transaction *sql.Tx, userId int64) error {
+	query := `
+		DELETE FROM email_verification_tokens
+		WHERE user_id = $1
+	`
+
+	_, err := transaction.ExecContext(ctx, query, userId)
+	if err != nil {
+		// TODO: migliorare error handling (?)
 		return err
 	}
 

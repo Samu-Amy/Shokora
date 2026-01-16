@@ -1,9 +1,11 @@
 package api
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/Samu-Amy/Shokora/internal/store"
+	"github.com/go-chi/chi/v5"
 )
 
 // - REGISTER -
@@ -41,16 +43,18 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		Email:     payload.Email,
 	}
 
-	// Hash password
+	// Hash and set password
 	if err := user.Password.Set(payload.Password); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
 	// Generate Token
+	hashedToken, plainToken := app.generateHashedToken()
+	log.Printf("plain token: %s", plainToken) // TODO: togli
 
 	// Create product
-	if err := app.store.User.CreateAndSendVerification(ctx, user, "token-123", app.config.Mail.EmailVerificationTokenExp); err != nil {
+	if err := app.store.User.CreateUserAndSendVerification(ctx, user, hashedToken, app.config.Mail.EmailVerificationTokenExp); err != nil {
 		app.parseError(w, r, err)
 		return
 	}
@@ -60,4 +64,19 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		app.internalServerError(w, r, err)
 		return
 	}
+}
+
+// - EMAIL VERIFICATION -
+
+func (app *App) verifyEmailHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	token := chi.URLParam(r, "token")
+
+	if err := app.store.User.VerifyEmail(ctx, token); err != nil {
+		app.parseError(w, r, err)
+		return
+	}
+
+	//* No content
+	w.WriteHeader(http.StatusNoContent)
 }

@@ -68,7 +68,8 @@ func (app *App) initRouter() *chi.Mux {
 
 		// - Auth Routes -
 		r.Route("/auth", func(r chi.Router) {
-			r.Post("/", app.registerUserHandler)
+			r.Post("/user", app.registerUserHandler)
+			r.Post("/verify-email/{token}", app.verifyEmailHandler)
 			// r.Post("/login", ...)
 			// r.Post("/refresh", ...)
 			// r.Post("/reset-password", ...)
@@ -94,8 +95,12 @@ func (app *App) initRouter() *chi.Mux {
 				// r.Get("/orders", ...)
 
 				// Users
-				r.Route("/users/{userId}", func(r chi.Router) {
-					r.Get("/", app.getUserHandler)
+				r.Route("/users", func(r chi.Router) {
+					// r.Get("/", app.getUsersHandler) // Get list of users
+
+					r.Route("/{userId}", func(r chi.Router) {
+						r.Get("/", app.getUserHandler)
+					})
 				})
 
 				// TODO: usare middleware per i permessi (employyes non possono modificare questi dati se non hanno i permessi)

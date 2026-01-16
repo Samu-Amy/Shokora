@@ -1,6 +1,8 @@
 package store
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"net/http"
 	"strconv"
@@ -14,6 +16,7 @@ var (
 	ErrNotFound         = errors.New("not found")
 	ErrVersionConlflict = errors.New("version conflict")
 	ErrDuplicateEmail   = errors.New("duplicate email")
+	ErrExpired          = errors.New("expired")
 )
 
 // - Timeouts -
@@ -21,6 +24,12 @@ var (
 var (
 	medium_query_timeout = 8 * time.Second
 )
+
+// - Hashing -
+func HashToken(plainToken string) string {
+	hash := sha256.Sum256([]byte(plainToken))
+	return hex.EncodeToString(hash[:])
+}
 
 // - Pagination -
 

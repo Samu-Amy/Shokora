@@ -9,13 +9,14 @@ import (
 )
 
 type User struct {
-	ID        int64    `json:"id"`
-	FirstName string   `json:"first_name"`
-	LastName  string   `json:"last_name"`
-	Email     string   `json:"email"`
-	Password  password `json:"-"`
-	CreatedAt string   `json:"created_at"`
-	UpdatedAt string   `json:"updated_at"`
+	ID         int64    `json:"id"`
+	FirstName  string   `json:"first_name"`
+	LastName   string   `json:"last_name"`
+	Email      string   `json:"email"`
+	Password   password `json:"-"`
+	IsVerified bool     `json:"is_verified"`
+	CreatedAt  string   `json:"created_at"`
+	UpdatedAt  string   `json:"updated_at"`
 }
 
 type password struct {
@@ -36,8 +37,17 @@ func (p *password) Set(text string) error {
 }
 
 type UserRepository interface {
-	Create(context.Context, *sql.Tx, *User) error // just for seeding (?)
-	CreateAndSendVerification(context.Context, *User, string, time.Duration) error
-	createUserVerification(context.Context, *sql.Tx, string, time.Duration, int64) error
+	// Auth main
+	CreateUserAndSendVerification(context.Context, *User, string, time.Duration) error
+	VerifyEmail(context.Context, string) error
+
+	// Auth utils
+	createEmailVerification(context.Context, *sql.Tx, string, time.Duration, int64) error
+	getUserFromEmailVerificationToken(context.Context, *sql.Tx, string) (*User, error)
+	setUserIsVerified(context.Context, *sql.Tx, int64) error
+	deleteEmailVerificationToken(context.Context, *sql.Tx, int64) error
+
+	// Users
+	Create(context.Context, *sql.Tx, *User) error
 	GetById(context.Context, int64) (*User, error)
 }
