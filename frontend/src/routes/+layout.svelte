@@ -9,6 +9,7 @@
   // TODO: usa Tanstack Query (?) e una libreria per la validazione degli input
   // TODO: come evitare che qualcuno senza autorizaazione possa accedere all'admin panel (alle pagine del pannello (non possono in ogni caso ottenere o modificare i dati dal backend, ma devono essere reindirizzati alle pagine accessibili (fetch on mount -> backend invia una richiesta di redirect (?))))
   // TODO: update dati db -> attenzione a null/undefined vs "" -> la prima significa che non si modificano, la seconda che si cancella il contenuto
+  // TODO: aggiungi debounce (per evitare di creare cose più volte, inviare troppe email, ecc.)
 </script>
 
 <svelte:head>

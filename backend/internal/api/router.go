@@ -68,6 +68,7 @@ func (app *App) initRouter() *chi.Mux {
 
 		// - Auth Routes -
 		r.Route("/auth", func(r chi.Router) {
+			r.Post("/", app.registerUserHandler)
 			// r.Post("/login", ...)
 			// r.Post("/refresh", ...)
 			// r.Post("/reset-password", ...)
@@ -97,8 +98,10 @@ func (app *App) initRouter() *chi.Mux {
 					r.Get("/", app.getUserHandler)
 				})
 
-				// TODO: spostare gestione prodotti in admin (employyes non possono modificare questi dati)
+				// TODO: usare middleware per i permessi (employyes non possono modificare questi dati se non hanno i permessi)
 				// Products
+				// r.Group(func(r chi.Router) {
+				// r.Use(ProductsManagementAuthorization) // middleware per gestione permessi
 				r.Route("/products", func(r chi.Router) {
 					r.Post("/", app.createProductHandler)
 
@@ -107,6 +110,7 @@ func (app *App) initRouter() *chi.Mux {
 						r.Delete("/", app.deleteProductHandler)
 					})
 				})
+				// })
 			})
 
 			// - Admin Routes -
@@ -114,6 +118,7 @@ func (app *App) initRouter() *chi.Mux {
 				// r.Use(AdminMiddleware)
 
 				// r.Get("/users", ...)
+				// r.Patch("/users/{userId}", ...) // gestione users (ruoli e permessi)
 			})
 		})
 	})

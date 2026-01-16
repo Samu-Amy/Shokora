@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users(
   last_name varchar(125) NOT NULL,
   email citext UNIQUE NOT NULL,
   password bytea NOT NULL,
+  -- is_verified BOOLEAN NOT NULL DEFAULT FALSE; -- TODO: attiva questo campo (per ora migration alter)
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW()
 );

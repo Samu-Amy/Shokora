@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/Samu-Amy/Shokora/internal/api"
 	"github.com/Samu-Amy/Shokora/internal/db"
 	"github.com/Samu-Amy/Shokora/internal/env"
 	"github.com/Samu-Amy/Shokora/internal/store"
+	"go.uber.org/zap"
 )
 
 // TODO: JWT in HTTP only cookies (no in local storage per evitare XSS) -> attenzione a CSRF (cross origin requests)
@@ -33,6 +33,10 @@ func main() {
 		// Env: env.GetString("ENV", "development"),
 	}
 
+	// - Logger -
+	logger := zap.Must(zap.NewProduction()).Sugar()
+	defer logger.Sync()
+
 	// - DB Connection -
 	db, err := db.New(
 		config.Db.Addr,
@@ -43,21 +47,21 @@ func main() {
 	)
 
 	if err != nil {
-		log.Panic(err)
+		logger.Fatal(err)
 	}
 
 	defer db.Close()
-	log.Println("DB Connected")
+	logger.Info("DB Connected")
 
 	// - Store -
 	store := store.NewPostgresStorage(db)
 
 	// - App -
-	app := api.NewApp(config, &store)
+	app := api.NewApp(config, &store, logger)
 
 	err = app.Run()
 
 	if err != nil {
-		log.Println(err) // TODO: sistema
+		logger.Error(err) // TODO: sistema
 	}
 }

@@ -1,12 +1,12 @@
 package api
 
 import (
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 )
 
 // - Structs -
@@ -14,6 +14,7 @@ type App struct {
 	config Config
 	router *chi.Mux
 	store  *store.Storage
+	logger *zap.SugaredLogger
 }
 
 type Config struct {
@@ -30,10 +31,11 @@ type DbConfig struct {
 }
 
 // - Functions/Methods -
-func NewApp(config Config, store *store.Storage) *App {
+func NewApp(config Config, store *store.Storage, logger *zap.SugaredLogger) *App {
 	app := &App{
 		config: config,
 		store:  store,
+		logger: logger,
 	}
 	app.router = app.initRouter()
 
@@ -49,6 +51,6 @@ func (app *App) Run() error {
 		IdleTimeout:  time.Minute,
 	}
 
-	log.Printf("Server started, listening on localhost%s", app.config.Addr)
+	app.logger.Infow("Server started", "addr", app.config.Addr)
 	return server.ListenAndServe()
 }
