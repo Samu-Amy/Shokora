@@ -106,14 +106,14 @@ func Seed(store store.Storage) {
 	// TODO: aggiorna (per le tabelle aggiunte dopo)
 
 	// Users
-	users := generateUsers(100)
+	// users := generateUsers(100)
 
-	for _, user := range users {
-		if err := store.User.Create(ctx, user); err != nil {
-			log.Println("Error creating user: ", err)
-			return
-		}
-	}
+	// for _, user := range users {
+	// 	if err := store.User.Create(ctx, user); err != nil {
+	// 		log.Println("Error creating user: ", err)
+	// 		return
+	// 	}
+	// }
 
 	// Products
 	products := generateProducts(40)
@@ -137,7 +137,7 @@ func generateUsers(num int) []*store.User {
 			FirstName: first_name,
 			LastName:  last_name,
 			Email:     fmt.Sprintf("%s@%s.%s", first_name, email_suffix[i%len(email_suffix)], email_domain[i%len(email_domain)]),
-			Password:  "Psw&1234",
+			// Password:  "Psw&1234", // TODO: sistema
 		}
 	}
 

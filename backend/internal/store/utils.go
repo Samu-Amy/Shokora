@@ -11,8 +11,9 @@ import (
 // - Errors -
 
 var (
-	ErrNotFound         = errors.New("resource not found")
+	ErrNotFound         = errors.New("not found")
 	ErrVersionConlflict = errors.New("version conflict")
+	ErrDuplicateEmail   = errors.New("duplicate email")
 )
 
 // - Timeouts -

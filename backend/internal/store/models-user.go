@@ -2,6 +2,8 @@ package store
 
 import (
 	"context"
+	"database/sql"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -34,7 +36,8 @@ func (p *password) Set(text string) error {
 }
 
 type UserRepository interface {
-	Create(context.Context, *User) error // just for seeding (?)
-	CreateAndSendVerification(context.Context, *User, string) error
+	Create(context.Context, *sql.Tx, *User) error // just for seeding (?)
+	CreateAndSendVerification(context.Context, *User, string, time.Duration) error
+	createUserVerification(context.Context, *sql.Tx, string, time.Duration, int64) error
 	GetById(context.Context, int64) (*User, error)
 }

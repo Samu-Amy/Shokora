@@ -2,7 +2,8 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS user_verification_tokens(
   token bytea PRIMARY KEY,
-  user_id bigint NOT NULL
+  user_id bigint NOT NULL,
+  -- expiry TIMESTAMP(0) with time zone NOT NULL -- TODO: attiva
 );
 -- +goose StatementEnd
 

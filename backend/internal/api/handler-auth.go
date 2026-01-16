@@ -47,8 +47,10 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Generate Token
+
 	// Create product
-	if err := app.store.User.Create(ctx, user); err != nil {
+	if err := app.store.User.CreateAndSendVerification(ctx, user, "token-123", app.config.Mail.EmailVerificationTokenExp); err != nil {
 		app.parseError(w, r, err)
 		return
 	}

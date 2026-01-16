@@ -20,6 +20,7 @@ type App struct {
 type Config struct {
 	Addr string
 	Db   DbConfig
+	Mail MailConfig
 	// Env  string
 }
 
@@ -28,6 +29,11 @@ type DbConfig struct {
 	MaxOpenConns int
 	MaxIdleConns int
 	MaxIdleTime  string
+}
+
+type MailConfig struct {
+	EmailVerificationTokenExp time.Duration
+	PasswordResetTokenExp     time.Duration
 }
 
 // - Functions/Methods -

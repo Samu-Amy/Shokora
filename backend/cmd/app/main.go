@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api"
 	"github.com/Samu-Amy/Shokora/internal/db"
@@ -31,6 +32,10 @@ func main() {
 			MaxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
 		// Env: env.GetString("ENV", "development"),
+		Mail: api.MailConfig{
+			EmailVerificationTokenExp: 24 * time.Hour,
+			PasswordResetTokenExp:     30 * time.Minute,
+		},
 	}
 
 	// - Logger -

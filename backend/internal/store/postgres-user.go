@@ -18,7 +18,7 @@ func NewPostgresUserStore(db *sql.DB) *PostgresUserStore {
 
 // ----- CREATE -----
 
-func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
+func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx, user *User) error {
 	query := `
 		INSERT INTO users (first_name, last_name, email, password)
 		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at
@@ -27,13 +27,13 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	err := store.db.QueryRowContext(
+	err := transaction.QueryRowContext(
 		ctx,
 		query,
 		user.FirstName,
 		user.LastName,
 		user.Email,
-		user.Password,
+		user.Password.hash,
 	).Scan(
 		&user.ID,
 		&user.CreatedAt,
@@ -41,7 +41,13 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 	)
 
 	if err != nil {
-		return err
+		// TODO: sistema (verificare che l'errore sia quello e magari fare un partial equal)
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "idx_users_email"`:
+			return ErrDuplicateEmail
+		default:
+			return err
+		}
 	}
 
 	return nil
