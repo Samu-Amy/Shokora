@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 )
 
 type PostgresUserStore struct {
@@ -41,9 +42,9 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 	)
 
 	if err != nil {
-		// TODO: sistema (verificare che l'errore sia quello e magari fare un partial equal)
+		// TODO: sistema (?)
 		switch {
-		case err.Error() == `pq: duplicate key value violates unique constraint "idx_users_email"`:
+		case strings.Contains(err.Error(), "email_key"):
 			return ErrDuplicateEmail
 		default:
 			return err

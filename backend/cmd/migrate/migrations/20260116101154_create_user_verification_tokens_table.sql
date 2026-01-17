@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens(
   user_id bigint NOT NULL,
   expiry TIMESTAMP(0) with time zone NOT NULL
 );
+
+-- TODO: setta user_id come foreign key (?) e metti che lo row del token viene eliminata se si elimina l'utente
 -- +goose StatementEnd
 
 -- +goose Down
