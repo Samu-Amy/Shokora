@@ -1,9 +1,10 @@
 package api
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 
+	"github.com/Samu-Amy/Shokora/internal/mailer"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
 )
@@ -51,11 +52,36 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate Token
 	hashedToken, plainToken := app.generateHashedToken()
-	log.Printf("plain token: %s", plainToken) // TODO: togli
 
-	// Create product
+	// Create User
 	if err := app.store.User.CreateUserAndSendVerification(ctx, user, hashedToken, app.config.Mail.EmailVerificationTokenExp); err != nil {
 		app.parseError(w, r, err)
+		return
+	}
+
+	activationURL := fmt.Sprintf("%s/verify-email/%s", app.config.FrontEndURL, plainToken)
+
+	vars := struct {
+		Name          string
+		ActivationURL string
+	}{
+		Name:          user.FirstName,
+		ActivationURL: activationURL,
+	}
+
+	isProdEnv := app.config.Env == "prod"
+
+	// Send email
+	err := app.mailer.Send(mailer.UserWelcomeTemplate, user.FirstName, user.Email, vars, !isProdEnv)
+	if err != nil {
+		app.logger.Errorw("error sending welcome email", "error", err)
+
+		// Rollback user creation
+		if err := app.store.User.DeleteUserAndEmailVerificationToken(ctx, user.ID); err != nil {
+			app.logger.Errorw("error deleting user", "error", err)
+		}
+
+		app.internalServerError(w, r, err)
 		return
 	}
 

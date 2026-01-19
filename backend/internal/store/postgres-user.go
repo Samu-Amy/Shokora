@@ -15,7 +15,7 @@ func NewPostgresUserStore(db *sql.DB) *PostgresUserStore {
 	return &PostgresUserStore{db: db}
 }
 
-// TODO: add version (for update check)
+// TODO: aggiungi version a user (for update check)
 
 // ----- CREATE -----
 
@@ -95,4 +95,19 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 	return &user, nil
 }
 
-// TODO: aggiungi eliminazione account (come gestire l'id che rimane referenziato?)
+// ----- DELETE -----
+
+// TODO: come gestire l'id che rimane referenziato?
+func (store *PostgresUserStore) Delete(ctx context.Context, transaction *sql.Tx, userId int64) error {
+	query := `DELETE FROM users WHERE id = $1`
+
+	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
+	_, err := transaction.ExecContext(ctx, query, userId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

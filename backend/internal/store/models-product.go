@@ -18,6 +18,7 @@ type Product struct {
 	UpdatedAt string  `json:"updated_at"`
 }
 
+// TODO: aggiungi nomi parametri/argomenti nei metodi di tutte le interfacce
 type ProductRepository interface {
 	Create(context.Context, *Product) error
 	GetById(context.Context, int64) (*Product, error)

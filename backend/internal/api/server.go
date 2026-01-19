@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Samu-Amy/Shokora/internal/mailer"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
@@ -15,13 +16,15 @@ type App struct {
 	router *chi.Mux
 	store  *store.Storage
 	logger *zap.SugaredLogger
+	mailer mailer.Client
 }
 
 type Config struct {
-	Addr string
-	Db   DbConfig
-	Mail MailConfig
-	// Env  string
+	Addr        string
+	Env         string // "env" | "prod"
+	FrontEndURL string
+	Db          DbConfig
+	Mail        MailConfig
 }
 
 type DbConfig struct {
@@ -32,16 +35,23 @@ type DbConfig struct {
 }
 
 type MailConfig struct {
+	SendGrid                  SendGridConfig
+	FromEmail                 string
 	EmailVerificationTokenExp time.Duration
 	PasswordResetTokenExp     time.Duration
 }
 
+type SendGridConfig struct {
+	ApiKey string
+}
+
 // - Functions/Methods -
-func NewApp(config Config, store *store.Storage, logger *zap.SugaredLogger) *App {
+func NewApp(config Config, store *store.Storage, logger *zap.SugaredLogger, mailer mailer.Client) *App {
 	app := &App{
 		config: config,
 		store:  store,
 		logger: logger,
+		mailer: mailer,
 	}
 	app.router = app.initRouter()
 

@@ -47,3 +47,9 @@ DB strings formats:
 In this case:
 - "postgresql://<user>:<password>@localhost:<port>/<db_name>?sslmode=<sll_mode (disable)>"
 - "host=localhost port=<port> user=<user> password=<password> dbname=<db_name> sslmode=<ssl_mode>"
+
+
+
+https://devhints.io/docker-compose
+https://devhints.io/postgresql
+https://devhints.io/go

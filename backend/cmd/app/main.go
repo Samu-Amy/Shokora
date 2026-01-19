@@ -7,6 +7,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api"
 	"github.com/Samu-Amy/Shokora/internal/db"
 	"github.com/Samu-Amy/Shokora/internal/env"
+	"github.com/Samu-Amy/Shokora/internal/mailer"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"go.uber.org/zap"
 )
@@ -22,7 +23,9 @@ func main() {
 
 	// - App and DB Config -
 	config := api.Config{
-		Addr: env.GetString("SERVER_PORT", ":8080"),
+		Addr:        env.GetString("SERVER_PORT", ":8080"),
+		Env:         env.GetString("ENV", "dev"),
+		FrontEndURL: env.GetString("FRONTEND_URL", "http://localhost:3000"),
 		Db: api.DbConfig{
 			// Addr: fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=%s", env.GetString("POSTGRES_USER", "user"), env.GetString("POSTGRES_PASSWORD", "password"), env.GetString("POSTGRES_DB", "db"), env.GetString("POSTGRES_PORT", "5432"), env.GetString("POSTGRES_SSL_MODE", "disable")),
 			// TODO: attivare modalità ssl (?)
@@ -31,8 +34,11 @@ func main() {
 			MaxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			MaxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
-		// Env: env.GetString("ENV", "development"),
 		Mail: api.MailConfig{
+			SendGrid: api.SendGridConfig{
+				ApiKey: env.GetString("SENDGRID_API_KEY", ""),
+			},
+			FromEmail:                 env.GetString("FROM_EMAIL", ""),
 			EmailVerificationTokenExp: 24 * time.Hour,
 			PasswordResetTokenExp:     30 * time.Minute,
 		},
@@ -61,8 +67,11 @@ func main() {
 	// - Store -
 	store := store.NewPostgresStorage(db)
 
+	// - Mailer -
+	mailer := mailer.NewSendGrid(config.Mail.SendGrid.ApiKey, config.Mail.FromEmail) // TODO: sostituire SendGrid (con Resend?)
+
 	// - App -
-	app := api.NewApp(config, &store, logger)
+	app := api.NewApp(config, &store, logger, mailer)
 
 	err = app.Run()
 

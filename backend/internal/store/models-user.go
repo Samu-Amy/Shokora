@@ -40,6 +40,7 @@ type UserRepository interface {
 	// Auth main
 	CreateUserAndSendVerification(context.Context, *User, string, time.Duration) error
 	VerifyEmail(context.Context, string) error
+	DeleteUserAndEmailVerificationToken(context.Context, int64) error
 
 	// Auth utils
 	createEmailVerification(context.Context, *sql.Tx, string, time.Duration, int64) error
@@ -50,4 +51,5 @@ type UserRepository interface {
 	// Users
 	Create(context.Context, *sql.Tx, *User) error
 	GetById(context.Context, int64) (*User, error)
+	Delete(context.Context, *sql.Tx, int64) error
 }

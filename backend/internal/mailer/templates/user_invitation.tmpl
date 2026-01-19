@@ -1,0 +1,22 @@
+{{define "subject"}}Finish Registration with Shokora{{end}}
+
+{{define "Body"}}
+<!doctype html>
+  <head>
+    <meta name="viewport" content="width=device-width"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  </head>
+  <body>
+    <p>Ciao {{.Name}},</p>
+    <p>Grazie per la registrazione...</p>
+    <p>Prima di poter ordinare online ? devi confermare il tuo indirizzo email. Clicca sul link per verificarlo.</p>
+    <p><a href="{{.ActivationURL}}">{{.ActivationURL}}</a></p>
+    <p>Se vuoi verificare manualmente il tuo indirizzo email, ...</p>
+    <p>Se non hai eseguito l'accesso a Shokora, puoi ignorare questa email.</p>
+
+    <p>Grazie,</p>
+    <p>il team di Shokora</p>
+  </body>
+</html>
+
+{{end}}

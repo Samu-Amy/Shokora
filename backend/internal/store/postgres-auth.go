@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// - CREATE -
+// ----- CREATE USER -----
 
 func (store *PostgresUserStore) CreateUserAndSendVerification(ctx context.Context, user *User, hashedToken string, verificationExp time.Duration) error {
 	// Transaction wrapper
@@ -50,7 +50,7 @@ func (store *PostgresUserStore) createEmailVerification(ctx context.Context, tra
 	return nil
 }
 
-// - VERIFY EMAIL -
+// ----- VERIFY EMAIL  -----
 
 func (store *PostgresUserStore) VerifyEmail(ctx context.Context, plainToken string) error {
 	return withTransaction(store.db, ctx, func(transaction *sql.Tx) error {
@@ -74,6 +74,29 @@ func (store *PostgresUserStore) VerifyEmail(ctx context.Context, plainToken stri
 		return nil
 	})
 }
+
+func (store *PostgresUserStore) ResendEmailVerificationEmail(ctx context.Context, email string) error {
+	// TODO: implementa re-invio email con token
+	return nil
+}
+
+// ----- DELETE -----
+
+func (store *PostgresUserStore) DeleteUserAndEmailVerificationToken(ctx context.Context, userId int64) error {
+	return withTransaction(store.db, ctx, func(transaction *sql.Tx) error {
+		if err := store.Delete(ctx, transaction, userId); err != nil {
+			return err
+		}
+
+		if err := store.deleteEmailVerificationToken(ctx, transaction, userId); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+// ----- PRIVATES -----
 
 func (store *PostgresUserStore) getUserFromEmailVerificationToken(ctx context.Context, transaction *sql.Tx, plainToken string) (*User, error) {
 	query := `
