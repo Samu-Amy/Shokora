@@ -69,7 +69,7 @@ func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile, name, e
 
 		response, err := mailer.client.Emails.SendWithOptions(ctx, params, options)
 		if err != nil {
-			log.Printf("Failer to send email to %v, attempt %d od %d", email, i+1, MaxRetries)
+			log.Printf("Failed to send email to %v, attempt %d of %d", email, i+1, MaxRetries)
 			log.Printf("Error: %v", err.Error())
 
 			// Exponential backoff
