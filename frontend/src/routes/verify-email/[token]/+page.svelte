@@ -3,13 +3,18 @@
 	import type { PageData } from "./$types";
 	import type { FetchStatus } from "$lib/types";
 
-  let { token }: PageData = $props();
+  let { data }: {data: PageData} = $props();
 
   let status = $state<FetchStatus>("loading");
 
   onMount(async () => {
     try {
-      const res = await fetch(`/api/v1/auth/verify-email/${token}`);
+      const res = await fetch(
+        `/api/v1/auth/verify-email/${data.token}`,
+        {
+          method: "POST",
+        }
+      );
       
       console.log(res); // TODO: togli
       
@@ -17,6 +22,8 @@
       if (!res.ok) {
         status = "error";
       }
+
+      // TODO: fai redirect con messaggio di successo (?)
       
       status = "success";
     } catch (err) {

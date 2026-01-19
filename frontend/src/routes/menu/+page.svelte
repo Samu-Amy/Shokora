@@ -8,21 +8,25 @@
   // TODO: usare load in +page.ts invece che onMount qua (?)
   onMount(async () => {
     try {
-      const res = await fetch("/api/v1/menu/products/12", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json"
+      const res = await fetch(
+        "/api/v1/products/12",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          }
         }
-      });
+      );
   
-      if (!res.ok) {
+      if (!res.ok) { //TODO: leggeva 405 come ok (non va bene)
         const text = await res.text
         console.log(`Error: ${res.status}, ${text}`);
         status = "error";
       }
-  
+
+      
       let product = await res.json();
-      productId = product.product;
+      productId = product.data.id;
       status = "success";
     } catch (err) {
       // TODO: gestisci (?)
