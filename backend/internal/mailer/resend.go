@@ -1,8 +1,19 @@
 package mailer
 
-import "github.com/resend/resend-go/v2"
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"html/template"
+	"log"
+	"time"
 
-// TODO: aggiungi dominio a Resend (sulla dashboard)
+	"github.com/google/uuid"
+	"github.com/resend/resend-go/v2"
+)
+
+// TODO: aggiungi dominio (e setta SMTP port per SSL/TLS) a Resend (sulla dashboard)
+// TODO: aggiungi unsubscribe per email marketing
 
 type ResendMailer struct {
 	apiKey    string
@@ -18,19 +29,57 @@ func NewResendMailer(apiKey, fromEmail string) *ResendMailer {
 	}
 }
 
-func (mailer *ResendMailer) Send(templateFile, name, email string, data any, isSandbox bool) error {
-	params := &resend.SendEmailRequest{
-		From:    mailer.fromEmail,
-		To:      []string{email},
-		Subject: "Test",
-		Html:    "<h2>Siamo felici di averti qui</h2><p>Per verificare il tuo indirizzo email clicca sul link qua sotto.</p>",
-	}
+func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile, name, email string, data any, isSandbox bool) error {
 
-	// TODO: Retry?
-	_, err := mailer.client.Emails.Send(params)
+	// Template parsing
+	tmpl, err := template.ParseFS(FS, "templates/"+templateFile)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	// Get subject from template
+	subject := new(bytes.Buffer)
+	err = tmpl.ExecuteTemplate(subject, "subject", data)
+	if err != nil {
+		return err
+	}
+
+	// Get body from template
+	body := new(bytes.Buffer)
+	err = tmpl.ExecuteTemplate(subject, "subject", data)
+	if err != nil {
+		return err
+	}
+
+	params := &resend.SendEmailRequest{
+		From:    mailer.fromEmail,
+		To:      []string{email},
+		Subject: subject.String(),
+		Html:    body.String(),
+	}
+
+	verificationId := uuid.New().String()
+
+	options := &resend.SendEmailOptions{
+		IdempotencyKey: "verify-email/" + verificationId,
+	}
+
+	// Send email (with retries)
+	for i := 0; i < MaxRetries; i++ {
+
+		response, err := mailer.client.Emails.SendWithOptions(ctx, params, options)
+		if err != nil {
+			log.Printf("Failer to send email to %v, attempt %d od %d", email, i+1, MaxRetries)
+			log.Printf("Error: %v", err.Error())
+
+			// Exponential backoff
+			time.Sleep(time.Second * time.Duration(i+1))
+			continue
+		}
+
+		log.Printf("Email sent with id %v", response.Id)
+		return nil
+	}
+
+	return fmt.Errorf("failed to send email after %d attempts", MaxRetries)
 }

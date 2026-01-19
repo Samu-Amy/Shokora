@@ -34,7 +34,7 @@ func (store *PostgresProductStore) Create(ctx context.Context, product *Product)
 		product.Price,
 		product.Discount,
 	).Scan(
-		&product.ID,
+		&product.Id,
 		&product.CreatedAt,
 		&product.UpdatedAt,
 	)
@@ -66,7 +66,7 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 		query,
 		productId,
 	).Scan(
-		&product.ID,
+		&product.Id,
 		&product.Name,
 		&product.Description,
 		&product.ImageURL,
@@ -125,7 +125,7 @@ func (store *PostgresProductStore) GetProducts(ctx context.Context, queryPaginat
 		var product Product
 
 		err := rows.Scan(
-			&product.ID,
+			&product.Id,
 			&product.Name,
 			&product.Description,
 			&product.ImageURL,
@@ -169,7 +169,7 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *Product)
 		product.ImageURL,
 		product.Price,
 		product.Discount,
-		product.ID,
+		product.Id,
 		product.Version,
 	).Scan(
 		&product.Version,

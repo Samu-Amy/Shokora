@@ -72,18 +72,20 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	isProdEnv := app.config.Env == "prod"
 
 	// Send email
-	err := app.mailer.Send(mailer.UserWelcomeTemplate, user.FirstName, user.Email, vars, !isProdEnv)
+	err := app.mailer.SendEmail(ctx, mailer.EmailVerificationTemplate, user.FirstName, user.Email, vars, !isProdEnv)
 	if err != nil {
 		app.logger.Errorw("error sending welcome email", "error", err)
 
 		// Rollback user creation
-		if err := app.store.User.DeleteUserAndEmailVerificationToken(ctx, user.ID); err != nil {
+		if err := app.store.User.DeleteUserAndEmailVerificationToken(ctx, user.Id); err != nil {
 			app.logger.Errorw("error deleting user", "error", err)
 		}
 
-		app.internalServerError(w, r, err)
+		app.internalServerError(w, r, err) // TODO: evitare di eliminare user e token e dire di riprovare più tardi (?)
 		return
 	}
+
+	// TODO: ricorda di controllare nello spam
 
 	//* Return user
 	if err := app.jsonResponse(w, http.StatusCreated, user); err != nil {

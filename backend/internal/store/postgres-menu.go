@@ -46,7 +46,7 @@ func (store *PostgresProductStore) GetMenuProducts(ctx context.Context, queryPag
 		var product Product
 
 		err := rows.Scan(
-			&product.ID,
+			&product.Id,
 			&product.Name,
 			&product.Description,
 			&product.ImageURL,

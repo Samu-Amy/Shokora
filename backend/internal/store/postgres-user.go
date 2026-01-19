@@ -36,7 +36,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 		user.Email,
 		user.Password.hash,
 	).Scan(
-		&user.ID,
+		&user.Id,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -73,7 +73,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 		query,
 		userId,
 	).Scan(
-		&user.ID,
+		&user.Id,
 		&user.FirstName,
 		&user.LastName,
 		&user.Email,

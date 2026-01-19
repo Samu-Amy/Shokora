@@ -18,7 +18,7 @@ func (store *PostgresUserStore) CreateUserAndSendVerification(ctx context.Contex
 		}
 
 		// Create verification
-		if err := store.createEmailVerification(ctx, transaction, hashedToken, verificationExp, user.ID); err != nil {
+		if err := store.createEmailVerification(ctx, transaction, hashedToken, verificationExp, user.Id); err != nil {
 			return err
 		}
 
@@ -62,12 +62,12 @@ func (store *PostgresUserStore) VerifyEmail(ctx context.Context, plainToken stri
 
 		// Update user (email verified)
 		user.IsVerified = true
-		if err := store.setUserIsVerified(ctx, transaction, user.ID); err != nil {
+		if err := store.setUserIsVerified(ctx, transaction, user.Id); err != nil {
 			return err
 		}
 
 		// Clean email verification token
-		if err := store.deleteEmailVerificationToken(ctx, transaction, user.ID); err != nil {
+		if err := store.deleteEmailVerificationToken(ctx, transaction, user.Id); err != nil {
 			return err
 		}
 
@@ -118,7 +118,7 @@ func (store *PostgresUserStore) getUserFromEmailVerificationToken(ctx context.Co
 		HashToken(plainToken),
 		time.Now(),
 	).Scan(
-		&user.ID,
+		&user.Id,
 		&user.FirstName,
 		&user.LastName,
 		&user.Email,
