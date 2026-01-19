@@ -35,13 +35,13 @@ type DbConfig struct {
 }
 
 type MailConfig struct {
-	SendGrid                  SendGridConfig
+	Resend                    ResendConfig
 	FromEmail                 string
 	EmailVerificationTokenExp time.Duration
 	PasswordResetTokenExp     time.Duration
 }
 
-type SendGridConfig struct {
+type ResendConfig struct {
 	ApiKey string
 }
 

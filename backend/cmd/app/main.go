@@ -35,8 +35,8 @@ func main() {
 			MaxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
 		Mail: api.MailConfig{
-			SendGrid: api.SendGridConfig{
-				ApiKey: env.GetString("SENDGRID_API_KEY", ""),
+			Resend: api.ResendConfig{
+				ApiKey: env.GetString("RESEND_API_KEY", ""),
 			},
 			FromEmail:                 env.GetString("FROM_EMAIL", ""),
 			EmailVerificationTokenExp: 24 * time.Hour,
@@ -68,7 +68,7 @@ func main() {
 	store := store.NewPostgresStorage(db)
 
 	// - Mailer -
-	mailer := mailer.NewSendGrid(config.Mail.SendGrid.ApiKey, config.Mail.FromEmail) // TODO: sostituire SendGrid (con Resend?)
+	mailer := mailer.NewResendMailer(config.Mail.Resend.ApiKey, config.Mail.FromEmail)
 
 	// - App -
 	app := api.NewApp(config, &store, logger, mailer)
