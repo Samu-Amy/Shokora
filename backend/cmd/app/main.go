@@ -25,7 +25,7 @@ func main() {
 	config := api.Config{
 		Addr:        env.GetString("SERVER_PORT", ":8080"),
 		Env:         env.GetString("ENV", "dev"),
-		FrontEndURL: env.GetString("FRONTEND_URL", "http://localhost:3000"),
+		FrontEndURL: env.GetString("FRONTEND_URL", "http://localhost:5173"),
 		Db: api.DbConfig{
 			// Addr: fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=%s", env.GetString("POSTGRES_USER", "user"), env.GetString("POSTGRES_PASSWORD", "password"), env.GetString("POSTGRES_DB", "db"), env.GetString("POSTGRES_PORT", "5432"), env.GetString("POSTGRES_SSL_MODE", "disable")),
 			// TODO: attivare modalità ssl (?)

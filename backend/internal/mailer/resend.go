@@ -46,7 +46,7 @@ func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile, name, e
 
 	// Get body from template
 	body := new(bytes.Buffer)
-	err = tmpl.ExecuteTemplate(subject, "subject", data)
+	err = tmpl.ExecuteTemplate(body, "body", data)
 	if err != nil {
 		return err
 	}

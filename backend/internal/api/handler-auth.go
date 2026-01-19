@@ -57,7 +57,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	if err := app.store.User.CreateUserAndSendVerification(ctx, user, hashedToken, app.config.Mail.EmailVerificationTokenExp); err != nil {
 		app.parseError(w, r, err)
 		return
-	}
+	} // TODO: gestire meglio (verificare scadenza token, se scaduto cosa si fa?)
 
 	activationURL := fmt.Sprintf("%s/verify-email/%s", app.config.FrontEndURL, plainToken)
 
@@ -81,7 +81,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 			app.logger.Errorw("error deleting user", "error", err)
 		}
 
-		app.internalServerError(w, r, err) // TODO: evitare di eliminare user e token e dire di riprovare più tardi (?)
+		app.internalServerError(w, r, err) // TODO: evitare di eliminare user e token e dire di riprovare più tardi -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
 		return
 	}
 
