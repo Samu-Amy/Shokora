@@ -85,7 +85,9 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: ricorda di controllare nello spam
+	app.logger.Infow("Email sent successfully")
+
+	// TODO: ricordati di scrivere di controllare nello spam
 
 	//* Return user
 	if err := app.jsonResponse(w, http.StatusCreated, user); err != nil {

@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,7 +31,7 @@ func NewResendMailer(apiKey, fromEmail string) *ResendMailer {
 func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile, name, email string, data any, isSandbox bool) error {
 
 	// Template parsing
-	tmpl, err := template.ParseFS(FS, "templates/"+templateFile)
+	tmpl, err := template.ParseFS(FS, "templates/"+templateFile) // TODO: crea e usa template su Resend (?)
 	if err != nil {
 		return err
 	}
@@ -64,22 +63,23 @@ func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile, name, e
 		IdempotencyKey: "verify-email/" + verificationId,
 	}
 
+	var retryErr error
+
 	// Send email (with retries)
 	for i := 0; i < MaxRetries; i++ {
 
-		response, err := mailer.client.Emails.SendWithOptions(ctx, params, options)
-		if err != nil {
-			log.Printf("Failed to send email to %v, attempt %d of %d", email, i+1, MaxRetries)
-			log.Printf("Error: %v", err.Error())
+		_, retryErr = mailer.client.Emails.SendWithOptions(ctx, params, options)
+		if retryErr != nil {
 
 			// Exponential backoff
 			time.Sleep(time.Second * time.Duration(i+1))
 			continue
 		}
 
-		log.Printf("Email sent with id %v", response.Id)
 		return nil
 	}
 
-	return fmt.Errorf("failed to send email after %d attempts", MaxRetries)
+	// TODO: fai controllo errore per errori di invio duplicato della stessa email (ma comunque ricevuta)
+
+	return fmt.Errorf("failed to send email after %d attempts, error: %v", MaxRetries, retryErr)
 }
