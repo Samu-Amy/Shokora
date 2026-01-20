@@ -45,6 +45,12 @@ func (app *App) unauthorizedError(w http.ResponseWriter, r *http.Request, err er
 	writeJSONError(w, http.StatusUnauthorized, "unauthorized") // TODO: rimuovere la risposta JSON per gli errori?
 }
 
+func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Warnf("forbiddeb error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+
+	writeJSONError(w, http.StatusForbidden, "forbidden")
+}
+
 // - Parse error -
 func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {

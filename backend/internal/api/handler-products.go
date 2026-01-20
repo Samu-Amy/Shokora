@@ -8,8 +8,6 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/store"
 )
 
-var productIdParam = "productId"
-
 // ----- CREATE -----
 
 func (app *App) createProductHandler(w http.ResponseWriter, r *http.Request) {

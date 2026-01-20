@@ -11,18 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// - Generics -
-
-// Roles
-type Role uint8
-
-const (
-	Customer Role = iota
-	Employee
-	Admin
-	Dev
-)
-
 // - Context -
 
 // Keys
@@ -40,6 +28,11 @@ func getUserFromContext(r *http.Request) (*store.User, bool) {
 
 // - Params -
 
+// Constants
+const userIdParam = "userId"
+const productIdParam = "productId"
+
+// Methods
 func (app *App) getIdFromParam(r *http.Request, idParamName string) (int64, error) {
 	idParam := chi.URLParam(r, idParamName)
 

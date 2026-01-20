@@ -2,14 +2,13 @@ package api
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/Samu-Amy/Shokora/internal/store"
 )
 
 // TODO: poter modificare dati utente (soprattutto moter mettere nome/cognome dopo la registrazione con google per poter fixarli nel caso non fossero giusti nell'account google)
-
-var userIdParam = "userId"
 
 // ----- GET -----
 
@@ -35,6 +34,16 @@ func (app *App) getUserHandler(w http.ResponseWriter, r *http.Request) {
 		app.internalServerError(w, r, err)
 		return
 	}
+}
+
+// ----- UPDATE -----
+
+func (app *App) updateUserDataHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO: implementa (per modificare i dati dell'utente -
+	// TODO: attenzione a evitare modifica data di nascita per avere offerte più volte all'anno (magari durante la registrazione si sottolinea che non è modificabile) -
+	// TODO: modificabile solo per chi non la ha (non messa in registrazione o registrato con OAuth e per qualche motivo manca))
+
+	log.Print("\n\nUpdate User...\n\n")
 }
 
 // ----- UTILS -----

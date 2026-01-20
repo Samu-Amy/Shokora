@@ -58,7 +58,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 
 func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*User, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password, is_verified, created_at, updated_at
+		SELECT id, first_name, last_name, email, password, is_verified, user_role, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
@@ -79,6 +79,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 		&user.Email,
 		&user.Password.Hash,
 		&user.IsVerified,
+		&user.Role,
 		// &user.Version,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -98,7 +99,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 
 func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password, is_verified, created_at, updated_at
+		SELECT id, first_name, last_name, email, password, is_verified, user_role, created_at, updated_at
 		FROM users
 		WHERE email = $1 AND is_verified = true
 	` // TODO: gestione verified (per chi non lo è ma accede per farsi re-inviare la mail o eliminare l'account)
@@ -119,6 +120,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 		&user.Email,
 		&user.Password.Hash,
 		&user.IsVerified,
+		&user.Role,
 		// &user.Version,
 		&user.CreatedAt,
 		&user.UpdatedAt,

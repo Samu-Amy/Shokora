@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users(
   email citext UNIQUE NOT NULL,
   password bytea NOT NULL,
   -- is_verified BOOLEAN NOT NULL DEFAULT FALSE; -- TODO: attiva questo campo (per ora migration alter)
+  -- user_role smallint NOT NULL DEFAULT 0 CHECK (user_role BETWEEN 0 AND 3), -- TODO: attiva questo campo (per ora migration alter)
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW()
 );

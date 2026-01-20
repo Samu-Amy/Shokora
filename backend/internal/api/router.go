@@ -85,13 +85,20 @@ func (app *App) initRouter() *chi.Mux {
 
 			// - Customers Routes -
 
+			// User Data
+			r.Route("/users/{userId}", func(r chi.Router) {
+				r.Use(app.updateUserMiddleware)
+
+				r.Patch("/", app.updateUserDataHandler)
+			})
+
 			// Menu Orders
 
 			// Shop Orders
 
 			// - Employee (and Admin) Routes -
 			r.Route("/employee", func(r chi.Router) {
-				// r.Use(EmployeeMiddleware)
+				r.Use(app.employeeMiddleware)
 				// TODO: aggiungi middleware per permessi (?)
 
 				// r.Get("/orders", ...)
@@ -122,7 +129,7 @@ func (app *App) initRouter() *chi.Mux {
 
 			// - Admin Routes -
 			r.Route("/admin", func(r chi.Router) {
-				// r.Use(AdminMiddleware)
+				r.Use(app.adminMiddleware)
 
 				// r.Get("/users", ...)
 				// r.Patch("/users/{userId}", ...) // gestione users (ruoli e permessi)
@@ -130,7 +137,7 @@ func (app *App) initRouter() *chi.Mux {
 
 			// - Developer Routes -
 			r.Route("/dev", func(r chi.Router) {
-				// r.Use(DevMiddleware)
+				r.Use(app.devMiddleware)
 
 				// TODO: route per vedere metrics particolari, logs ed altre cose legate al development (?)
 			})

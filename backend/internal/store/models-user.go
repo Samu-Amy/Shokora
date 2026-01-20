@@ -15,10 +15,26 @@ type User struct {
 	Email      string   `json:"email"`
 	Password   Password `json:"-"`
 	IsVerified bool     `json:"is_verified"`
+	Role       Role     `json:"role"`
 	CreatedAt  string   `json:"created_at"`
 	UpdatedAt  string   `json:"updated_at"`
 }
 
+// Roles
+type Role uint8
+
+const (
+	RoleCustomer Role = iota
+	RoleEmployee
+	RoleAdmin
+	RoleDev
+)
+
+func (user *User) IsRoleValid(requiredRole Role) bool {
+	return user.Role >= requiredRole
+}
+
+// Password
 type Password struct {
 	Text *string
 	Hash []byte
@@ -36,6 +52,7 @@ func (p *Password) Set(text string) error {
 	return nil
 }
 
+// Repository
 type UserRepository interface {
 	// Auth main
 	CreateUserAndSendVerification(context.Context, *User, string, time.Duration) error
