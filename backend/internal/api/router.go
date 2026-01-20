@@ -89,6 +89,7 @@ func (app *App) initRouter() *chi.Mux {
 			r.Route("/users/{userId}", func(r chi.Router) {
 				r.Use(app.updateUserMiddleware)
 
+				// TODO: aggiungi metodo per ottenere user (ma solo se è lo stesso di quello autenticato (cioè ottiene il suo profilo))
 				r.Patch("/", app.updateUserDataHandler)
 			})
 

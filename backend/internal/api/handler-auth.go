@@ -155,7 +155,8 @@ func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: setta cookie invece che inviarlo come payload
+	// TODO: setta cookie invece che inviarlo come payload (?)
+
 	//* Send token to the client
 	if err := app.jsonResponse(w, http.StatusCreated, token); err != nil {
 		app.internalServerError(w, r, err)
