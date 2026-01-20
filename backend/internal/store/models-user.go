@@ -13,25 +13,25 @@ type User struct {
 	FirstName  string   `json:"first_name"`
 	LastName   string   `json:"last_name"`
 	Email      string   `json:"email"`
-	Password   password `json:"-"`
+	Password   Password `json:"-"`
 	IsVerified bool     `json:"is_verified"`
 	CreatedAt  string   `json:"created_at"`
 	UpdatedAt  string   `json:"updated_at"`
 }
 
-type password struct {
-	text *string
-	hash []byte
+type Password struct {
+	Text *string
+	Hash []byte
 }
 
-func (p *password) Set(text string) error {
+func (p *Password) Set(text string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
-	p.text = &text
-	p.hash = hash
+	p.Text = &text
+	p.Hash = hash
 
 	return nil
 }
@@ -51,5 +51,6 @@ type UserRepository interface {
 	// Users
 	Create(context.Context, *sql.Tx, *User) error
 	GetById(context.Context, int64) (*User, error)
+	GetByEmail(context.Context, string) (*User, error)
 	Delete(context.Context, *sql.Tx, int64) error
 }

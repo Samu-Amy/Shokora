@@ -26,30 +26,6 @@ func (store *PostgresUserStore) CreateUserAndSendVerification(ctx context.Contex
 	})
 }
 
-func (store *PostgresUserStore) createEmailVerification(ctx context.Context, transaction *sql.Tx, hashedToken string, verificationExp time.Duration, userId int64) error {
-	query := `
-		INSERT INTO email_verification_tokens (token, user_id, expiry)
-		VALUES ($1, $2, $3)
-	`
-
-	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
-	defer cancel()
-
-	_, err := transaction.ExecContext(
-		ctx,
-		query,
-		hashedToken,
-		userId,
-		time.Now().Add(verificationExp),
-	)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // ----- VERIFY EMAIL  -----
 
 func (store *PostgresUserStore) VerifyEmail(ctx context.Context, plainToken string) error {
@@ -97,6 +73,30 @@ func (store *PostgresUserStore) DeleteUserAndEmailVerificationToken(ctx context.
 }
 
 // ----- PRIVATES -----
+
+func (store *PostgresUserStore) createEmailVerification(ctx context.Context, transaction *sql.Tx, hashedToken string, verificationExp time.Duration, userId int64) error {
+	query := `
+		INSERT INTO email_verification_tokens (token, user_id, expiry)
+		VALUES ($1, $2, $3)
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
+	_, err := transaction.ExecContext(
+		ctx,
+		query,
+		hashedToken,
+		userId,
+		time.Now().Add(verificationExp),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func (store *PostgresUserStore) getUserFromEmailVerificationToken(ctx context.Context, transaction *sql.Tx, plainToken string) (*User, error) {
 	query := `

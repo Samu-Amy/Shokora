@@ -39,6 +39,12 @@ func (app *App) conflictError(w http.ResponseWriter, r *http.Request, err error)
 	writeJSONError(w, http.StatusConflict, "conflict")
 }
 
+func (app *App) unauthorizedError(w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Warnf("unauthorized error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+
+	writeJSONError(w, http.StatusUnauthorized, "unauthorized") // TODO: rimuovere la risposta JSON per gli errori?
+}
+
 // - Parse error -
 func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
@@ -53,6 +59,9 @@ func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 
 	case errors.Is(err, store.ErrDuplicateEmail):
 		app.badRequestError(w, r, err) // TODO: passare quale dato è duplicato (email) per poter mostrare un messaggio più preciso all'utente (?)
+
+	case errors.Is(err, store.ErrUnauthorized):
+		app.unauthorizedError(w, r, err)
 
 	default:
 		app.internalServerError(w, r, err)

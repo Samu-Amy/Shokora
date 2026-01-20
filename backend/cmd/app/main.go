@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api"
+	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/db"
 	"github.com/Samu-Amy/Shokora/internal/env"
 	"github.com/Samu-Amy/Shokora/internal/mailer"
@@ -42,6 +43,13 @@ func main() {
 			EmailVerificationTokenExp: 24 * time.Hour,
 			PasswordResetTokenExp:     30 * time.Minute,
 		},
+		Auth: api.AuthConfig{
+			Token: api.TokenConfig{
+				Secret: env.GetString("AUTH_TOKEN_SECRET", "basicTokenSecret"),
+				Issuer: "shokora",
+				Exp:    time.Hour * 24 * 3, // 3 Days // TODO: dopo 3 giorni bisogna rifare il login (implementare un metodo di "refresh" (?))
+			},
+		},
 	}
 
 	// - Logger -
@@ -70,8 +78,15 @@ func main() {
 	// - Mailer -
 	mailer := mailer.NewResendMailer(config.Mail.Resend.ApiKey, config.Mail.FromEmail)
 
+	// - Authenticator -
+	jwtAuthenticator := auth.NewJWTAuthenticator(
+		config.Auth.Token.Secret,
+		config.Auth.Token.Issuer,
+		config.Auth.Token.Issuer,
+	)
+
 	// - App -
-	app := api.NewApp(config, &store, logger, mailer)
+	app := api.NewApp(config, &store, logger, mailer, jwtAuthenticator)
 
 	err = app.Run()
 

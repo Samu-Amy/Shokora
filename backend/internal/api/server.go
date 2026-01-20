@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/mailer"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
@@ -12,11 +13,12 @@ import (
 
 // - Structs -
 type App struct {
-	config Config
-	router *chi.Mux
-	store  *store.Storage
-	logger *zap.SugaredLogger
-	mailer mailer.Client
+	config        Config
+	router        *chi.Mux
+	store         *store.Storage
+	logger        *zap.SugaredLogger
+	mailer        mailer.Client
+	authenticator auth.Authenticator
 }
 
 type Config struct {
@@ -25,6 +27,7 @@ type Config struct {
 	FrontEndURL string
 	Db          DbConfig
 	Mail        MailConfig
+	Auth        AuthConfig
 }
 
 type DbConfig struct {
@@ -45,13 +48,30 @@ type ResendConfig struct {
 	ApiKey string
 }
 
+type AuthConfig struct {
+	Token TokenConfig
+}
+
+type TokenConfig struct {
+	Secret string
+	Issuer string
+	Exp    time.Duration
+}
+
 // - Functions/Methods -
-func NewApp(config Config, store *store.Storage, logger *zap.SugaredLogger, mailer mailer.Client) *App {
+func NewApp(
+	config Config,
+	store *store.Storage,
+	logger *zap.SugaredLogger,
+	mailer mailer.Client,
+	authenticator auth.Authenticator,
+) *App {
 	app := &App{
-		config: config,
-		store:  store,
-		logger: logger,
-		mailer: mailer,
+		config:        config,
+		store:         store,
+		logger:        logger,
+		mailer:        mailer,
+		authenticator: authenticator,
 	}
 	app.router = app.initRouter()
 

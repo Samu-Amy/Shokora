@@ -70,6 +70,7 @@ func (app *App) initRouter() *chi.Mux {
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)
 			r.Post("/verify-email/{token}", app.verifyEmailHandler)
+			r.Post("/token", app.createTokenHandler)
 			// r.Post("/login", ...)
 			// r.Post("/refresh", ...)
 			// r.Post("/reset-password", ...)
@@ -124,6 +125,13 @@ func (app *App) initRouter() *chi.Mux {
 
 				// r.Get("/users", ...)
 				// r.Patch("/users/{userId}", ...) // gestione users (ruoli e permessi)
+			})
+
+			// - Developer Routes -
+			r.Route("/dev", func(r chi.Router) {
+				// r.Use(DevMiddleware)
+
+				// TODO: route per vedere metrics particolari, logs ed altre cose legate al development (?)
 			})
 		})
 	})

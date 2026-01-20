@@ -17,6 +17,7 @@ var (
 	ErrVersionConlflict = errors.New("version conflict")
 	ErrDuplicateEmail   = errors.New("duplicate email")
 	ErrExpired          = errors.New("expired")
+	ErrUnauthorized     = errors.New("unauthorized")
 )
 
 // - Timeouts -
