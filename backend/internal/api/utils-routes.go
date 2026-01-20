@@ -6,9 +6,25 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
+
+// - Context -
+
+// Keys
+type contextKey int
+
+const (
+	userCtx contextKey = iota
+)
+
+// Functions
+func getUserFromContext(r *http.Request) (*store.User, bool) {
+	user, ok := r.Context().Value(userCtx).(*store.User)
+	return user, ok
+}
 
 // - Params -
 

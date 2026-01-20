@@ -79,7 +79,7 @@ func (app *App) initRouter() *chi.Mux {
 
 		// - Auth-Protected Routes -
 		r.Group(func(r chi.Router) {
-			// r.Use(AuthMiddleware)
+			r.Use(app.authMiddleware)
 			// TODO: controllo modifiche -> gli utenti possono modificare solo il proprio profilo (solo le info di base, non ruolo o altro (quelli modificabili solo da admin))
 
 			// - Customers Routes -

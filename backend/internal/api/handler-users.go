@@ -11,12 +11,6 @@ import (
 
 var userIdParam = "userId"
 
-// ----- CREATE -----
-
-func (app *App) createUserHandler(w http.ResponseWriter, r *http.Request) {
-
-}
-
 // ----- GET -----
 
 func (app *App) getUserHandler(w http.ResponseWriter, r *http.Request) {
