@@ -11,10 +11,22 @@ import (
 	"github.com/google/uuid"
 )
 
+// - Generics -
+
+// Roles
+type Role uint8
+
+const (
+	Customer Role = iota
+	Employee
+	Admin
+	Dev
+)
+
 // - Context -
 
 // Keys
-type contextKey int
+type contextKey uint8
 
 const (
 	userCtx contextKey = iota

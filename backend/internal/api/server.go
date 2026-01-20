@@ -53,9 +53,10 @@ type AuthConfig struct {
 }
 
 type TokenConfig struct {
-	Secret string
-	Issuer string
-	Exp    time.Duration
+	Secret   string
+	Audience string
+	Issuer   string
+	Exp      time.Duration
 }
 
 // - Functions/Methods -

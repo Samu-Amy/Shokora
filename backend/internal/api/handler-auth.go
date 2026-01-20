@@ -143,10 +143,10 @@ func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 	claims := jwt.MapClaims{
 		"sub": user.Id, // subject
 		"exp": time.Now().Add(app.config.Auth.Token.Exp).Unix(),
-		"iat": time.Now().Unix(),            // issued at
-		"nbf": time.Now().Unix(),            // not before time
-		"iss": app.config.Auth.Token.Issuer, // issuer
-		"aud": app.config.Auth.Token.Issuer, // audience
+		"iat": time.Now().Unix(),              // issued at
+		"nbf": time.Now().Unix(),              // not before time
+		"iss": app.config.Auth.Token.Issuer,   // issuer
+		"aud": app.config.Auth.Token.Audience, // audience
 	}
 
 	token, err := app.authenticator.GenerateToken(claims)

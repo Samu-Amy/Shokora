@@ -45,9 +45,10 @@ func main() {
 		},
 		Auth: api.AuthConfig{
 			Token: api.TokenConfig{
-				Secret: env.GetString("AUTH_TOKEN_SECRET", "basicTokenSecret"),
-				Issuer: "shokora",
-				Exp:    time.Hour * 24 * 3, // 3 Days // TODO: dopo 3 giorni bisogna rifare il login (implementare un metodo di "refresh" (?))
+				Secret:   env.GetString("AUTH_TOKEN_SECRET", "basicTokenSecret"),
+				Audience: "shokora",
+				Issuer:   "shokora",
+				Exp:      time.Hour * 24 * 3, // 3 Days // TODO: dopo 3 giorni bisogna rifare il login (implementare un metodo di "refresh" (?))
 			},
 		},
 	}

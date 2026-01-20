@@ -55,6 +55,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		//* Save user in context
 		ctx = context.WithValue(ctx, userCtx, user)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
