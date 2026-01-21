@@ -15,6 +15,14 @@ func (app *App) internalServerError(w http.ResponseWriter, r *http.Request, err 
 	writeJSONError(w, http.StatusInternalServerError, "the server encountered a problem")
 }
 
+func (app *App) rateLimitExceededError(w http.ResponseWriter, r *http.Request, retryAfter string) {
+	app.logger.Warnf("rate limit exceeded (too many requests) error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+
+	w.Header().Set("Retry-After", retryAfter)
+
+	writeJSONError(w, http.StatusTooManyRequests, "too many requests")
+}
+
 func (app *App) requestTimeoutError(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Warnf("request timeout error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 

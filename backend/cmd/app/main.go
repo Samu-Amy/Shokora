@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api"
+	"github.com/Samu-Amy/Shokora/internal/api/ratelimiter"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/db"
 	"github.com/Samu-Amy/Shokora/internal/env"
@@ -51,6 +52,11 @@ func main() {
 				Exp:      time.Hour * 24 * 3, // 3 Days // TODO: dopo 3 giorni bisogna rifare il login (implementare un metodo di "refresh" (?))
 			},
 		},
+		RateLimiter: ratelimiter.RateLimiterConfig{
+			RequestsPerTimeFrame: env.GetInt("RATE_LIMITER_REQUESTS_COUNT", 20), // TODO: fix (cambia)
+			TimeFrame:            env.GetInt("RATE_LIMITER_SECONDS_TIME_FRAME", 5) * int(time.Second),
+			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
+		},
 	}
 
 	// - Logger -
@@ -86,8 +92,15 @@ func main() {
 		config.Auth.Token.Issuer,
 	)
 
+	// - Rate Limiter -
+	// TODO: test print fallback env
+	rateLimiter := ratelimiter.NewFixedWindowLimiter(
+		config.RateLimiter.RequestsPerTimeFrame,
+		config.RateLimiter.TimeFrame,
+	)
+
 	// - App -
-	app := api.NewApp(config, &store, logger, mailer, jwtAuthenticator)
+	app := api.NewApp(config, &store, logger, mailer, jwtAuthenticator, rateLimiter)
 
 	err = app.Run()
 

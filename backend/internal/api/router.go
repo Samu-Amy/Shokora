@@ -14,11 +14,13 @@ func (app *App) initRouter() *chi.Mux {
 
 	// Generic middlewares
 	router.Use(middleware.RequestID)
-	// router.Use(middleware.RealIP) //! per questo bisogna configurare bene nginx (?)
+	router.Use(middleware.RealIP) //! per questo bisogna configurare bene nginx (?)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
 	router.Use(middleware.Timeout(60 * time.Second)) // Timeout
+
+	router.Use(app.rateLimiterMiddleware)
 	// router.Use(httprate.LimitByIP(100, 1*time.Minute)) // Rate Limiter (?) // TODO: Controlla implementazione (?)
 
 	// CORS
@@ -57,7 +59,7 @@ func (app *App) initRouter() *chi.Mux {
 	router.Route("/api/v1", func(r chi.Router) {
 		// - Public Routes (commons) -
 
-		r.Get("/health", app.checkHealthHandler) // TODO: sposta in admin/dev
+		r.Get("/health", app.checkHealthHandler) //! TODO: togli
 
 		// Products
 		r.Get("/menu/products", app.getMenuProductsHandler)
@@ -101,6 +103,8 @@ func (app *App) initRouter() *chi.Mux {
 			r.Route("/employee", func(r chi.Router) {
 				r.Use(app.employeeMiddleware)
 				// TODO: aggiungi middleware per permessi (?)
+
+				r.Get("/health", app.checkHealthHandler)
 
 				// r.Get("/orders", ...)
 

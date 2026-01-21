@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Samu-Amy/Shokora/internal/api/ratelimiter"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/mailer"
 	"github.com/Samu-Amy/Shokora/internal/store"
@@ -24,6 +25,7 @@ type App struct {
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
+	rateLimiter   ratelimiter.RateLimiter
 }
 
 type Config struct {
@@ -33,6 +35,7 @@ type Config struct {
 	Db          DbConfig
 	Mail        MailConfig
 	Auth        AuthConfig
+	RateLimiter ratelimiter.RateLimiterConfig
 }
 
 type DbConfig struct {
@@ -71,6 +74,7 @@ func NewApp(
 	logger *zap.SugaredLogger,
 	mailer mailer.Client,
 	authenticator auth.Authenticator,
+	rateLimiter ratelimiter.RateLimiter,
 ) *App {
 	app := &App{
 		config:        config,
@@ -78,6 +82,7 @@ func NewApp(
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: authenticator,
+		rateLimiter:   rateLimiter,
 	}
 	app.router = app.initRouter()
 

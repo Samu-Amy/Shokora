@@ -12,6 +12,21 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// - Rate Limiter -
+
+func (app *App) rateLimiterMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if app.config.RateLimiter.Enabled {
+			if allow, retryAfter := app.rateLimiter.Allow(r.RemoteAddr); !allow {
+				app.rateLimitExceededError(w, r, retryAfter.String())
+				return
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // - Authentication -
 
 func (app *App) authMiddleware(next http.Handler) http.Handler {
