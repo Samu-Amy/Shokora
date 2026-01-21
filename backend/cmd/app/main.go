@@ -54,7 +54,7 @@ func main() {
 		},
 		RateLimiter: ratelimiter.RateLimiterConfig{
 			RequestsPerTimeFrame: env.GetInt("RATE_LIMITER_REQUESTS_COUNT", 20), // TODO: fix (cambia)
-			TimeFrame:            env.GetInt("RATE_LIMITER_SECONDS_TIME_FRAME", 5) * int(time.Second),
+			TimeFrame:            5 * time.Second,
 			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
 		},
 	}
@@ -93,7 +93,6 @@ func main() {
 	)
 
 	// - Rate Limiter -
-	// TODO: test print fallback env
 	rateLimiter := ratelimiter.NewFixedWindowLimiter(
 		config.RateLimiter.RequestsPerTimeFrame,
 		config.RateLimiter.TimeFrame,

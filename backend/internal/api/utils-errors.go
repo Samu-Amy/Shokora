@@ -16,7 +16,7 @@ func (app *App) internalServerError(w http.ResponseWriter, r *http.Request, err 
 }
 
 func (app *App) rateLimitExceededError(w http.ResponseWriter, r *http.Request, retryAfter string) {
-	app.logger.Warnf("rate limit exceeded (too many requests) error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	app.logger.Warnw("rate limit exceeded (too many requests) error", "method", r.Method, "path", r.URL.Path)
 
 	w.Header().Set("Retry-After", retryAfter)
 
