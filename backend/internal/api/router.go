@@ -87,9 +87,9 @@ func (app *App) initRouter() *chi.Mux {
 
 			// User Data
 			r.Route("/users/{userId}", func(r chi.Router) {
-				r.Use(app.updateUserMiddleware)
+				r.Use(app.userOwnershipMiddleware)
 
-				// TODO: aggiungi metodo per ottenere user (ma solo se è lo stesso di quello autenticato (cioè ottiene il suo profilo))
+				// TODO: aggiungi metodo per ottenere user (direttamente dal middleware, non dal db) (con middleware -> solo se è lo stesso di quello autenticato (cioè ottiene il suo profilo))
 				r.Patch("/", app.updateUserDataHandler)
 			})
 

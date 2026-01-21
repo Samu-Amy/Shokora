@@ -89,6 +89,8 @@ func (app *App) employeeMiddleware(next http.Handler) http.Handler {
 func (app *App) adminMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		// TODO: aggiungi controllo permessi (solo per employee)
+
 		// Get User
 		user, ok := getUserFromContext(r)
 		if !ok || user == nil {
@@ -128,7 +130,7 @@ func (app *App) devMiddleware(next http.Handler) http.Handler {
 
 // - Authorization - Ownership -
 
-func (app *App) updateUserMiddleware(next http.Handler) http.Handler {
+func (app *App) userOwnershipMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get user id

@@ -91,3 +91,24 @@ func (app *App) Run() error {
 	app.logger.Infow("Server started", "addr", app.config.Addr)
 	return server.ListenAndServe()
 }
+
+// - Tests -
+
+func NewMockApp(store *store.Storage, logger *zap.SugaredLogger, authenticator auth.Authenticator) *App {
+	app := &App{
+		store:         store,
+		logger:        logger,
+		authenticator: authenticator,
+	}
+	app.router = app.initRouter()
+
+	return app
+}
+
+func (app *App) GetRouter() *chi.Mux {
+	return app.router
+}
+
+func (app *App) GetAuthenticator() auth.Authenticator {
+	return app.authenticator
+}
