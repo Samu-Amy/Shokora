@@ -57,7 +57,7 @@ func (app *App) initRouter() *chi.Mux {
 	router.Route("/api/v1", func(r chi.Router) {
 		// - Public Routes (commons) -
 
-		r.Get("/health", app.checkHealthHandler)
+		r.Get("/health", app.checkHealthHandler) // TODO: sposta in admin/dev
 
 		// Products
 		r.Get("/menu/products", app.getMenuProductsHandler)

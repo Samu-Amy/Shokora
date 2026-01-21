@@ -5,7 +5,9 @@ import (
 	"testing"
 )
 
-// TODO: fai test più "ampi", con db di test
+// TODO: fai test più "ampi" con db di test ed elimina mock (da store, auth e funzioni aggiuntive in server)
+
+// TODO: aggiungere spies (?)
 
 func TestGetUserHandler(t *testing.T) {
 	app := newTestApp(t, true)

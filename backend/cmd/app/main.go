@@ -92,6 +92,6 @@ func main() {
 	err = app.Run()
 
 	if err != nil {
-		logger.Error(err) // TODO: sistema
+		logger.Error(err)
 	}
 }
