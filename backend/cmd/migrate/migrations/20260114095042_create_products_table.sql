@@ -1,13 +1,13 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS products(
-  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- TODO: cambia in int normale
   name varchar(150) NOT NULL,
   description text NOT NULL,
   image_url text NOT NULL,
-  price numeric(10, 2) NOT NULL,
+  price numeric(10, 2) NOT NULL, -- TODO: aggiungi check > 0
   discount numeric(4, 3) NOT NULL DEFAULT 0 CHECK (discount >= 0 AND discount <= 1),
-  version INT DEFAULT 0,
+  version INT DEFAULT 0, -- TODO: aggiungi NOT NULL (?) anche se non dovrebbe servire
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW()
 );

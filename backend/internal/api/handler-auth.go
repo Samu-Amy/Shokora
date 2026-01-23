@@ -32,7 +32,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create product from payload data
+	// Create user from payload data
 	user := &store.User{
 		FirstName: payload.FirstName,
 		LastName:  payload.LastName,
@@ -102,8 +102,10 @@ func (app *App) verifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: aggiungi creazione ed invio token (togliere createTokenHandler?) - crea anche refresh token (?)
+
 	//* No content
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusNoContent) // TODO: setta http-only cookies con token e invia user
 }
 
 // ----- TOKENS -----
@@ -142,7 +144,7 @@ func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate tokens (and add claims)
 	claims := jwt.MapClaims{
 		"sub": user.Id, // subject
-		"exp": time.Now().Add(app.config.Auth.Token.Exp).Unix(),
+		"exp": time.Now().Add(app.config.Auth.Token.AccessTokenExp).Unix(),
 		"iat": time.Now().Unix(),              // issued at
 		"nbf": time.Now().Unix(),              // not before time
 		"iss": app.config.Auth.Token.Issuer,   // issuer

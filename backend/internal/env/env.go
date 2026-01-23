@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func GetString(key string, fallback string) string {
@@ -47,4 +48,20 @@ func GetBool(key string, fallback bool) bool {
 	}
 
 	return valAsInt
+}
+
+func LoadCORSOrigins(fallback []string) []string {
+	originsEnv, ok := os.LookupEnv("ALLOWED_ORIGINS")
+	if !ok || originsEnv == "" {
+		log.Printf("Returning fallback for env var: ALLOWED_ORIGINS")
+		return fallback
+	}
+
+	origins := strings.Split(originsEnv, ",")
+
+	for i, origin := range origins {
+		origins[i] = strings.TrimSpace(origin)
+	}
+
+	return origins
 }

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"expvar"
 	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api"
@@ -28,6 +30,10 @@ func main() {
 		Addr:        env.GetString("SERVER_PORT", ":8080"),
 		Env:         env.GetString("ENV", "dev"),
 		FrontEndURL: env.GetString("FRONTEND_URL", "http://localhost:5173"),
+		AllowedOriginsURLs: env.LoadCORSOrigins([]string{
+			"http://localhost:5173",
+			"http://localhost:3000",
+		}),
 		Db: api.DbConfig{
 			// Addr: fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=%s", env.GetString("POSTGRES_USER", "user"), env.GetString("POSTGRES_PASSWORD", "password"), env.GetString("POSTGRES_DB", "db"), env.GetString("POSTGRES_PORT", "5432"), env.GetString("POSTGRES_SSL_MODE", "disable")),
 			// TODO: attivare modalità ssl (?)
@@ -46,10 +52,11 @@ func main() {
 		},
 		Auth: api.AuthConfig{
 			Token: api.TokenConfig{
-				Secret:   env.GetString("AUTH_TOKEN_SECRET", "basicTokenSecret"),
-				Audience: "shokora",
-				Issuer:   "shokora",
-				Exp:      time.Hour * 24 * 3, // 3 Days // TODO: dopo 3 giorni bisogna rifare il login (implementare un metodo di "refresh" (?))
+				Secret:          env.GetString("AUTH_TOKEN_SECRET", "basicTokenSecret"),
+				Audience:        "shokora",
+				Issuer:          "shokora",
+				AccessTokenExp:  15 * time.Minute,
+				RefreshTokenExp: 14 * 24 * time.Hour, // 14 days
 			},
 		},
 		RateLimiter: ratelimiter.RateLimiterConfig{
@@ -97,6 +104,20 @@ func main() {
 		config.RateLimiter.RequestsPerTimeFrame,
 		config.RateLimiter.TimeFrame,
 	)
+
+	// - Metrics -
+	// Version
+	// expvar.NewString("backend_version").Set("1.0")
+
+	// DB Stats
+	expvar.Publish("database", expvar.Func(func() any {
+		return db.Stats()
+	}))
+
+	// Goroutines
+	expvar.Publish("goroutines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}))
 
 	// - App -
 	app := api.NewApp(config, &store, logger, mailer, jwtAuthenticator, rateLimiter)

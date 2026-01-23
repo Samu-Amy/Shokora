@@ -44,7 +44,7 @@ func (app *App) getIdFromParam(r *http.Request, idParamName string) (int64, erro
 	return resourceId, nil
 }
 
-// - Token Generation -
+// - Auth JWT Token (Generate and Send) -
 
 func (app *App) generateHashedToken() (string, string) {
 	plainToken := uuid.New().String()
@@ -54,3 +54,15 @@ func (app *App) generateHashedToken() (string, string) {
 
 	return hashedToken, plainToken
 }
+
+// func (app *App) setAuthCookie(w http.ResponseWriter, token string) {
+// 	http.SetCookie(w, &http.Cookie{
+// 		Name:     "auth_token",
+// 		Value:    token,
+// 		Path:     "/",
+// 		MaxAge:   int(app.config.Auth.Token.Exp.Seconds()),
+// 		HttpOnly: true,
+// 		Secure:   app.config.Env == "production", // true in prod
+// 		SameSite: http.SameSiteStrictMode,
+// 	})
+// }

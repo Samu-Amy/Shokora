@@ -10,6 +10,8 @@
   // TODO: come evitare che qualcuno senza autorizaazione possa accedere all'admin panel (alle pagine del pannello (non possono in ogni caso ottenere o modificare i dati dal backend, ma devono essere reindirizzati alle pagine accessibili (fetch on mount -> backend invia una richiesta di redirect (?))))
   // TODO: update dati db -> attenzione a null/undefined vs "" -> la prima significa che non si modificano, la seconda che si cancella il contenuto
   // TODO: aggiungi debounce (per evitare di creare cose più volte, inviare troppe email, ecc.)
+
+  // TODO: aggiungi api call a "/api/v1/auth/me" per cercare di ottenere lo user (se autenticato), salvarlo nel context e mostrare "accedi" o l'icona utente (?)
 </script>
 
 <svelte:head>

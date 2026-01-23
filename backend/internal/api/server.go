@@ -29,13 +29,14 @@ type App struct {
 }
 
 type Config struct {
-	Addr        string
-	Env         string // "env" | "prod"
-	FrontEndURL string
-	Db          DbConfig
-	Mail        MailConfig
-	Auth        AuthConfig
-	RateLimiter ratelimiter.RateLimiterConfig
+	Addr               string
+	Env                string // "env" | "prod"
+	FrontEndURL        string
+	AllowedOriginsURLs []string
+	Db                 DbConfig
+	Mail               MailConfig
+	Auth               AuthConfig
+	RateLimiter        ratelimiter.RateLimiterConfig
 }
 
 type DbConfig struct {
@@ -61,10 +62,11 @@ type AuthConfig struct {
 }
 
 type TokenConfig struct {
-	Secret   string
-	Audience string
-	Issuer   string
-	Exp      time.Duration
+	Secret          string
+	Audience        string
+	Issuer          string
+	AccessTokenExp  time.Duration
+	RefreshTokenExp time.Duration
 }
 
 // - Functions/Methods -

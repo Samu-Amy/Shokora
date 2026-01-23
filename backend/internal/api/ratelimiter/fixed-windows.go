@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// TODO: con redis (invece che in-memory con locks) sarebbe più veloce
+// TODO: attiva anche rate limiter nginx
 
 type FixedWindowLimiter struct {
 	sync.RWMutex
@@ -22,7 +22,7 @@ func NewFixedWindowLimiter(limit int, window time.Duration) *FixedWindowLimiter 
 	}
 }
 
-// TODO: sistema questo codice (implementa un rate limiter migliore)
+// TODO: sistema questo codice (implementa un rate limiter migliore - magari Sliding Window ed usando channels o sync.Map invece che Mutex)
 func (rLimiter *FixedWindowLimiter) Allow(ip string) (bool, time.Duration) {
 	rLimiter.RLock()
 	count, exists := rLimiter.clients[ip]

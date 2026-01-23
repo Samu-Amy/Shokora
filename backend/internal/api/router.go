@@ -1,10 +1,12 @@
 package api
 
 import (
-	"time"
+	"expvar"
+	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 )
 
 func (app *App) initRouter() *chi.Mux {
@@ -14,44 +16,45 @@ func (app *App) initRouter() *chi.Mux {
 
 	// Generic middlewares
 	router.Use(middleware.RequestID)
-	router.Use(middleware.RealIP) //! per questo bisogna configurare bene nginx (?)
+	router.Use(middleware.RealIP) // per questo bisogna configurare bene nginx
+	/* (tipo:
+		set_real_ip_from 127.0.0.1;
+		set_real_ip_from <IP_DEL_LOAD_BALANCER>;
+		real_ip_header X-Forwarded-For;
+		real_ip_recursive on;
+	) */
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
-	router.Use(middleware.Timeout(60 * time.Second)) // Timeout
+	// router.Use(middleware.Timeout(60 * time.Second)) // Timeout // TODO: bisogna controllarlo negli handler per evitare panic (eventualmente usarlo solo su alcuni?)
+
+	// TODO: setta comunque (con il dominio)
+	// CORS
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins: app.config.AllowedOriginsURLs,
+
+		AllowedMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodDelete,
+			http.MethodOptions,
+		},
+
+		AllowedHeaders: []string{
+			"Accept",
+			"Authorization",
+			"Content-Type",
+		},
+
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true, // cookies
+		MaxAge:           300,
+	}))
 
 	router.Use(app.rateLimiterMiddleware)
 	// router.Use(httprate.LimitByIP(100, 1*time.Minute)) // Rate Limiter (?) // TODO: Controlla implementazione (?)
-
-	// CORS
-	// router.Use(cors.Handler(cors.Options{
-	// 	AllowedOrigins: []string{
-	// 		"http://localhost:5173",
-	// 		"http://192.168.0.46:5173",
-	// 		"http://localhost:3000",
-	// 		"http://192.168.0.46:3000",
-	// 	},
-
-	// 	AllowedMethods: []string{
-	// 		http.MethodGet,
-	// 		http.MethodPost,
-	// 		http.MethodPut,
-	// 		http.MethodPatch,
-	// 		http.MethodDelete,
-	// 	},
-
-	// 	AllowedHeaders: []string{
-	// 		// "Accept",
-	// 		"Authorization",
-	// 		"Content-Type",
-	// 	},
-
-	// 	// ExposedHeaders:   []string{"Link"},
-	// 	// AllowCredentials: false,
-	// 	// MaxAge: 300,
-
-	// 	// TODO: continua... (aggiungi altri url, methods, ecc.)
-	// }))
 
 	//* - Routes - *
 
@@ -78,6 +81,10 @@ func (app *App) initRouter() *chi.Mux {
 			// r.Post("/refresh", ...)
 			// r.Post("/reset-password", ...)
 			// r.Post("/logout", ...)
+			r.Group(func(r chi.Router) {
+				// TODO: usare (o crearne uno simile) middleware auth per ottenere l'utente (?)
+				// r.Get("/me" app.getCurrentAuthUserHandler) // TODO: per ottenere i dati dell'utente se autenticato
+			})
 		})
 
 		// - Auth-Protected Routes -
@@ -145,6 +152,7 @@ func (app *App) initRouter() *chi.Mux {
 				r.Use(app.devMiddleware)
 
 				// TODO: route per vedere metrics particolari, logs ed altre cose legate al development (?)
+				r.Get("/debug/vars", expvar.Handler().ServeHTTP)
 			})
 		})
 	})

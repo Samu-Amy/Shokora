@@ -18,6 +18,13 @@ type Product struct {
 	UpdatedAt string  `json:"updated_at"`
 }
 
+// TODO: es. struct per prodotti menu/shop
+type ShopProduct struct {
+	Product
+	// Price float64 (magari tolto da Product normale e messo nelle "versioni" menu/shop ?)
+	// Discount float64 (magari tolto da Product normale e messo nelle "versioni" menu/shop ?)
+}
+
 // TODO: aggiungi nomi parametri/argomenti nei metodi di tutte le interfacce
 type ProductRepository interface {
 	Create(context.Context, *Product) error

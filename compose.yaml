@@ -2,6 +2,7 @@
 name: shokora
 
 services:
+  # TODO: nginx https://claude.ai/chat/2be1bd31-ad3c-49c2-b1da-0c920421daed
   frontend:
     image: nginx #:alpine (?)
     # volumes:
@@ -10,6 +11,7 @@ services:
     ports:
       - 80:80 # (?)
     build: frontend/build # (?)
+    # TODO: rate limiter
 
   backend:
     image: golang:1.25.4-alpine
