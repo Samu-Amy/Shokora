@@ -9,10 +9,13 @@ import (
 )
 
 var (
-	ErrTokenInvalid = errors.New("acces_token_invalid")
-	ErrTokenExpired = errors.New("access_token_expired")
-	// TODO: aagiungere versioni separate per OTP?
+	ErrUserBlocked  = errors.New("user_blocked")
+	ErrTokenInvalid = errors.New("token_invalid")
+	ErrTokenExpired = errors.New("token_expired")
+	// TODO: aggiungere versioni per refresh token?
 )
+
+// TODO: passa errori strutturati (sopra) al frontend (invece che hardcoded strings)
 
 // - Return an error -
 func (app *App) internalServerError(w http.ResponseWriter, r *http.Request, err error) {
@@ -56,7 +59,7 @@ func (app *App) conflictError(w http.ResponseWriter, r *http.Request, err error)
 func (app *App) unauthorizedError(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Warnf("unauthorized error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
-	writeJSONError(w, http.StatusUnauthorized, "unauthorized") // TODO: creare errori "strutturati" e passare quelli
+	writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 }
 
 func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error) {

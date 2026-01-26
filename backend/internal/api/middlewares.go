@@ -72,6 +72,11 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		if !user.IsActive {
+			app.unauthorizedError(w, r, err) // TODO: usa errore dedicato
+			return
+		}
+
 		//* Save user in context
 		ctx = context.WithValue(ctx, userCtx, user)
 
