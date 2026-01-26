@@ -40,16 +40,16 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Hash and set password
-	if err := user.Password.Set(payload.Password); err != nil {
+	if err := user.Password.Set(payload.Password); err != nil { // TODO: sistema
 		app.internalServerError(w, r, err)
 		return
 	}
 
 	// Generate Token
-	hashedToken, plainToken := app.generateHashedToken()
+	hashedToken, plainToken := app.generateHashedToken() // TODO: sistema
 
 	// Create User
-	if err := app.store.User.CreateUserAndSendVerification(ctx, user, hashedToken, app.config.Mail.EmailVerificationTokenExp); err != nil {
+	if err := app.store.User.CreateUserAndSendVerification(ctx, user, hashedToken, app.config.Auth.MagicLink.Exp); err != nil {
 		app.parseError(w, r, err)
 		return
 	} // TODO: gestire meglio (verificare scadenza token, se scaduto cosa si fa?)
@@ -163,4 +163,12 @@ func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 	if err := app.jsonResponse(w, http.StatusCreated, token); err != nil {
 		app.internalServerError(w, r, err)
 	}
+}
+
+func (app *App) refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO: opzioni per cookie (da verificare)
+	// HttpOnly: true
+	// Secure: true
+	// SameSite: Strict (refresh) / Lax (access)
+	// Path: /auth/refresh (per refresh token)
 }

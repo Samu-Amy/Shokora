@@ -8,6 +8,12 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/store"
 )
 
+var (
+	ErrTokenInvalid = errors.New("acces_token_invalid")
+	ErrTokenExpired = errors.New("access_token_expired")
+	// TODO: aagiungere versioni separate per OTP?
+)
+
 // - Return an error -
 func (app *App) internalServerError(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Errorw("internal server error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
@@ -50,7 +56,7 @@ func (app *App) conflictError(w http.ResponseWriter, r *http.Request, err error)
 func (app *App) unauthorizedError(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Warnf("unauthorized error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
-	writeJSONError(w, http.StatusUnauthorized, "unauthorized") // TODO: rimuovere la risposta JSON per gli errori?
+	writeJSONError(w, http.StatusUnauthorized, "unauthorized") // TODO: creare errori "strutturati" e passare quelli
 }
 
 func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error) {

@@ -47,10 +47,8 @@ type DbConfig struct {
 }
 
 type MailConfig struct {
-	Resend                    ResendConfig
-	FromEmail                 string
-	EmailVerificationTokenExp time.Duration
-	PasswordResetTokenExp     time.Duration
+	Resend    ResendConfig
+	FromEmail string
 }
 
 type ResendConfig struct {
@@ -58,15 +56,27 @@ type ResendConfig struct {
 }
 
 type AuthConfig struct {
-	Token TokenConfig
+	Token     TokenConfig
+	MagicLink MagicLinkConfig
+	OTP       OTPConfig
 }
 
 type TokenConfig struct {
-	Secret          string
-	Audience        string
-	Issuer          string
-	AccessTokenExp  time.Duration
-	RefreshTokenExp time.Duration
+	Secret             string
+	Audience           string
+	Issuer             string
+	AccessTokenExp     time.Duration
+	RefreshTokenExp    time.Duration
+	RefreshTokenMaxExp time.Duration // How long the expiration can be extended for
+}
+
+type MagicLinkConfig struct {
+	Exp time.Duration
+}
+
+type OTPConfig struct {
+	MaxAttempts int8
+	Exp         time.Duration
 }
 
 // - Functions/Methods -

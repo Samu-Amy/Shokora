@@ -4,20 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"time"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	Id         int64    `json:"id"`
-	FirstName  string   `json:"first_name"`
-	LastName   string   `json:"last_name"`
-	Email      string   `json:"email"`
-	Password   Password `json:"-"`
-	IsVerified bool     `json:"is_verified"`
-	Role       Role     `json:"role"`
-	CreatedAt  string   `json:"created_at"`
-	UpdatedAt  string   `json:"updated_at"`
+	Id         int64  `json:"id"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	Email      string `json:"email"`
+	Password   []byte `json:"-"`
+	IsVerified bool   `json:"is_verified"`
+	Role       Role   `json:"role"`
+	CreatedAt  string `json:"created_at"`
+	UpdatedAt  string `json:"updated_at"`
 }
 
 // Roles
@@ -35,22 +33,22 @@ func (user *User) IsRoleValid(requiredRole Role) bool {
 }
 
 // Password
-type Password struct {
-	Text *string
-	Hash []byte
-}
+// type Password struct {
+// 	Text *string
+// 	Hash []byte
+// }
 
-func (p *Password) Set(text string) error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
+// func (p *Password) Set(text string) error {
+// 	hash, err := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	p.Text = &text
-	p.Hash = hash
+// 	p.Text = &text
+// 	p.Hash = hash
 
-	return nil
-}
+// 	return nil
+// }
 
 // Repository
 type UserRepository interface {

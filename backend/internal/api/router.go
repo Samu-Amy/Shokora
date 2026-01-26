@@ -121,6 +121,7 @@ func (app *App) initRouter() *chi.Mux {
 
 					r.Route("/{userId}", func(r chi.Router) {
 						r.Get("/", app.getUserHandler)
+						// TODO: nell'handler delete user richiedi la password come sicurezza per eliminare l'account (solo jwt non è abbastanza sicuro)
 					})
 				})
 

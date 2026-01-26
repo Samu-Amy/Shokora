@@ -29,6 +29,7 @@ func NewResendMailer(apiKey, fromEmail string) *ResendMailer {
 }
 
 func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile, name, email string, data any, isSandbox bool) error {
+	// TODO: usa isSandbox
 
 	// Template parsing
 	tmpl, err := template.ParseFS(FS, "templates/"+templateFile) // TODO: ----- crea e usa template su Resend (forse no) o genera template con MJML (meglio) -----

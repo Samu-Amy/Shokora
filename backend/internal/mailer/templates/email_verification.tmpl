@@ -9,8 +9,9 @@
   <body>
     <p>Ciao {{.Name}},</p>
     <p>Grazie per la registrazione...</p>
-    <p>Prima di poter ordinare online devi confermare il tuo indirizzo email. Clicca qua sotto per verificarlo.</p>
-    <p><a href="{{.ActivationURL}}">Conferma indirizzo email</a></p>
+    <p>Prima di poter ordinare online devi confermare il tuo indirizzo email. Clicca sul link oppure inserisci il codice OTP per verificarlo.</p>
+    <p><a href="{{.ActivationURL}}">Conferma indirizzo email</a> (scade tra {{.MagicLinkExp}})</p>
+    <p>Codice OTP: {{.OTPToken}} (scade tra {{.OTPExp}})</p>
     <p>Se non hai eseguito l'accesso a Shokora, puoi ignorare questa email.</p>
 
     <p>Grazie,</p>

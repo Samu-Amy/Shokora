@@ -35,16 +35,16 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 
 		// Get Auth header
-		authHeader := r.Header.Get("Authorization")
+		authHeader := r.Header.Get("Authorization") // TODO: fai functions utils (?)
 		if authHeader == "" {
-			app.unauthorizedError(w, r, errors.New("authorization header is missing"))
+			app.unauthorizedError(w, r, ErrTokenInvalid)
 			return
 		}
 
 		// Parse Auth header ("authorization: Bearer <token>")
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			app.unauthorizedError(w, r, errors.New("authorization header is malformed"))
+			app.unauthorizedError(w, r, ErrTokenInvalid)
 			return
 		}
 
@@ -52,7 +52,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 
 		jwtToken, err := app.authenticator.ValidateToken(token)
 		if err != nil {
-			app.unauthorizedError(w, r, err)
+			app.unauthorizedError(w, r, ErrTokenExpired)
 			return
 		}
 
@@ -66,7 +66,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Get user
-		user, err := app.store.User.GetById(ctx, userId)
+		user, err := app.store.User.GetById(ctx, userId) // TODO: gestione caso utente non verificato (?)
 		if err != nil {
 			app.unauthorizedError(w, r, err)
 			return

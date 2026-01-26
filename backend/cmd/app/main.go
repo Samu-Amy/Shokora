@@ -46,23 +46,29 @@ func main() {
 			Resend: api.ResendConfig{
 				ApiKey: env.GetString("RESEND_API_KEY", ""),
 			},
-			FromEmail:                 env.GetString("FROM_EMAIL", ""),
-			EmailVerificationTokenExp: 24 * time.Hour,
-			PasswordResetTokenExp:     30 * time.Minute,
+			FromEmail: env.GetString("FROM_EMAIL", ""),
 		},
 		Auth: api.AuthConfig{
 			Token: api.TokenConfig{
-				Secret:          env.GetString("AUTH_TOKEN_SECRET", "basicTokenSecret"),
-				Audience:        "shokora",
-				Issuer:          "shokora",
-				AccessTokenExp:  15 * time.Minute,
-				RefreshTokenExp: 14 * 24 * time.Hour, // 14 days
+				Secret:             env.GetString("AUTH_TOKEN_SECRET", "basicTokenSecret"),
+				Audience:           "shokora",
+				Issuer:             "shokora",
+				AccessTokenExp:     15 * time.Minute,    // 15 min (suggested: 15-60 min) //TODO: alza a 30 (?)
+				RefreshTokenExp:    21 * 24 * time.Hour, // 21 days (suggested: 7-30 days) // TODO: due opzioni, una breve (es. 7 giorni) ed una "ricordami" (es. circa 30 giorni) ed eventualmente se si accede spesso si può allungare un po' la scadenza (?)
+				RefreshTokenMaxExp: 90 * 24 * time.Hour, // 90 days (suggested: 7-30 days)
+			},
+			MagicLink: api.MagicLinkConfig{
+				Exp: 24 * time.Hour, // 1 day
+			},
+			OTP: api.OTPConfig{
+				MaxAttempts: 5,
+				Exp:         5 * time.Minute, // 30 min
 			},
 		},
 		RateLimiter: ratelimiter.RateLimiterConfig{
 			RequestsPerTimeFrame: env.GetInt("RATE_LIMITER_REQUESTS_COUNT", 20), // TODO: fix (cambia)
 			TimeFrame:            5 * time.Second,
-			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
+			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", false), // TODO: sistema rate limiter e riattivalo
 		},
 	}
 
