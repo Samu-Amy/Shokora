@@ -58,11 +58,11 @@ func main() {
 				RefreshTokenExp:    28 * 24 * time.Hour, // 28 days (suggested: 7-30 days) // TODO: due opzioni, una breve (es. 7 giorni) ed una "ricordami" (es. circa 30 giorni) ed eventualmente se si accede spesso si può allungare un po' la scadenza (?)
 				RefreshTokenMaxExp: 90 * 24 * time.Hour, // 90 days (suggested: max 90 days)
 			},
-			MagicLink: api.MagicLinkConfig{
+			MagicLink: auth.MagicLinkConfig{
 				ByteSize: 32,
 				Exp:      30 * time.Minute, // 30 min
 			},
-			OTP: api.OTPConfig{
+			OTP: auth.OTPConfig{
 				Length:      6, // Suggested: between 4 and 10
 				MaxAttempts: 5,
 				Exp:         5 * time.Minute, // 5 min
@@ -101,11 +101,16 @@ func main() {
 	// - Mailer -
 	mailer := mailer.NewResendMailer(config.Mail.Resend.ApiKey, config.Mail.FromEmail)
 
-	// - Authenticator -
+	// - Authenticators -
 	jwtAuthenticator := auth.NewJWTAuthenticator(
 		config.Auth.Token.Secret,
 		config.Auth.Token.Issuer,
 		config.Auth.Token.Issuer,
+	)
+
+	tokenAuthenricator := auth.NewTokenAuthenticator(
+		config.Auth.MagicLink,
+		config.Auth.OTP,
 	)
 
 	// - Rate Limiter -
@@ -129,7 +134,7 @@ func main() {
 	}))
 
 	// - App -
-	app := api.NewApp(config, &store, logger, mailer, jwtAuthenticator, rateLimiter)
+	app := api.NewApp(config, &store, logger, mailer, jwtAuthenticator, tokenAuthenricator, rateLimiter)
 
 	err = app.Run()
 

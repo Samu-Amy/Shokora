@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	"github.com/Samu-Amy/Shokora/internal/auth"
 )
 
 // ----- CREATE USER -----
 
-func (store *PostgresUserStore) CreateUserAndSendVerification(ctx context.Context, user *User, hashedToken string, verificationExp time.Duration) error {
+func (store *PostgresUserStore) CreateUserAndSendVerification(ctx context.Context, user *User, verificationTokens *auth.VerificationTokens) error {
 	// Transaction wrapper
 	return withTransaction(store.db, ctx, func(transaction *sql.Tx) error {
 		// Create user
@@ -28,7 +30,7 @@ func (store *PostgresUserStore) CreateUserAndSendVerification(ctx context.Contex
 
 // ----- VERIFY EMAIL  -----
 
-func (store *PostgresUserStore) VerifyEmail(ctx context.Context, plainToken string) error {
+func (store *PostgresUserStore) VerifyEmail(ctx context.Context, plainToken string) error { // TODO: passare plain token e verificare con funzione util (?)
 	return withTransaction(store.db, ctx, func(transaction *sql.Tx) error {
 		// Find user related to the token
 		user, err := store.getUserFromEmailVerificationToken(ctx, transaction, plainToken)
@@ -74,9 +76,9 @@ func (store *PostgresUserStore) DeleteUserAndEmailVerificationToken(ctx context.
 
 // ----- PRIVATES -----
 
-func (store *PostgresUserStore) createEmailVerification(ctx context.Context, transaction *sql.Tx, hashedToken string, verificationExp time.Duration, userId int64) error {
+func (store *PostgresUserStore) createEmailVerification(ctx context.Context, transaction *sql.Tx, verificationTokens *auth.VerificationTokens, userId int64) error {
 	query := `
-		INSERT INTO email_verification_tokens (token, user_id, expiry)
+		INSERT INTO verification_tokens (token, user_id, expiry)
 		VALUES ($1, $2, $3)
 	`
 

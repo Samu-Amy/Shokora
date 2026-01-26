@@ -10,11 +10,15 @@ type JWTAuthenticator struct {
 	issuer   string
 }
 
+// - Constructor -
+
 func NewJWTAuthenticator(secret, audience, issuer string) *JWTAuthenticator {
 	return &JWTAuthenticator{secret, audience, issuer}
 }
 
-func (a *JWTAuthenticator) GenerateToken(claims jwt.Claims) (string, error) {
+// - Methods -
+
+func (a *JWTAuthenticator) GenerateJWTToken(claims jwt.Claims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	tokenString, err := token.SignedString([]byte(a.secret))
@@ -25,7 +29,7 @@ func (a *JWTAuthenticator) GenerateToken(claims jwt.Claims) (string, error) {
 	return tokenString, nil
 }
 
-func (a *JWTAuthenticator) ValidateToken(token string) (*jwt.Token, error) {
+func (a *JWTAuthenticator) ValidateJWTToken(token string) (*jwt.Token, error) {
 	return jwt.Parse(token, func(t *jwt.Token) (any, error) {
 		// Check signing method (algoritm)
 		// if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {

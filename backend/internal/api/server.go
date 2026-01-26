@@ -19,13 +19,14 @@ import (
 
 // - Structs -
 type App struct {
-	config        Config
-	router        *chi.Mux
-	store         *store.Storage
-	logger        *zap.SugaredLogger
-	mailer        mailer.Client
-	authenticator auth.Authenticator
-	rateLimiter   ratelimiter.RateLimiter
+	config             Config
+	router             *chi.Mux
+	store              *store.Storage
+	logger             *zap.SugaredLogger
+	mailer             mailer.Client
+	jwtAuthenticator   auth.JWTService
+	tokenAuthenticator auth.TokenService
+	rateLimiter        ratelimiter.RateLimiter
 }
 
 type Config struct {
@@ -58,8 +59,8 @@ type ResendConfig struct {
 type AuthConfig struct {
 	HashingCost int
 	Token       TokenConfig
-	MagicLink   MagicLinkConfig
-	OTP         OTPConfig
+	MagicLink   auth.MagicLinkConfig
+	OTP         auth.OTPConfig
 }
 
 type TokenConfig struct {
@@ -71,33 +72,24 @@ type TokenConfig struct {
 	RefreshTokenMaxExp time.Duration // How long the expiration can be extended for
 }
 
-type MagicLinkConfig struct {
-	ByteSize int
-	Exp      time.Duration
-}
-
-type OTPConfig struct {
-	Length      int8
-	MaxAttempts int8
-	Exp         time.Duration
-}
-
 // - Functions/Methods -
 func NewApp(
 	config Config,
 	store *store.Storage,
 	logger *zap.SugaredLogger,
 	mailer mailer.Client,
-	authenticator auth.Authenticator,
+	jwtAuthenticator auth.JWTService,
+	tokenAuthenticator auth.TokenService,
 	rateLimiter ratelimiter.RateLimiter,
 ) *App {
 	app := &App{
-		config:        config,
-		store:         store,
-		logger:        logger,
-		mailer:        mailer,
-		authenticator: authenticator,
-		rateLimiter:   rateLimiter,
+		config:             config,
+		store:              store,
+		logger:             logger,
+		mailer:             mailer,
+		jwtAuthenticator:   jwtAuthenticator,
+		tokenAuthenticator: tokenAuthenticator,
+		rateLimiter:        rateLimiter,
 	}
 	app.router = app.initRouter()
 
@@ -151,21 +143,21 @@ func (app *App) Run() error {
 
 // - Tests -
 
-func NewMockApp(store *store.Storage, logger *zap.SugaredLogger, authenticator auth.Authenticator) *App {
-	app := &App{
-		store:         store,
-		logger:        logger,
-		authenticator: authenticator,
-	}
-	app.router = app.initRouter()
+// func NewMockApp(store *store.Storage, logger *zap.SugaredLogger, authenticator auth.Authenticator) *App {
+// 	app := &App{
+// 		store:         store,
+// 		logger:        logger,
+// 		authenticator: authenticator,
+// 	}
+// 	app.router = app.initRouter()
 
-	return app
-}
+// 	return app
+// }
 
-func (app *App) GetRouter() *chi.Mux {
-	return app.router
-}
+// func (app *App) GetRouter() *chi.Mux {
+// 	return app.router
+// }
 
-func (app *App) GetAuthenticator() auth.Authenticator {
-	return app.authenticator
-}
+// func (app *App) GetAuthenticator() auth.Authenticator {
+// 	return app.authenticator
+// }

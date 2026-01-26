@@ -3,7 +3,8 @@ package store
 import (
 	"context"
 	"database/sql"
-	"time"
+
+	"github.com/Samu-Amy/Shokora/internal/auth"
 )
 
 type User struct {
@@ -33,36 +34,18 @@ func (user *User) IsRoleValid(requiredRole Role) bool {
 	return user.Role >= requiredRole
 }
 
-// Password
-// type Password struct {
-// 	Text *string
-// 	Hash []byte
-// }
-
-// func (p *Password) Set(text string) error {
-// 	hash, err := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	p.Text = &text
-// 	p.Hash = hash
-
-// 	return nil
-// }
-
 // Repository
 type UserRepository interface {
 	// Auth main
-	CreateUserAndSendVerification(context.Context, *User, string, time.Duration) error
-	VerifyEmail(context.Context, string) error
-	DeleteUserAndEmailVerificationToken(context.Context, int64) error
+	CreateUserAndSendVerification(ctx context.Context, user *User, verificationTokens *auth.VerificationTokens) error
+	VerifyEmail(ctx context.Context, plainToken string) error
+	DeleteUserAndEmailVerificationToken(ctx context.Context, userId int64) error
 
 	// Auth utils
-	createEmailVerification(context.Context, *sql.Tx, string, time.Duration, int64) error
-	getUserFromEmailVerificationToken(context.Context, *sql.Tx, string) (*User, error)
-	setUserIsVerified(context.Context, *sql.Tx, int64) error
-	deleteEmailVerificationToken(context.Context, *sql.Tx, int64) error
+	createEmailVerification(ctx context.Context, transaction *sql.Tx, verificationTokens *auth.VerificationTokens, userId int64) error
+	getUserFromEmailVerificationToken(ctx context.Context, transaction *sql.Tx, plainToken string) (*User, error)
+	setUserIsVerified(ctx context.Context, transaction *sql.Tx, userId int64) error
+	deleteEmailVerificationToken(ctx context.Context, transaction *sql.Tx, userId int64) error
 
 	// Users
 	Create(context.Context, *sql.Tx, *User) error

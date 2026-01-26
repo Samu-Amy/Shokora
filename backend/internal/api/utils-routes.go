@@ -1,12 +1,6 @@
 package api
 
 import (
-	"bytes"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
-	"fmt"
-	"math/big"
 	"net/http"
 	"strconv"
 
@@ -48,54 +42,7 @@ func (app *App) getIdFromParam(r *http.Request, idParamName string) (int64, erro
 	return resourceId, nil
 }
 
-// - Auth verification (verify email, reset password, 2FA) -
-
-// Enum
-type tokenType uint8
-
-const (
-	tokenEmailVerification tokenType = 0
-	tokenPasswordReset     tokenType = 1
-	tokenTwoFactorAuth     tokenType = 2
-)
-
-// Generation Methods
-func (app *App) generateVerificationToken() (string, error) { // TODO: nell'handler gestire il retry nel caso non dovesse essere unico
-	buffer := make([]byte, app.config.Auth.MagicLink.ByteSize)
-
-	if _, err := rand.Read(buffer); err != nil {
-		return "", err
-	}
-
-	return base64.RawURLEncoding.EncodeToString(buffer), nil
-}
-
-// TODO: per la verifica dell'otp si usa anche lo user_id nella richiesta (l'otp potrebbe non essere unico nel db)
-func (app *App) generateOTP() (string, error) {
-	length := app.config.Auth.OTP.Length
-
-	// Max for length = 6 -> 1000000 (values in range[000000, 999999])
-	max := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(length)), nil) // Create a new *big.Int as 10^length (big.NewInt(10) ^ big.NewInt(int64(length)))
-
-	otp, err := rand.Int(rand.Reader, max) // max is a *big.Int
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%0*d", length, otp), nil // Format with [length] numbers/zeros
-}
-
-// Hash-related Functions/Methods
-func hashToken(plainToken string) []byte {
-	hash := sha256.Sum256([]byte(plainToken)) // TODO: aggiungere pepper (secret)?
-	return hash[:]                            // From [32]byte to []byte
-}
-
-func verifyToken(plainToken string, hashedToken []byte) bool {
-	hash := hashToken(plainToken)
-	return bytes.Equal(hash, hashedToken)
-}
-
+// - Auth -
 func (app *App) hashPassword(plainPassword string) ([]byte, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(plainPassword), app.config.Auth.HashingCost)
 	if err != nil {

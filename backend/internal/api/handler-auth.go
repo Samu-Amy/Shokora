@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payload"
+	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/mailer"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
@@ -33,7 +34,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Hash password
-	hashedPassword, err := hashPassword(payload.Password)
+	hashedPassword, err := app.hashPassword(payload.Password)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -47,11 +48,41 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		HashedPassword: hashedPassword,
 	}
 
-	// Generate Token
-	hashedToken, plainToken := app.generateHashedToken() // TODO: sistema
+	// Generate verification Token and OTP
+	verificationTokens, err := app.tokenAuthenticator.CreateVerificationTokens(auth.TokenEmailVerification)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	// TODO: nell'handler gestire il retry nel caso non dovesse essere unico
+
+	// plainToken, err := app.tokenAuthenticator.GenerateVerificationToken()
+	// if err != nil {
+	// 	app.internalServerError(w, r, err)
+	// 	return
+	// }
+
+	// plainOTP, err := app.tokenAuthenticator.GenerateOTP()
+	// if err != nil {
+	// 	app.internalServerError(w, r, err)
+	// 	return
+	// }
+
+	// // Hash verification Token and OTP
+	// hashedToken := app.tokenAuthenticator.HashToken(plainToken)
+	// hashedOTP := app.tokenAuthenticator.HashToken(plainOTP)
+
+	// verificationTokens := &auth.VerificationTokens{
+	// 	TokenType:   auth.TokenEmailVerification,
+	// 	HashedToken: hashedToken,
+	// 	HashedOTP:   hashedOTP,
+	// 	TokenExp:    app.config.Auth.MagicLink.Exp,
+	// 	OTPExp:      app.config.Auth.OTP.Exp,
+	// }
 
 	// Create User
-	if err := app.store.User.CreateUserAndSendVerification(ctx, user, hashedToken, app.config.Auth.MagicLink.Exp); err != nil {
+	if err := app.store.User.CreateUserAndSendVerification(ctx, user, verificationTokens); err != nil {
 		app.parseError(w, r, err)
 		return
 	} // TODO: gestire meglio (verificare scadenza token, se scaduto cosa si fa?)
@@ -151,7 +182,7 @@ func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 		"aud": app.config.Auth.Token.Audience, // audience
 	}
 
-	token, err := app.authenticator.GenerateToken(claims)
+	token, err := app.jwtAuthenticator.GenerateJWTToken(claims)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
