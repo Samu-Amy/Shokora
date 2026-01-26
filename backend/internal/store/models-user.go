@@ -7,25 +7,25 @@ import (
 )
 
 type User struct {
-	Id         int64  `json:"id"`
-	FirstName  string `json:"first_name"`
-	LastName   string `json:"last_name"`
-	Email      string `json:"email"`
-	Password   []byte `json:"-"`
-	IsVerified bool   `json:"is_verified"`
-	Role       Role   `json:"role"`
-	CreatedAt  string `json:"created_at"`
-	UpdatedAt  string `json:"updated_at"`
+	Id             int64  `json:"id"`
+	FirstName      string `json:"first_name"`
+	LastName       string `json:"last_name"`
+	Email          string `json:"email"`
+	HashedPassword []byte `json:"-"`
+	IsVerified     bool   `json:"is_verified"`
+	Role           Role   `json:"role"`
+	CreatedAt      string `json:"created_at"`
+	UpdatedAt      string `json:"updated_at"`
 }
 
 // Roles
 type Role uint8
 
 const (
-	RoleCustomer Role = iota
-	RoleEmployee
-	RoleAdmin
-	RoleDev
+	RoleCustomer Role = 0
+	RoleEmployee Role = 1
+	RoleAdmin    Role = 2
+	RoleDev      Role = 3
 )
 
 func (user *User) IsRoleValid(requiredRole Role) bool {

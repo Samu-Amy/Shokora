@@ -32,17 +32,19 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create user from payload data
-	user := &store.User{
-		FirstName: payload.FirstName,
-		LastName:  payload.LastName,
-		Email:     payload.Email,
-	}
-
-	// Hash and set password
-	if err := user.Password.Set(payload.Password); err != nil { // TODO: sistema
+	// Hash password
+	hashedPassword, err := hashPassword(payload.Password)
+	if err != nil {
 		app.internalServerError(w, r, err)
 		return
+	}
+
+	// Create user from payload data
+	user := &store.User{
+		FirstName:      payload.FirstName,
+		LastName:       payload.LastName,
+		Email:          payload.Email,
+		HashedPassword: hashedPassword,
 	}
 
 	// Generate Token
@@ -67,7 +69,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	isProdEnv := app.config.Env == "prod"
 
 	// Send email
-	err := app.mailer.SendEmail(ctx, mailer.EmailVerificationTemplate, user.FirstName, user.Email, vars, !isProdEnv)
+	err = app.mailer.SendEmail(ctx, mailer.EmailVerificationTemplate, user.FirstName, user.Email, vars, !isProdEnv)
 	if err != nil {
 		app.logger.Errorw("error sending welcome email", "error", err)
 
@@ -102,8 +104,6 @@ func (app *App) verifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: aggiungi creazione ed invio token (togliere createTokenHandler?) - crea anche refresh token (?)
-
 	//* No content
 	w.WriteHeader(http.StatusNoContent) // TODO: setta http-only cookies con token e invia user
 }
@@ -130,12 +130,12 @@ func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// Fetch the user (check if the user exist)
 	user, err := app.store.User.GetByEmail(ctx, payload.Email)
 	if err != nil {
-		app.parseError(w, r, err) // TODO: non dire se l'email esiste o meno
+		app.parseError(w, r, err) // TODO: FRONTEND - non dire se l'email esiste o meno
 		return
 	}
 
 	// Compare password
-	err = bcrypt.CompareHashAndPassword(user.Password.Hash, []byte(payload.Password))
+	err = bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(payload.Password))
 	if err != nil {
 		app.unauthorizedError(w, r, err)
 		return

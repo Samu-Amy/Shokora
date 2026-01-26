@@ -49,20 +49,23 @@ func main() {
 			FromEmail: env.GetString("FROM_EMAIL", ""),
 		},
 		Auth: api.AuthConfig{
+			HashingCost: 12, // bcrypt.DefaultCost = 10
 			Token: api.TokenConfig{
 				Secret:             env.GetString("AUTH_TOKEN_SECRET", "basicTokenSecret"),
 				Audience:           "shokora",
 				Issuer:             "shokora",
 				AccessTokenExp:     15 * time.Minute,    // 15 min (suggested: 15-60 min) //TODO: alza a 30 (?)
-				RefreshTokenExp:    21 * 24 * time.Hour, // 21 days (suggested: 7-30 days) // TODO: due opzioni, una breve (es. 7 giorni) ed una "ricordami" (es. circa 30 giorni) ed eventualmente se si accede spesso si può allungare un po' la scadenza (?)
-				RefreshTokenMaxExp: 90 * 24 * time.Hour, // 90 days (suggested: 7-30 days)
+				RefreshTokenExp:    28 * 24 * time.Hour, // 28 days (suggested: 7-30 days) // TODO: due opzioni, una breve (es. 7 giorni) ed una "ricordami" (es. circa 30 giorni) ed eventualmente se si accede spesso si può allungare un po' la scadenza (?)
+				RefreshTokenMaxExp: 90 * 24 * time.Hour, // 90 days (suggested: max 90 days)
 			},
 			MagicLink: api.MagicLinkConfig{
-				Exp: 24 * time.Hour, // 1 day
+				ByteSize: 32,
+				Exp:      30 * time.Minute, // 30 min
 			},
 			OTP: api.OTPConfig{
+				Length:      6, // Suggested: between 4 and 10
 				MaxAttempts: 5,
-				Exp:         5 * time.Minute, // 30 min
+				Exp:         5 * time.Minute, // 5 min
 			},
 		},
 		RateLimiter: ratelimiter.RateLimiterConfig{

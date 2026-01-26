@@ -1,13 +1,11 @@
 package api
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
-	"errors"
 	"fmt"
-	"math"
 	"math/big"
 	"net/http"
 	"strconv"
@@ -56,75 +54,50 @@ func (app *App) getIdFromParam(r *http.Request, idParamName string) (int64, erro
 type tokenType uint8
 
 const (
-	tokenEmailVerification tokenType = iota
-	tokenPasswordReset
-	tokenTwoFactorAuth
+	tokenEmailVerification tokenType = 0
+	tokenPasswordReset     tokenType = 1
+	tokenTwoFactorAuth     tokenType = 2
 )
 
-// Functions
-func generateVerificationTokens() (string, []byte) {
-	plainToken, err := generateplainVerificationToken()
-	if err != nil {
-		return "", nil // TODO: sistema
-	}
+// Generation Methods
+func (app *App) generateVerificationToken() (string, error) { // TODO: nell'handler gestire il retry nel caso non dovesse essere unico
+	buffer := make([]byte, app.config.Auth.MagicLink.ByteSize)
 
-	// hash token
-
-	return plainToken, nil
-}
-
-// func generateOTP() string {
-// 	buffer := make([]byte, 32) // 32 byte
-// 	if _, err := rand.Read(buffer); err != nil {
-// 		return ""
-// 	}
-// 	return hex.EncodeToString(buffer)
-// }
-
-func generateplainVerificationToken() (string, error) {
-	buffer := make([]byte, 32)                   // 32 byte
-	if _, err := rand.Read(buffer); err != nil { // TODO: sistema
+	if _, err := rand.Read(buffer); err != nil {
 		return "", err
 	}
-	return base64.RawURLEncoding.EncodeToString(b), nil
+
+	return base64.RawURLEncoding.EncodeToString(buffer), nil
 }
 
-// TODO: controlla
-func generatePlainOTP(digits int) (string, error) {
-	if digits < 4 || digits > 8 {
-		return "", errors.New("invalid otp length")
-	}
+// TODO: per la verifica dell'otp si usa anche lo user_id nella richiesta (l'otp potrebbe non essere unico nel db)
+func (app *App) generateOTP() (string, error) {
+	length := app.config.Auth.OTP.Length
 
-	max := int(math.Pow10(digits))
+	// Max for length = 6 -> 1000000 (values in range[000000, 999999])
+	max := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(length)), nil) // Create a new *big.Int as 10^length (big.NewInt(10) ^ big.NewInt(int64(length)))
 
-	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	otp, err := rand.Int(rand.Reader, max) // max is a *big.Int
 	if err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("%0*d", digits, n.Int64()), nil
+	return fmt.Sprintf("%0*d", length, otp), nil // Format with [length] numbers/zeros
 }
 
-func hashToken(plainToken string) ([]byte, error) {
-	hash := sha256.Sum256([]byte(plainToken))
-	hashedToken := hex.EncodeToString(hash[:])
-
-	return hashedToken, nil
+// Hash-related Functions/Methods
+func hashToken(plainToken string) []byte {
+	hash := sha256.Sum256([]byte(plainToken)) // TODO: aggiungere pepper (secret)?
+	return hash[:]                            // From [32]byte to []byte
 }
 
-// func hashToken(token string, secret []byte) []byte {
-// 	mac := hmac.New(sha256.New, secret)
-// 	mac.Write([]byte(token))
-// 	return mac.Sum(nil)
-// }
+func verifyToken(plainToken string, hashedToken []byte) bool {
+	hash := hashToken(plainToken)
+	return bytes.Equal(hash, hashedToken)
+}
 
-// CONFRONTO (?)
-// if !hmac.Equal(storedHash, hashToken(token, secret)) {
-// 	return errors.New("invalid token")
-// }
-
-func hashPassword(plainPassword string) ([]byte, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(plainPassword), bcrypt.DefaultCost)
+func (app *App) hashPassword(plainPassword string) ([]byte, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(plainPassword), app.config.Auth.HashingCost)
 	if err != nil {
 		return nil, err
 	}

@@ -56,9 +56,10 @@ type ResendConfig struct {
 }
 
 type AuthConfig struct {
-	Token     TokenConfig
-	MagicLink MagicLinkConfig
-	OTP       OTPConfig
+	HashingCost int
+	Token       TokenConfig
+	MagicLink   MagicLinkConfig
+	OTP         OTPConfig
 }
 
 type TokenConfig struct {
@@ -71,10 +72,12 @@ type TokenConfig struct {
 }
 
 type MagicLinkConfig struct {
-	Exp time.Duration
+	ByteSize int
+	Exp      time.Duration
 }
 
 type OTPConfig struct {
+	Length      int8
 	MaxAttempts int8
 	Exp         time.Duration
 }

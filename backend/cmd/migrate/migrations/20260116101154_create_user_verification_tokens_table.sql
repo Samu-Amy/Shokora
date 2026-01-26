@@ -1,15 +1,29 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE IF NOT EXISTS email_verification_tokens(
-  token bytea PRIMARY KEY,
-  user_id bigint NOT NULL,
-  expiry TIMESTAMP(0) with time zone NOT NULL
+CREATE TABLE IF NOT EXISTS verification_tokens(
+  user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  verification_type smallint NOT NULL CHECK (verification_type BETWEEN 0 AND 2),
+  
+  token_hash bytea UNIQUE NOT NULL,
+  token_exp timestamp(0) with time zone NOT NULL,
+  
+  otp_hash bytea NOT NULL,
+  otp_exp timestamp(0) with time zone NOT NULL,
+  otp_attempts smallint NOT NULL DEFAULT 0,
+  
+  created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
+  updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
+  
+  PRIMARY KEY (user_id, verification_type)
 );
 
--- TODO: setta user_id come foreign key e metti che lo row del token viene eliminata se si elimina l'utente
+CREATE TRIGGER update_verification_tokens_updated_at
+BEFORE UPDATE ON verification_tokens
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS email_verification_tokens;
+DROP TABLE IF EXISTS verification_tokens;
 -- +goose StatementEnd
