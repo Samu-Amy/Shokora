@@ -38,6 +38,7 @@ func (user *User) IsRoleValid(requiredRole Role) bool {
 type UserRepository interface {
 	// Auth main
 	CreateUserAndSendVerification(ctx context.Context, user *User, verificationTokens *auth.VerificationTokens) error
+	ResendEmailVerificationEmail(ctx context.Context, email string) error
 	VerifyEmail(ctx context.Context, plainToken string) error
 	DeleteUserAndEmailVerificationToken(ctx context.Context, userId int64) error
 
@@ -48,8 +49,8 @@ type UserRepository interface {
 	deleteEmailVerificationToken(ctx context.Context, transaction *sql.Tx, userId int64) error
 
 	// Users
-	Create(context.Context, *sql.Tx, *User) error
-	GetById(context.Context, int64) (*User, error)
-	GetByEmail(context.Context, string) (*User, error)
-	Delete(context.Context, *sql.Tx, int64) error
+	Create(ctx context.Context, transaction *sql.Tx, user *User) error
+	GetById(ctx context.Context, userId int64) (*User, error)
+	GetByEmail(ctx context.Context, email string) (*User, error)
+	Delete(ctx context.Context, transaction *sql.Tx, userId int64) error
 }

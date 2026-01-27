@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users(
   is_active boolean NOT NULL DEFAULT TRUE,
   user_role smallint NOT NULL DEFAULT 0 CHECK (user_role BETWEEN 0 AND 3),
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
-  updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW()
+  updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW() -- TODO: aggiungere campo per 2FA?
 );
 
 CREATE TRIGGER update_users_updated_at

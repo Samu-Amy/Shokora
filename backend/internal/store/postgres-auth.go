@@ -9,6 +9,8 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/auth"
 )
 
+// TODO: fai lookup anche per verification_type (token + verification_type | OPT + email + verification_type + attempts)
+
 // ----- CREATE USER -----
 
 func (store *PostgresUserStore) CreateUserAndSendVerification(ctx context.Context, user *User, verificationTokens *auth.VerificationTokens) error {
@@ -20,12 +22,17 @@ func (store *PostgresUserStore) CreateUserAndSendVerification(ctx context.Contex
 		}
 
 		// Create verification
-		if err := store.createEmailVerification(ctx, transaction, hashedToken, verificationExp, user.Id); err != nil {
+		if err := store.createEmailVerification(ctx, transaction, verificationTokens, user.Id); err != nil {
 			return err
 		}
 
 		return nil
 	})
+}
+
+func (store *PostgresUserStore) ResendEmailVerificationEmail(ctx context.Context, email string) error {
+	// TODO: implementa re-invio email con token
+	return nil
 }
 
 // ----- VERIFY EMAIL  -----
@@ -51,11 +58,6 @@ func (store *PostgresUserStore) VerifyEmail(ctx context.Context, plainToken stri
 
 		return nil
 	})
-}
-
-func (store *PostgresUserStore) ResendEmailVerificationEmail(ctx context.Context, email string) error {
-	// TODO: implementa re-invio email con token
-	return nil
 }
 
 // ----- DELETE -----
@@ -88,7 +90,7 @@ func (store *PostgresUserStore) createEmailVerification(ctx context.Context, tra
 	_, err := transaction.ExecContext(
 		ctx,
 		query,
-		hashedToken,
+		verificationTokens.HashedToken,
 		userId,
 		time.Now().Add(verificationExp),
 	)

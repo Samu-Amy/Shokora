@@ -82,12 +82,12 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// Create User
-	if err := app.store.User.CreateUserAndSendVerification(ctx, user, verificationTokens); err != nil {
+	if err := app.store.User.CreateUserAndSendVerification(ctx, user, verificationTokens); err != nil { // TODO: aggiungi scadenza ed altro
 		app.parseError(w, r, err)
 		return
 	} // TODO: gestire meglio (verificare scadenza token, se scaduto cosa si fa?)
 
-	activationURL := fmt.Sprintf("%s/verify-email/%s", app.config.FrontEndURL, plainToken)
+	activationURL := fmt.Sprintf("%s/verify-email/%s", app.config.FrontEndURL, verificationTokens.PlainToken)
 
 	vars := struct {
 		Name          string
@@ -126,7 +126,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 // ----- EMAIL VERIFICATION -----
 
-func (app *App) verifyEmailHandler(w http.ResponseWriter, r *http.Request) {
+func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	token := chi.URLParam(r, "token")
 

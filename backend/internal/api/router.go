@@ -74,13 +74,18 @@ func (app *App) initRouter() *chi.Mux {
 		// - Auth Routes -
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)
-			r.Post("/verify-email/{token}", app.verifyEmailHandler)
-			r.Post("/token", app.createTokenHandler)
+
+			r.Post("/tokens", app.createTokenHandler)
+			// r.Post("/verify-email", app.verifyEmailWithOTPHandler)
+			r.Post("/verify-email/{token}", app.verifyEmailWithTokenHandler)
+			// r.Post("/verify-2fa", app.verify2FAWithOTPHandler)
+			// r.Post("/verify-2fa/{token}", app.verify2FAWithTokenHandler)
 			// TODO: implementa routes per login, reset password, ecc.
-			// r.Post("/login", ...)
+			// r.Post("/login", ...) // TODO: se 2fa -> "verify-2fa[/{token}]" -> generate auth tokens ("tokens"), se no 2fa -> generate auth tokens ("tokens")
 			// r.Post("/refresh", ...)
 			// r.Post("/reset-password", ...)
 			// r.Post("/logout", ...)
+
 			r.Group(func(r chi.Router) {
 				// TODO: usare (o crearne uno simile) middleware auth per ottenere l'utente (?)
 				// r.Get("/me" app.getCurrentAuthUserHandler) // TODO: per ottenere i dati dell'utente se autenticato

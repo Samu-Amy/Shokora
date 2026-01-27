@@ -24,7 +24,9 @@ type MagicLinkConfig struct {
 type OTPConfig struct {
 	Length      int8
 	MaxAttempts int8
-	Exp         time.Duration
+	LongExp     time.Duration // For Email Verification
+	BaseExp     time.Duration // For Password Reset and 2FA
+	// CriticalExp time.Duration // For critical operations (es. 30s)
 }
 
 // Tokens
@@ -34,7 +36,6 @@ type VerificationTokens struct { // TODO: fai methodi per seplificarne la creazi
 	HashedToken []byte
 	PlainOTP    string
 	HashedOTP   []byte
-	TokenExp    time.Duration
 	OTPExp      time.Duration
 }
 
@@ -77,12 +78,30 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(tokenType
 		HashedToken: hashedToken,
 		PlainOTP:    plainOTP,
 		HashedOTP:   hashedOTP,
-		TokenExp:    tokenAuthenticator.MagicLink.Exp,
-		OTPExp:      tokenAuthenticator.OTP.Exp,
+		OTPExp:      tokenAuthenticator.getExp(tokenType),
 	}, nil
 }
 
 // - Utils -
+
+func (tokenAuthenticator *TokenAuthenticator) getExp(tokenType TokenType) time.Duration {
+	var exp time.Duration
+
+	switch tokenType {
+
+	case TokenEmailVerification:
+		exp = tokenAuthenticator.OTP.LongExp
+
+	case TokenPasswordReset:
+	case TokenTwoFactorAuth:
+		exp = tokenAuthenticator.OTP.BaseExp
+
+	default:
+		exp = tokenAuthenticator.OTP.BaseExp
+	}
+
+	return exp
+}
 
 // Generate
 func (tokenAuthenticator *TokenAuthenticator) GenerateVerificationToken() (string, error) {
@@ -116,5 +135,5 @@ func (tokenAuthenticator *TokenAuthenticator) HashToken(plainToken string) []byt
 
 func (tokenAuthenticator *TokenAuthenticator) VerifyToken(plainToken string, hashedToken []byte) bool {
 	hash := tokenAuthenticator.HashToken(plainToken)
-	return bytes.Equal(hash, hashedToken)
+	return bytes.Equal(hash, hashedToken) // TODO: usa subtle.ConstantTimeCompare(hash1, hash2) == 1
 }
