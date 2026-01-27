@@ -87,7 +87,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	} // TODO: gestire meglio (verificare scadenza token, se scaduto cosa si fa?)
 
-	activationURL := fmt.Sprintf("%s/verify-email/%s", app.config.FrontEndURL, verificationTokens.PlainToken)
+	activationURL := fmt.Sprintf("%s/verify-email/%s", app.config.FrontEndURL, verificationTokens.PlainMagicLinkToken)
 
 	vars := struct {
 		Name          string

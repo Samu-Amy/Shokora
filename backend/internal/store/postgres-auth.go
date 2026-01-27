@@ -90,9 +90,9 @@ func (store *PostgresUserStore) createEmailVerification(ctx context.Context, tra
 	_, err := transaction.ExecContext(
 		ctx,
 		query,
-		verificationTokens.HashedToken,
+		verificationTokens.HashedMagicLinkToken,
 		userId,
-		time.Now().Add(verificationExp),
+		time.Now().Add(verificationTokens.OTPExp),
 	)
 
 	if err != nil {

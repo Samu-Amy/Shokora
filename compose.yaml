@@ -12,6 +12,7 @@ services:
       - 80:80 # (?)
     build: frontend/build # (?)
     # TODO: rate limiter
+    # TODO: per accedere alle foto su MinIO posso "esporre l'accesso" tramite nginx?
 
   backend:
     image: golang:1.25.4-alpine
