@@ -42,12 +42,12 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create user from payload data
 	user := &store.User{
-		FirstName:      payload.FirstName,
-		LastName:       payload.LastName,
-		Email:          payload.Email,
-		HashedPassword: hashedPassword,
-		ImageUrl:       payload.ImageUrl,
-		BirthDate:      payload.BirthDate,
+		FirstName:    payload.FirstName,
+		LastName:     payload.LastName,
+		Email:        payload.Email,
+		PasswordHash: hashedPassword,
+		ImageUrl:     payload.ImageUrl,
+		BirthDate:    payload.BirthDate,
 	} // TODO: aggiorna query (per image_url e birth_date)
 
 	// Generate verification Token and OTP
@@ -168,7 +168,7 @@ func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Compare password
-	err = bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(payload.Password))
+	err = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(payload.Password))
 	if err != nil {
 		app.unauthorizedError(w, r, err)
 		return
