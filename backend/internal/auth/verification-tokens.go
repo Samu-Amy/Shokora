@@ -115,8 +115,6 @@ func (tokenAuthenticator *TokenAuthenticator) HashMagicLinkToken(plainMagicLinkT
 }
 
 func (tokenAuthenticator *TokenAuthenticator) HashOTP(plainOTP string, verificationType VerificationType) []byte {
-	// hash := sha256.Sum256([]byte(plainToken + tokenAuthenticator.getVerificationTypeString(verificationType) + tokenAuthenticator.secret)) // TODO: usare HMAC?
-	// return hash[:]                                                                                                                         // From [32]byte to []byte
 	mac := hmac.New(sha256.New, []byte(tokenAuthenticator.secret))
 	mac.Write([]byte(plainOTP + tokenAuthenticator.getVerificationTypeString(verificationType)))
 	return mac.Sum(nil)

@@ -11,3 +11,5 @@ type RateLimiterConfig struct {
 	TimeFrame            time.Duration
 	Enabled              bool
 }
+
+// TODO: sfruttare il rate limiter anche per deboucing (evitare richieste troppo vicine tra loro, soprattutto se uguali o simili (modificano la stessa risorsa))

@@ -8,6 +8,7 @@
   let status = $state<FetchStatus>("loading");
 
   onMount(async () => {
+    // TODO: implementa debouncing (magari crea una funzione per gestire le query con metodi, debouncing ed altro)
     try {
       const res = await fetch(
         `/api/v1/auth/verify-email/${data.token}`,
