@@ -1,5 +1,6 @@
 package payload
 
+// - Payloads -
 type CreateProductPayload struct {
 	Name        string  `json:"name" validate:"required,min=1,max=150"` // Required
 	Description string  `json:"description" validate:"max=2500"`        // Default ""

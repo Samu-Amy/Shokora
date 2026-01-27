@@ -3,21 +3,24 @@ package store
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 )
 
 type User struct {
-	Id             int64  `json:"id"`
-	FirstName      string `json:"first_name"`
-	LastName       string `json:"last_name"`
-	Email          string `json:"email"`
-	HashedPassword []byte `json:"-"`
-	IsVerified     bool   `json:"is_verified"`
-	IsActive       bool   `json:"is_active"`
-	Role           Role   `json:"role"`
-	CreatedAt      string `json:"created_at"`
-	UpdatedAt      string `json:"updated_at"`
+	Id             int64     `json:"id"`
+	FirstName      string    `json:"first_name"`
+	LastName       string    `json:"last_name"`
+	Email          string    `json:"email"`
+	HashedPassword []byte    `json:"-"`
+	ImageUrl       string    `json:"image_url"`
+	BirthDate      time.Time `json:"birth_date"`
+	IsVerified     bool      `json:"is_verified"`
+	IsActive       bool      `json:"is_active"`
+	Role           Role      `json:"role"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 // Roles

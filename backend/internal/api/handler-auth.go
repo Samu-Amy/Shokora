@@ -46,7 +46,9 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		LastName:       payload.LastName,
 		Email:          payload.Email,
 		HashedPassword: hashedPassword,
-	}
+		ImageUrl:       payload.ImageUrl,
+		BirthDate:      payload.BirthDate,
+	} // TODO: aggiorna query (per image_url e birth_date)
 
 	// Generate verification Token and OTP
 	verificationTokens, err := app.tokenAuthenticator.CreateVerificationTokens(auth.TokenEmailVerification)
@@ -82,7 +84,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// Create User
-	if err := app.store.User.CreateUserAndSendVerification(ctx, user, verificationTokens); err != nil { // TODO: aggiungi scadenza ed altro
+	if err := app.store.User.CreateUserAndSendVerification(ctx, user, verificationTokens); err != nil { // TODO: aggiungi scadenza token ed altro
 		app.parseError(w, r, err)
 		return
 	} // TODO: gestire meglio (verificare scadenza token, se scaduto cosa si fa?)
@@ -145,7 +147,7 @@ func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payload.CreateUserTokenPayload
+	var payload payload.UserLoginPayload
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)

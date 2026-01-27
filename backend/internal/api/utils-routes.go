@@ -49,7 +49,7 @@ func (app *App) hashPassword(plainPassword string) ([]byte, error) {
 		return nil, err
 	}
 
-	return hash, err
+	return hash, nil
 }
 
 // func (app *App) setAuthCookie(w http.ResponseWriter, token string) {

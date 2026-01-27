@@ -4,10 +4,10 @@ CREATE TABLE IF NOT EXISTS verification_tokens(
   user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   verification_type smallint NOT NULL CHECK (verification_type BETWEEN 0 AND 2),
   
-  token_hash bytea UNIQUE NOT NULL,
-  token_exp timestamp(0) with time zone NOT NULL,
+  magic_link_token bytea UNIQUE NOT NULL,
+  magic_link_token_exp timestamp(0) with time zone NOT NULL,
   
-  otp_hash bytea NOT NULL,
+  otp bytea NOT NULL,
   otp_exp timestamp(0) with time zone NOT NULL,
   otp_attempts smallint NOT NULL DEFAULT 0,
   

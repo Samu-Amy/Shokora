@@ -8,18 +8,32 @@ Password validation:
 - max 72 chars
 */
 
+// - Payload Fields -
+type UserData struct {
+	FirstName string `json:"first_name" validate:"required,max=125"`
+	LastName  string `json:"last_name" validate:"omitempty,max=125"` // TODO: opzionale (?)
+}
+
+type UserEmail struct {
+	Email string `json:"email" validate:"required,email,max=255"`
+}
+
+type UserPassword struct {
+	Password string `json:"password" validate:"required,min=8,max=72"` // TODO: aggiungere altri controlli?
+}
+
+// - Payloads -
 type RegisterUserPayload struct {
-	FirstName string    `json:"first_name" validate:"required,max=125"`
-	LastName  string    `json:"last_name" validate:"required,max=125"`
-	Email     string    `json:"email" validate:"required,email,max=255"`
-	Password  string    `json:"password" validate:"required,min=8,max=72"`    // TODO: aggiungere altri controlli?
+	UserData
+	UserEmail
+	UserPassword
 	ImageUrl  string    `json:"image_url,omitempty" validate:"omitempty,url"` // TODO: usare url (se l'url sarà conforme al controllo)?
 	BirthDate time.Time `json:"birth_date,omitempty" validate:"omitempty"`    // TODO: fare validazione
 }
 
-type CreateUserTokenPayload struct {
-	Email    string `json:"email" validate:"required,email,max=255"`
-	Password string `json:"password" validate:"required,min=8,max=72"`
+type UserLoginPayload struct {
+	UserEmail
+	UserPassword
 }
 
 // TODO: fare validazione custom (tipo quella sotto)?
