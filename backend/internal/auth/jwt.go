@@ -10,6 +10,8 @@ type JWTAuthenticator struct {
 	issuer   string
 }
 
+// TODO: gestisci anche Refresh Tokens (?) - aggiungi pepper per l'hashing dei Refresh Token
+
 // - Constructor -
 
 func NewJWTAuthenticator(secret, audience, issuer string) *JWTAuthenticator {

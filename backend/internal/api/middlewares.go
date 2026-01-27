@@ -50,7 +50,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 
 		token := parts[1]
 
-		jwtToken, err := app.authenticator.ValidateToken(token)
+		jwtToken, err := app.jwtAuthenticator.ValidateJWTToken(token)
 		if err != nil {
 			app.unauthorizedError(w, r, ErrTokenExpired)
 			return

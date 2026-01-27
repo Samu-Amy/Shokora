@@ -9,7 +9,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/auth"
 )
 
-// TODO: fai lookup anche per verification_type (token + verification_type | OPT + email + verification_type + attempts)
+// TODO: fai lookup anche per verification_type (token + verification_type | OPT + email + verification_type + attempts) -- SET otp_attempts = otp_attempts + 1 (aggiorna atomicamente attempts)
 
 // ----- CREATE USER -----
 

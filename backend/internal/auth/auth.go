@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -10,9 +12,17 @@ type JWTService interface {
 }
 
 type TokenService interface {
-	CreateVerificationTokens(tokenType TokenType) (*VerificationTokens, error)
-	GenerateVerificationToken() (string, error)
+	CreateVerificationTokens(verificationType VerificationType) (*VerificationTokens, error)
+
+	GenerateMagicLinkToken() (string, error)
 	GenerateOTP() (string, error)
-	HashToken(plainToken string) []byte
-	VerifyToken(plainToken string, hashedToken []byte) bool
+
+	HashMagicLinkToken(plainMagicLinkToken string) []byte
+	HashOTP(plainOTP string, verificationType VerificationType) []byte
+
+	VerifyMagicLinkToken(plainToken string, hashedToken []byte) bool
+	VerifyOTP(plainOTP string, hashedToken []byte, verificationType VerificationType) bool
+
+	getExpiration(verificationType VerificationType) time.Duration
+	getVerificationTypeString(verificationType VerificationType) string
 }

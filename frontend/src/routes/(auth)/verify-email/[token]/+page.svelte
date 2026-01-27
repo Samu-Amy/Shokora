@@ -32,6 +32,8 @@
       status = "error";
     }
   });
+
+  // TODO: per il reset della password mettere opzione "disconnetti da tutti i dispositivi" -> elimina tutti i Refresh Token (di tutte le sessioni) di quell'utente
 </script>
 
 <svelte:head>

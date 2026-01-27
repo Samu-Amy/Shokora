@@ -23,12 +23,16 @@ import (
 // DB Connection string
 
 func main() {
-	env.LoadEnv() //! - Dev Only (use file .env) - !
+	environment := env.GetString("ENV", "dev")
+
+	if environment != "prod" {
+		env.LoadEnv() //! - Dev Only - !
+	}
 
 	// - App and DB Config -
 	config := api.Config{
 		Addr:        env.GetString("SERVER_PORT", ":8080"),
-		Env:         env.GetString("ENV", "dev"),
+		Env:         environment,
 		FrontEndURL: env.GetString("FRONTEND_URL", "http://localhost:5173"),
 		AllowedOriginsURLs: env.LoadCORSOrigins([]string{
 			"http://localhost:5173",
@@ -51,7 +55,7 @@ func main() {
 		Auth: api.AuthConfig{
 			HashingCost: 12, // bcrypt.DefaultCost = 10
 			Token: api.TokenConfig{
-				Secret:             env.GetString("AUTH_TOKEN_SECRET", "basicTokenSecret"),
+				Secret:             env.GetString("AUTH_TOKEN_SECRET", "4a4c345b5064c9a85fff749313ff25310085a606a47232c94e9d898470c6e854"), // TODO: usa "openssl rand -hex 32" per generare token
 				Audience:           "shokora",
 				Issuer:             "shokora",
 				AccessTokenExp:     15 * time.Minute,    // 15 min (suggested: 15-60 min) //TODO: alza a 30 (?)
@@ -68,6 +72,7 @@ func main() {
 				LongExp:     10 * time.Minute, // 10 min (email verification)
 				BaseExp:     5 * time.Minute,  // 5 min (password reset, 2FA)
 			},
+			VerficationTokensSecret: env.GetString("VERIFICATION_TOKENS_SECRET", "076477e061001e898408230972c4ec67b806b38449860c8304e04e0ef33b60be"),
 		},
 		RateLimiter: ratelimiter.RateLimiterConfig{
 			RequestsPerTimeFrame: env.GetInt("RATE_LIMITER_REQUESTS_COUNT", 20), // TODO: fix (cambia)
@@ -112,6 +117,7 @@ func main() {
 	tokenAuthenricator := auth.NewTokenAuthenticator(
 		config.Auth.MagicLink,
 		config.Auth.OTP,
+		config.Auth.VerficationTokensSecret,
 	)
 
 	// - Rate Limiter -

@@ -57,10 +57,11 @@ type ResendConfig struct {
 }
 
 type AuthConfig struct {
-	HashingCost int
-	Token       TokenConfig
-	MagicLink   auth.MagicLinkConfig
-	OTP         auth.OTPConfig
+	HashingCost             int
+	Token                   TokenConfig
+	MagicLink               auth.MagicLinkConfig
+	OTP                     auth.OTPConfig
+	VerficationTokensSecret string
 }
 
 type TokenConfig struct {

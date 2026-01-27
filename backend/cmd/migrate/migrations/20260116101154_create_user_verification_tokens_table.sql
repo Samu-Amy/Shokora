@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS verification_tokens(
   user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   verification_type smallint NOT NULL CHECK (verification_type BETWEEN 0 AND 2),
   
-  token_hash bytea UNIQUE NOT NULL, -- In realtà dovrebbe bastare l'unicità per user_id (poi con la verification_type si decide l'azione)
+  token_hash bytea UNIQUE NOT NULL,
   token_exp timestamp(0) with time zone NOT NULL,
   
   otp_hash bytea NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS verification_tokens(
   updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   
   PRIMARY KEY (user_id, verification_type)
-  -- TODO: aggiungi unicità otp - user_id
+  -- UNIQUE (user_id, otp_hash)
 );
 
 CREATE TRIGGER update_verification_tokens_updated_at

@@ -1,19 +1,21 @@
 package auth
 
 import (
-	"bytes"
+	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
 	"math/big"
 	"time"
 )
 
-// Authenticator
+// - Authenticator -
 type TokenAuthenticator struct {
 	MagicLink MagicLinkConfig
 	OTP       OTPConfig
+	secret    string
 }
 
 type MagicLinkConfig struct {
@@ -29,36 +31,36 @@ type OTPConfig struct {
 	// CriticalExp time.Duration // For critical operations (es. 30s)
 }
 
-// Tokens
+// - Tokens -
 type VerificationTokens struct { // TODO: fai methodi per seplificarne la creazione (?)
-	TokenType   TokenType
-	PlainToken  string
-	HashedToken []byte
-	PlainOTP    string
-	HashedOTP   []byte
-	OTPExp      time.Duration
+	VerificationType     VerificationType
+	PlainMagicLinkToken  string
+	HashedMagicLinkToken []byte
+	PlainOTP             string
+	HashedOTP            []byte
+	OTPExp               time.Duration
 }
 
 // Verification Token and OTP
-type TokenType uint8
+type VerificationType uint8
 
 const (
-	TokenEmailVerification TokenType = 0
-	TokenPasswordReset     TokenType = 1
-	TokenTwoFactorAuth     TokenType = 2
+	TokenEmailVerification VerificationType = 0
+	TokenPasswordReset     VerificationType = 1
+	TokenTwoFactorAuth     VerificationType = 2
 )
 
 // - Constructor -
 
-func NewTokenAuthenticator(MagicLink MagicLinkConfig, OTP OTPConfig) *TokenAuthenticator {
-	return &TokenAuthenticator{MagicLink, OTP}
+func NewTokenAuthenticator(MagicLink MagicLinkConfig, OTP OTPConfig, secret string) *TokenAuthenticator {
+	return &TokenAuthenticator{MagicLink, OTP, secret}
 }
 
 // - Methods -
 
-func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(tokenType TokenType) (*VerificationTokens, error) {
+func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificationType VerificationType) (*VerificationTokens, error) {
 	// Generate verification Token and OTP
-	plainToken, err := tokenAuthenticator.GenerateVerificationToken() // TODO: nell'handler gestire il retry nel caso non dovesse essere unico
+	plainMagicLinkToken, err := tokenAuthenticator.GenerateMagicLinkToken() // TODO: nell'handler gestire il retry nel caso non dovesse essere unico
 	if err != nil {
 		return nil, err
 	}
@@ -69,42 +71,21 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(tokenType
 	}
 
 	// Hash verification Token and OTP
-	hashedToken := tokenAuthenticator.HashToken(plainToken)
-	hashedOTP := tokenAuthenticator.HashToken(plainOTP)
+	hashedMagicLinkToken := tokenAuthenticator.HashMagicLinkToken(plainMagicLinkToken)
+	hashedOTP := tokenAuthenticator.HashOTP(plainOTP, verificationType)
 
 	return &VerificationTokens{
-		TokenType:   tokenType,
-		PlainToken:  plainToken,
-		HashedToken: hashedToken,
-		PlainOTP:    plainOTP,
-		HashedOTP:   hashedOTP,
-		OTPExp:      tokenAuthenticator.getExp(tokenType),
+		VerificationType:     verificationType,
+		PlainMagicLinkToken:  plainMagicLinkToken,
+		HashedMagicLinkToken: hashedMagicLinkToken,
+		PlainOTP:             plainOTP,
+		HashedOTP:            hashedOTP,
+		OTPExp:               tokenAuthenticator.getExpiration(verificationType),
 	}, nil
 }
 
-// - Utils -
-
-func (tokenAuthenticator *TokenAuthenticator) getExp(tokenType TokenType) time.Duration {
-	var exp time.Duration
-
-	switch tokenType {
-
-	case TokenEmailVerification:
-		exp = tokenAuthenticator.OTP.LongExp
-
-	case TokenPasswordReset:
-	case TokenTwoFactorAuth:
-		exp = tokenAuthenticator.OTP.BaseExp
-
-	default:
-		exp = tokenAuthenticator.OTP.BaseExp
-	}
-
-	return exp
-}
-
 // Generate
-func (tokenAuthenticator *TokenAuthenticator) GenerateVerificationToken() (string, error) {
+func (tokenAuthenticator *TokenAuthenticator) GenerateMagicLinkToken() (string, error) {
 	buffer := make([]byte, tokenAuthenticator.MagicLink.ByteSize)
 
 	if _, err := rand.Read(buffer); err != nil {
@@ -128,12 +109,70 @@ func (tokenAuthenticator *TokenAuthenticator) GenerateOTP() (string, error) { //
 }
 
 // Hash and Verification
-func (tokenAuthenticator *TokenAuthenticator) HashToken(plainToken string) []byte {
-	hash := sha256.Sum256([]byte(plainToken)) // TODO: aggiungere pepper (secret)?
-	return hash[:]                            // From [32]byte to []byte
+func (tokenAuthenticator *TokenAuthenticator) HashMagicLinkToken(plainMagicLinkToken string) []byte {
+	hash := sha256.Sum256([]byte(plainMagicLinkToken))
+	return hash[:] // From [32]byte to []byte
 }
 
-func (tokenAuthenticator *TokenAuthenticator) VerifyToken(plainToken string, hashedToken []byte) bool {
-	hash := tokenAuthenticator.HashToken(plainToken)
-	return bytes.Equal(hash, hashedToken) // TODO: usa subtle.ConstantTimeCompare(hash1, hash2) == 1
+func (tokenAuthenticator *TokenAuthenticator) HashOTP(plainOTP string, verificationType VerificationType) []byte {
+	// hash := sha256.Sum256([]byte(plainToken + tokenAuthenticator.getVerificationTypeString(verificationType) + tokenAuthenticator.secret)) // TODO: usare HMAC?
+	// return hash[:]                                                                                                                         // From [32]byte to []byte
+	mac := hmac.New(sha256.New, []byte(tokenAuthenticator.secret))
+	mac.Write([]byte(plainOTP + tokenAuthenticator.getVerificationTypeString(verificationType)))
+	return mac.Sum(nil)
+}
+
+func (tokenAuthenticator *TokenAuthenticator) VerifyMagicLinkToken(plainToken string, hashedToken []byte) bool {
+	hash := tokenAuthenticator.HashMagicLinkToken(plainToken)
+
+	//? si può aggiungere padding al/ai token e fare comunque il controllo per evitare timing leak (ma rischiando di validare token sbagliati)
+	if len(hash) != 32 || len(hashedToken) != 32 {
+		return false
+	}
+
+	return subtle.ConstantTimeCompare(hash, hashedToken) == 1
+}
+
+func (tokenAuthenticator *TokenAuthenticator) VerifyOTP(plainOTP string, hashedToken []byte, verificationType VerificationType) bool {
+	hash := tokenAuthenticator.HashOTP(plainOTP, verificationType)
+	return hmac.Equal(hash, hashedToken)
+}
+
+// - Utils -
+
+func (tokenAuthenticator *TokenAuthenticator) getExpiration(verificationType VerificationType) time.Duration {
+	var exp time.Duration
+
+	switch verificationType {
+
+	case TokenEmailVerification:
+		exp = tokenAuthenticator.OTP.LongExp
+
+	case TokenPasswordReset:
+	case TokenTwoFactorAuth:
+		exp = tokenAuthenticator.OTP.BaseExp
+
+	default:
+		exp = tokenAuthenticator.OTP.BaseExp
+	}
+
+	return exp
+}
+
+func (tokenAuthenticator *TokenAuthenticator) getVerificationTypeString(verificationType VerificationType) string {
+	verificationTypeString := "verification"
+
+	switch verificationType {
+
+	case TokenEmailVerification:
+		verificationTypeString = "email_verification"
+
+	case TokenPasswordReset:
+		verificationTypeString = "password_reset"
+
+	case TokenTwoFactorAuth:
+		verificationTypeString = "two_factor_auth"
+	}
+
+	return verificationTypeString
 }
