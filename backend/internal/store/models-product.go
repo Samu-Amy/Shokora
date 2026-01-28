@@ -5,15 +5,15 @@ import (
 )
 
 type Product struct {
-	Id          int64   `json:"id"`
+	Id          int64   `json:"id"` // Generated
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
 	ImageURL    string  `json:"image_url"`
 	Price       float64 `json:"price"`
-	Discount    float64 `json:"discount"`
-	Version     int     `json:"version"`
-	CreatedAt   string  `json:"created_at"`
-	UpdatedAt   string  `json:"updated_at"`
+	Discount    float64 `json:"discount"`   // Defalut 0
+	Version     int     `json:"version"`    // Defalut 0
+	CreatedAt   string  `json:"created_at"` // Default now()
+	UpdatedAt   string  `json:"updated_at"` // Default now()
 }
 
 // TODO: es. struct per prodotti menu/shop

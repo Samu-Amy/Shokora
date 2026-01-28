@@ -83,8 +83,8 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	// 	OTPExp:      app.config.Auth.OTP.Exp,
 	// }
 
-	// Create User
-	if err := app.store.User.CreateUserAndSendVerification(ctx, user, verificationTokens); err != nil { // TODO: aggiungi scadenza token ed altro
+	// Create User and Email Verification Tokens
+	if err := app.store.User.CreateUserAndSendEmailVerification(ctx, user, verificationTokens); err != nil { // TODO: aggiungi scadenza token ed altro
 		app.parseError(w, r, err)
 		return
 	} // TODO: gestire meglio (verificare scadenza token, se scaduto cosa si fa?)

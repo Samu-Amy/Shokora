@@ -13,7 +13,8 @@ import (
 
 // ----- CREATE USER -----
 
-func (store *PostgresUserStore) CreateUserAndSendVerification(ctx context.Context, user *User, verificationTokens *auth.VerificationTokens) error {
+// TODO: sposta in Auth Service
+func (store *PostgresUserStore) CreateUserAndSendEmailVerification(ctx context.Context, user *User, verificationTokens *auth.VerificationTokens) error {
 	// Transaction wrapper
 	return withTransaction(store.db, ctx, func(transaction *sql.Tx) error {
 		// Create user
@@ -77,30 +78,6 @@ func (store *PostgresUserStore) DeleteUserAndEmailVerificationToken(ctx context.
 }
 
 // ----- PRIVATES -----
-
-func (store *PostgresUserStore) createEmailVerification(ctx context.Context, transaction *sql.Tx, verificationTokens *auth.VerificationTokens, userId int64) error {
-	query := `
-		INSERT INTO verification_tokens (token, user_id, expiry)
-		VALUES ($1, $2, $3)
-	`
-
-	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
-	defer cancel()
-
-	_, err := transaction.ExecContext(
-		ctx,
-		query,
-		verificationTokens.HashedMagicLinkToken,
-		userId,
-		time.Now().Add(verificationTokens.OTPExp),
-	)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
 
 func (store *PostgresUserStore) getUserFromEmailVerificationToken(ctx context.Context, transaction *sql.Tx, plainToken string) (*User, error) {
 	query := `
