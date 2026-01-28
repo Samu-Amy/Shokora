@@ -5,9 +5,9 @@ import (
 )
 
 type Storage struct {
-	User    UserRepository
-	Product ProductRepository
-	VTokens VTokensRepository
+	User    UserRepositoryI
+	Product ProductRepositoryI
+	VTokens VTokensRepositoryI
 }
 
 func NewPostgresStorage(db *sql.DB) *Storage {

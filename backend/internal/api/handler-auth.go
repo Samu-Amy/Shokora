@@ -48,7 +48,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		PasswordHash: hashedPassword,
 		ImageUrl:     payload.ImageUrl,
 		BirthDate:    payload.BirthDate,
-	} // TODO: aggiorna query (per image_url e birth_date)
+	}
 
 	// Generate verification Token and OTP
 	verificationTokens, err := app.tokenAuthenticator.CreateVerificationTokens(auth.TokenEmailVerification)
@@ -57,31 +57,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: nell'handler gestire il retry nel caso non dovesse essere unico
-
-	// plainToken, err := app.tokenAuthenticator.GenerateVerificationToken()
-	// if err != nil {
-	// 	app.internalServerError(w, r, err)
-	// 	return
-	// }
-
-	// plainOTP, err := app.tokenAuthenticator.GenerateOTP()
-	// if err != nil {
-	// 	app.internalServerError(w, r, err)
-	// 	return
-	// }
-
-	// // Hash verification Token and OTP
-	// hashedToken := app.tokenAuthenticator.HashToken(plainToken)
-	// hashedOTP := app.tokenAuthenticator.HashToken(plainOTP)
-
-	// verificationTokens := &auth.VerificationTokens{
-	// 	TokenType:   auth.TokenEmailVerification,
-	// 	HashedToken: hashedToken,
-	// 	HashedOTP:   hashedOTP,
-	// 	TokenExp:    app.config.Auth.MagicLink.Exp,
-	// 	OTPExp:      app.config.Auth.OTP.Exp,
-	// }
+	// TODO: gestire (nell'handler?) il retry nel caso non dovesse essere unico
 
 	// Create User and Email Verification Tokens
 	if err := app.service.Auth.CreateUserAndEmailVerificationTokens(ctx, user, verificationTokens); err != nil { // TODO: aggiungi scadenza token ed altro
@@ -132,7 +108,7 @@ func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Reque
 	ctx := r.Context()
 	token := chi.URLParam(r, "token")
 
-	if err := app.store.User.VerifyEmail(ctx, token); err != nil {
+	if err := app.service.Auth.VerifyEmail(ctx, token); err != nil {
 		app.parseError(w, r, err)
 		return
 	}

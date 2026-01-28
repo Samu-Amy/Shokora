@@ -22,6 +22,6 @@ var FS embed.FS
 
 // - Interface -
 
-type Client interface {
+type ClientI interface {
 	SendEmail(ctx context.Context, templateFile, name, email string, data any, isSandbox bool) error
 }

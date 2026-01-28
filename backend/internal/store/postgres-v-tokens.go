@@ -20,7 +20,7 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, transaction
 	query := `
 		INSERT INTO verification_tokens (token, user_id, expiry)
 		VALUES ($1, $2, $3)
-	`
+	` // TODO: usa UPSERT
 
 	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()

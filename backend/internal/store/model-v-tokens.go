@@ -21,7 +21,7 @@ type VTokens struct {
 	UpdatedAt          time.Time             `json:"updated_at"`   // Default now()
 }
 
-type VTokensRepository interface {
+type VTokensRepositoryI interface {
 	// Create tokens (for email verification | password reset | 2FA)
 	CreateTokens(ctx context.Context, transaction *sql.Tx, verificationTokens *auth.VerificationTokens, userId int64) error
 }

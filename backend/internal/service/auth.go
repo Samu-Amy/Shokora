@@ -9,13 +9,14 @@ import (
 )
 
 type AuthService struct {
-	UserRepo    store.UserRepository
-	VTokensRepo store.VTokensRepository
-	db          *sql.DB
+	userRepo           store.UserRepositoryI
+	vTokensRepo        store.VTokensRepositoryI
+	db                 *sql.DB
+	tokenAuthenticator auth.TokenAuthenticatorI
 }
 
-func NewAuthService(User store.UserRepository, VTokens store.VTokensRepository, db *sql.DB) *AuthService {
-	return &AuthService{User, VTokens, db}
+func NewAuthService(userRepo store.UserRepositoryI, vTokensRepo store.VTokensRepositoryI, db *sql.DB, tokenAuthenticator auth.TokenAuthenticatorI) *AuthService {
+	return &AuthService{userRepo, vTokensRepo, db, tokenAuthenticator}
 }
 
 // ----- CREATE -----
@@ -23,14 +24,39 @@ func NewAuthService(User store.UserRepository, VTokens store.VTokensRepository, 
 func (service *AuthService) CreateUserAndEmailVerificationTokens(ctx context.Context, user *store.User, verificationTokens *auth.VerificationTokens) error {
 	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
 		// Create user
-		if err := service.UserRepo.Create(ctx, transaction, user); err != nil {
+		if err := service.userRepo.Create(ctx, transaction, user); err != nil {
 			return err
 		}
 
 		// Create verification
-		if err := service.VTokensRepo.CreateTokens(ctx, transaction, verificationTokens, user.Id); err != nil {
-			return err
+		if err := service.vTokensRepo.CreateTokens(ctx, transaction, verificationTokens, user.Id); err != nil {
+			return err // TODO: fai retries (usando tokenAuthenticator per rigenerare i token)
 		}
+
+		return nil
+	})
+}
+
+// ----- VERIFY EMAIL  -----
+
+func (service *AuthService) VerifyEmail(ctx context.Context, plainToken string) error { // TODO: passare plain token e verificare con funzione util (?)
+	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
+		// // Find user related to the token
+		// user, err := store.getUserFromEmailVerificationToken(ctx, transaction, plainToken)
+		// if err != nil {
+		// 	return err
+		// }
+
+		// // Update user (email verified)
+		// user.IsVerified = true
+		// if err := store.setUserIsVerified(ctx, transaction, user.Id); err != nil {
+		// 	return err
+		// }
+
+		// // Clean email verification token
+		// if err := store.deleteEmailVerificationToken(ctx, transaction, user.Id); err != nil {
+		// 	return err
+		// }
 
 		return nil
 	})

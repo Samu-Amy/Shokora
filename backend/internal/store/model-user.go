@@ -38,11 +38,10 @@ func (user *User) IsRoleValid(requiredRole Role) bool {
 // TODO: sistema (qua solo metodi "strettamente legati" a users (tabella) che fanno le query, poi quelli "composti" o con logica (es. retry) li si crea nel service usando questi)
 
 // Repository
-type UserRepository interface {
+type UserRepositoryI interface {
 	// Auth main
-	// CreateUserAndSendEmailVerification(ctx context.Context, user *User, verificationTokens *auth.VerificationTokens) error
-	ResendEmailVerificationEmail(ctx context.Context, email string) error
-	VerifyEmail(ctx context.Context, plainToken string) error
+	// ResendEmailVerificationEmail(ctx context.Context, email string) error // TODO: cambia nome
+	// VerifyEmail(ctx context.Context, plainToken string) error // TODO: dividi tra users e vtokens e sposta questo metodo nel service
 	DeleteUserAndEmailVerificationToken(ctx context.Context, userId int64) error
 
 	// Auth utils

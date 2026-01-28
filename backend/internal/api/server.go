@@ -22,13 +22,13 @@ import (
 type App struct {
 	config             Config
 	router             *chi.Mux
+	jwtAuthenticator   auth.JWTAuthenticatorI
+	tokenAuthenticator auth.TokenAuthenticatorI
+	mailer             mailer.ClientI
 	store              *store.Storage
 	service            *service.Service
 	logger             *zap.SugaredLogger
-	mailer             mailer.Client
-	jwtAuthenticator   auth.JWTService
-	tokenAuthenticator auth.TokenService
-	rateLimiter        ratelimiter.RateLimiter
+	rateLimiter        ratelimiter.RateLimiterI
 }
 
 type Config struct {
@@ -59,11 +59,12 @@ type ResendConfig struct {
 }
 
 type AuthConfig struct {
-	HashingCost             int
-	Token                   TokenConfig
-	MagicLink               auth.MagicLinkConfig
-	OTP                     auth.OTPConfig
-	VerficationTokensSecret string
+	HashingCost                 int
+	Token                       TokenConfig
+	MagicLink                   auth.MagicLinkConfig
+	OTP                         auth.OTPConfig
+	VerficationTokensMaxRetries uint8
+	VerficationTokensSecret     string
 }
 
 type TokenConfig struct {
@@ -78,22 +79,22 @@ type TokenConfig struct {
 // - Functions/Methods -
 func NewApp(
 	config Config,
+	jwtAuthenticator auth.JWTAuthenticatorI,
+	tokenAuthenticator auth.TokenAuthenticatorI,
+	mailer mailer.ClientI,
 	store *store.Storage,
 	service *service.Service,
 	logger *zap.SugaredLogger,
-	mailer mailer.Client,
-	jwtAuthenticator auth.JWTService,
-	tokenAuthenticator auth.TokenService,
-	rateLimiter ratelimiter.RateLimiter,
+	rateLimiter ratelimiter.RateLimiterI,
 ) *App {
 	app := &App{
 		config:             config,
+		jwtAuthenticator:   jwtAuthenticator,
+		tokenAuthenticator: tokenAuthenticator,
+		mailer:             mailer,
 		store:              store,
 		service:            service,
 		logger:             logger,
-		mailer:             mailer,
-		jwtAuthenticator:   jwtAuthenticator,
-		tokenAuthenticator: tokenAuthenticator,
 		rateLimiter:        rateLimiter,
 	}
 	app.router = app.initRouter()

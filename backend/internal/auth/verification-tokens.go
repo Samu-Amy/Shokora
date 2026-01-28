@@ -13,9 +13,10 @@ import (
 
 // - Authenticator -
 type TokenAuthenticator struct {
-	MagicLink MagicLinkConfig
-	OTP       OTPConfig
-	secret    string
+	MagicLink  MagicLinkConfig
+	OTP        OTPConfig
+	MaxRetries uint8
+	secret     string
 }
 
 type MagicLinkConfig struct {
@@ -32,7 +33,7 @@ type OTPConfig struct {
 }
 
 // - Tokens -
-type VerificationTokens struct { // TODO: fai methodi per seplificarne la creazione (?)
+type VerificationTokens struct {
 	VerificationType     VerificationType
 	PlainMagicLinkToken  string
 	HashedMagicLinkToken []byte
@@ -52,15 +53,15 @@ const (
 
 // - Constructor -
 
-func NewTokenAuthenticator(MagicLink MagicLinkConfig, OTP OTPConfig, secret string) *TokenAuthenticator {
-	return &TokenAuthenticator{MagicLink, OTP, secret}
+func NewTokenAuthenticator(MagicLink MagicLinkConfig, OTP OTPConfig, MaxRetries uint8, secret string) *TokenAuthenticator {
+	return &TokenAuthenticator{MagicLink, OTP, MaxRetries, secret}
 }
 
 // - Methods -
 
 func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificationType VerificationType) (*VerificationTokens, error) {
 	// Generate verification Token and OTP
-	plainMagicLinkToken, err := tokenAuthenticator.GenerateMagicLinkToken() // TODO: nell'handler gestire il retry nel caso non dovesse essere unico
+	plainMagicLinkToken, err := tokenAuthenticator.GenerateMagicLinkToken()
 	if err != nil {
 		return nil, err
 	}

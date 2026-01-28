@@ -24,7 +24,7 @@ type ShopProduct struct {
 }
 
 // TODO: aggiungi nomi parametri/argomenti nei metodi di tutte le interfacce
-type ProductRepository interface {
+type ProductRepositoryI interface {
 	Create(ctx context.Context, product *Product) error
 	GetById(ctx context.Context, productId int64) (*Product, error)
 	GetProducts(ctx context.Context, queryPaginationOptions QueryPaginationOptions, productsFilters ProductsFilters) ([]Product, error) // TODO: (anche per GetMenuProducts e GetShopProducts) modifica struct ritornata (aggiungendo anche badges ed altro)

@@ -23,7 +23,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 	query := `
 		INSERT INTO users (first_name, last_name, email, password)
 		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at
-	`
+	` // TODO: aggiorna query (per image_url e birth_date)
 
 	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()

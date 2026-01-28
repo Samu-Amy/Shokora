@@ -6,12 +6,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type JWTService interface {
+type JWTAuthenticatorI interface {
 	GenerateJWTToken(claims jwt.Claims) (string, error)
 	ValidateJWTToken(token string) (*jwt.Token, error)
 }
 
-type TokenService interface {
+type TokenAuthenticatorI interface {
 	// Create a struct with verification Tokens (plain and hashed), verification type and otp expiry
 	CreateVerificationTokens(verificationType VerificationType) (*VerificationTokens, error)
 

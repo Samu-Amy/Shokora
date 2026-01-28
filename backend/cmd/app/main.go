@@ -86,6 +86,23 @@ func main() {
 	logger := zap.Must(zap.NewProduction()).Sugar()
 	defer logger.Sync()
 
+	// - Mailer -
+	mailer := mailer.NewResendMailer(config.Mail.Resend.ApiKey, config.Mail.FromEmail)
+
+	// - Authenticators -
+	jwtAuthenticator := auth.NewJWTAuthenticator(
+		config.Auth.Token.Secret,
+		config.Auth.Token.Issuer,
+		config.Auth.Token.Issuer,
+	)
+
+	tokenAuthenricator := auth.NewTokenAuthenticator(
+		config.Auth.MagicLink,
+		config.Auth.OTP,
+		config.Auth.VerficationTokensMaxRetries,
+		config.Auth.VerficationTokensSecret,
+	)
+
 	// - DB Connection -
 	db, err := db.New(
 		config.Db.Addr,
@@ -106,23 +123,7 @@ func main() {
 	store := store.NewPostgresStorage(db)
 
 	// - Service -
-	service := service.NewService(db, store)
-
-	// - Mailer -
-	mailer := mailer.NewResendMailer(config.Mail.Resend.ApiKey, config.Mail.FromEmail)
-
-	// - Authenticators -
-	jwtAuthenticator := auth.NewJWTAuthenticator(
-		config.Auth.Token.Secret,
-		config.Auth.Token.Issuer,
-		config.Auth.Token.Issuer,
-	)
-
-	tokenAuthenricator := auth.NewTokenAuthenticator(
-		config.Auth.MagicLink,
-		config.Auth.OTP,
-		config.Auth.VerficationTokensSecret,
-	)
+	service := service.NewService(db, store, tokenAuthenricator)
 
 	// - Rate Limiter -
 	rateLimiter := ratelimiter.NewFixedWindowLimiter(
@@ -145,7 +146,16 @@ func main() {
 	}))
 
 	// - App -
-	app := api.NewApp(config, store, service, logger, mailer, jwtAuthenticator, tokenAuthenricator, rateLimiter)
+	app := api.NewApp(
+		config,
+		jwtAuthenticator,
+		tokenAuthenricator,
+		mailer,
+		store,
+		service,
+		logger,
+		rateLimiter,
+	)
 
 	err = app.Run()
 

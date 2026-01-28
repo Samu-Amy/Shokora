@@ -1,9 +1,9 @@
 package service
 
 import (
-	"context"
 	"database/sql"
 
+	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/store"
 )
 
@@ -15,30 +15,8 @@ type Service struct {
 	// Orders
 }
 
-func NewService(db *sql.DB, store *store.Storage) *Service {
+func NewService(db *sql.DB, store *store.Storage, tokenAuthenticator auth.TokenAuthenticatorI) *Service {
 	return &Service{
-		Auth: NewAuthService(store.User, store.VTokens, db),
+		Auth: NewAuthService(store.User, store.VTokens, db, tokenAuthenticator),
 	}
-}
-
-// Transaction wrapper
-func withTransaction(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) error {
-	// Create transaction
-	transaction, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	// Defer rollback (in caso di panic)
-	defer func() {
-		if err != nil {
-			_ = transaction.Rollback() // TODO: rollback error handling?
-		}
-	}()
-
-	if err = fn(transaction); err != nil {
-		return err
-	}
-
-	return transaction.Commit()
 }
