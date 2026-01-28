@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"time"
-
-	"github.com/Samu-Amy/Shokora/internal/auth"
 )
 
 // TODO: fai lookup anche per verification_type (token + verification_type | OPT + email + verification_type + attempts) -- SET otp_attempts = otp_attempts + 1 (aggiorna atomicamente attempts)
@@ -14,22 +12,22 @@ import (
 // ----- CREATE USER -----
 
 // TODO: sposta in Auth Service
-func (store *PostgresUserStore) CreateUserAndSendEmailVerification(ctx context.Context, user *User, verificationTokens *auth.VerificationTokens) error {
-	// Transaction wrapper
-	return withTransaction(store.db, ctx, func(transaction *sql.Tx) error {
-		// Create user
-		if err := store.Create(ctx, transaction, user); err != nil {
-			return err
-		}
+// func (store *PostgresUserStore) CreateUserAndSendEmailVerification(ctx context.Context, user *User, verificationTokens *auth.VerificationTokens) error {
+// 	// Transaction wrapper
+// 	return withTransaction(store.db, ctx, func(transaction *sql.Tx) error {
+// 		// Create user
+// 		if err := store.Create(ctx, transaction, user); err != nil {
+// 			return err
+// 		}
 
-		// Create verification
-		if err := store.createEmailVerification(ctx, transaction, verificationTokens, user.Id); err != nil {
-			return err
-		}
+// 		// Create verification
+// 		if err := store.createEmailVerification(ctx, transaction, verificationTokens, user.Id); err != nil {
+// 			return err
+// 		}
 
-		return nil
-	})
-}
+// 		return nil
+// 	})
+// }
 
 func (store *PostgresUserStore) ResendEmailVerificationEmail(ctx context.Context, email string) error {
 	// TODO: implementa re-invio email con token

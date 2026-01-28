@@ -15,8 +15,8 @@ type Service struct {
 	// Orders
 }
 
-func NewService(db *sql.DB, store *store.Storage) Service {
-	return Service{
+func NewService(db *sql.DB, store *store.Storage) *Service {
+	return &Service{
 		Auth: NewAuthService(store.User, store.VTokens, db),
 	}
 }
@@ -28,12 +28,6 @@ func withTransaction(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) er
 	if err != nil {
 		return err
 	}
-
-	// Use transaction
-	// if err := fn(transaction); err != nil {
-	// 	_ = transaction.Rollback() // TODO: rollback error handling?
-	// 	return err
-	// }
 
 	// Defer rollback (in caso di panic)
 	defer func() {

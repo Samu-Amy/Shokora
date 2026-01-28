@@ -12,6 +12,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/db"
 	"github.com/Samu-Amy/Shokora/internal/env"
 	"github.com/Samu-Amy/Shokora/internal/mailer"
+	"github.com/Samu-Amy/Shokora/internal/service"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"go.uber.org/zap"
 )
@@ -104,6 +105,9 @@ func main() {
 	// - Store -
 	store := store.NewPostgresStorage(db)
 
+	// - Service -
+	service := service.NewService(db, store)
+
 	// - Mailer -
 	mailer := mailer.NewResendMailer(config.Mail.Resend.ApiKey, config.Mail.FromEmail)
 
@@ -141,7 +145,7 @@ func main() {
 	}))
 
 	// - App -
-	app := api.NewApp(config, &store, logger, mailer, jwtAuthenticator, tokenAuthenricator, rateLimiter)
+	app := api.NewApp(config, store, service, logger, mailer, jwtAuthenticator, tokenAuthenricator, rateLimiter)
 
 	err = app.Run()
 

@@ -9,9 +9,9 @@ import (
 )
 
 type AuthService struct {
-	User    store.UserRepository
-	VTokens store.VTokensRepository
-	db      *sql.DB
+	UserRepo    store.UserRepository
+	VTokensRepo store.VTokensRepository
+	db          *sql.DB
 }
 
 func NewAuthService(User store.UserRepository, VTokens store.VTokensRepository, db *sql.DB) *AuthService {
@@ -25,12 +25,12 @@ func NewAuthService(User store.UserRepository, VTokens store.VTokensRepository, 
 func (service *AuthService) CreateUserAndEmailVerificationToken(ctx context.Context, user *store.User, verificationTokens *auth.VerificationTokens) error {
 	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
 		// Create user
-		if err := service.User.Create(ctx, transaction, user); err != nil {
+		if err := service.UserRepo.Create(ctx, transaction, user); err != nil {
 			return err
 		}
 
 		// Create verification
-		if err := service.VTokens.CreateTokens(ctx, transaction, verificationTokens, user.Id); err != nil {
+		if err := service.VTokensRepo.CreateTokens(ctx, transaction, verificationTokens, user.Id); err != nil {
 			return err
 		}
 

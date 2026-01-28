@@ -10,8 +10,8 @@ type Storage struct {
 	VTokens VTokensRepository
 }
 
-func NewPostgresStorage(db *sql.DB) Storage {
-	return Storage{
+func NewPostgresStorage(db *sql.DB) *Storage {
+	return &Storage{
 		User:    NewPostgresUserStore(db),
 		Product: NewPostgresProductStore(db),
 		VTokens: NewPostgresVTokenStore(db),

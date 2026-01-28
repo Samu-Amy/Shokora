@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"time"
-
-	"github.com/Samu-Amy/Shokora/internal/auth"
 )
 
 type User struct {
@@ -37,12 +35,12 @@ func (user *User) IsRoleValid(requiredRole Role) bool {
 	return user.Role >= requiredRole
 }
 
-// TODO: sistema (qua solo metodi "strettamente legati" a users (tabella) che fanno le query, poi quelli "composti" li si crea nel service usando questi)
+// TODO: sistema (qua solo metodi "strettamente legati" a users (tabella) che fanno le query, poi quelli "composti" o con logica (es. retry) li si crea nel service usando questi)
 
 // Repository
 type UserRepository interface {
 	// Auth main
-	CreateUserAndSendEmailVerification(ctx context.Context, user *User, verificationTokens *auth.VerificationTokens) error
+	// CreateUserAndSendEmailVerification(ctx context.Context, user *User, verificationTokens *auth.VerificationTokens) error
 	ResendEmailVerificationEmail(ctx context.Context, email string) error
 	VerifyEmail(ctx context.Context, plainToken string) error
 	DeleteUserAndEmailVerificationToken(ctx context.Context, userId int64) error

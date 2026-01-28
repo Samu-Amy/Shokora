@@ -12,6 +12,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api/ratelimiter"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/mailer"
+	"github.com/Samu-Amy/Shokora/internal/service"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
@@ -22,6 +23,7 @@ type App struct {
 	config             Config
 	router             *chi.Mux
 	store              *store.Storage
+	service            *service.Service
 	logger             *zap.SugaredLogger
 	mailer             mailer.Client
 	jwtAuthenticator   auth.JWTService
@@ -77,6 +79,7 @@ type TokenConfig struct {
 func NewApp(
 	config Config,
 	store *store.Storage,
+	service *service.Service,
 	logger *zap.SugaredLogger,
 	mailer mailer.Client,
 	jwtAuthenticator auth.JWTService,
@@ -86,6 +89,7 @@ func NewApp(
 	app := &App{
 		config:             config,
 		store:              store,
+		service:            service,
 		logger:             logger,
 		mailer:             mailer,
 		jwtAuthenticator:   jwtAuthenticator,
