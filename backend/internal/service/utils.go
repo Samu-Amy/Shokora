@@ -3,7 +3,22 @@ package service
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"time"
 )
+
+// - Errors -
+var (
+	ErrMaxRetriesExceeded = errors.New("max_retries")
+)
+
+// - Timeouts -
+
+const (
+	regenerate_token_timeout = 10 * time.Second
+)
+
+// - Functions -
 
 // Transaction wrapper
 func withTransaction(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) error {

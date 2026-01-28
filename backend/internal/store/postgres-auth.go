@@ -21,13 +21,13 @@ func (store *PostgresUserStore) getUserFromEmailVerificationToken(ctx context.Co
 	`
 	// TODO: nel caso sia scaduto (bisogna fare un controllo separato ed eliminare sia token che user - mandare un errore ErrExpired)?
 
-	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
 	user := &User{}
 
 	err := transaction.QueryRowContext(
-		ctx,
+		queryCtx,
 		query,
 		HashToken(plainToken),
 		time.Now(),
@@ -61,7 +61,10 @@ func (store *PostgresUserStore) setUserIsVerified(ctx context.Context, transacti
 		WHERE id = $1
 	`
 
-	_, err := transaction.ExecContext(ctx, query, userId)
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
+	_, err := transaction.ExecContext(queryCtx, query, userId)
 	if err != nil {
 		// TODO: migliorare error handling (?)
 		return err
@@ -76,8 +79,10 @@ func (store *PostgresUserStore) deleteEmailVerificationToken(ctx context.Context
 		DELETE FROM email_verification_tokens
 		WHERE user_id = $1
 	`
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
 
-	_, err := transaction.ExecContext(ctx, query, userId)
+	_, err := transaction.ExecContext(queryCtx, query, userId)
 	if err != nil {
 		// TODO: migliorare error handling (?)
 		return err

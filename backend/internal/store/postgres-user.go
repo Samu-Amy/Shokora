@@ -25,11 +25,11 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at, updated_at
 	`
 
-	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
 	err := store.db.QueryRowContext(
-		ctx,
+		queryCtx,
 		query,
 		user.FirstName,
 		user.LastName,
@@ -65,13 +65,13 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 		WHERE id = $1
 	`
 
-	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
 	var user User
 
 	err := store.db.QueryRowContext(
-		ctx,
+		queryCtx,
 		query,
 		userId,
 	).Scan(
@@ -106,13 +106,13 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 		WHERE email = $1 AND is_verified = true
 	` // TODO: gestione verified (per chi non lo è ma accede per farsi re-inviare la mail o eliminare l'account)
 
-	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
 	var user User
 
 	err := store.db.QueryRowContext(
-		ctx,
+		queryCtx,
 		query,
 		email,
 	).Scan(
@@ -146,10 +146,10 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 func (store *PostgresUserStore) Delete(ctx context.Context, transaction *sql.Tx, userId int64) error {
 	query := `DELETE FROM users WHERE id = $1`
 
-	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	_, err := transaction.ExecContext(ctx, query, userId)
+	_, err := transaction.ExecContext(queryCtx, query, userId)
 	if err != nil {
 		return err
 	}

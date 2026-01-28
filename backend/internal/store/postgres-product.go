@@ -22,11 +22,11 @@ func (store *PostgresProductStore) Create(ctx context.Context, product *Product)
 		VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at, updated_at
 	`
 
-	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
 	err := store.db.QueryRowContext(
-		ctx,
+		queryCtx,
 		query,
 		product.Name,
 		product.Description,
@@ -56,13 +56,13 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 		WHERE id = $1
 	`
 
-	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
 	var product Product
 
 	err := store.db.QueryRowContext(
-		ctx,
+		queryCtx,
 		query,
 		productId,
 	).Scan(
@@ -106,8 +106,11 @@ func (store *PostgresProductStore) GetProducts(ctx context.Context, queryPaginat
 		LIMIT $2 OFFSET $3
 	`
 
+	queryCtx, cancel := context.WithTimeout(ctx, long_query_timeout) //TODO: va bene?
+	defer cancel()
+
 	rows, err := store.db.QueryContext(
-		ctx,
+		queryCtx,
 		query,
 		productsFilters.Search,
 		queryPaginationOptions.Limit,
@@ -156,13 +159,13 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *Product)
 		RETURNING version
 	`
 
-	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
 	// TODO: modifica e rendi "modulare" per aggiornare solo ciò che serve (e magari fai un controllo più accurato sulle modifiche fatte e non solo sulla versione)
 
 	err := store.db.QueryRowContext(
-		ctx,
+		queryCtx,
 		query,
 		product.Name,
 		product.Description,
@@ -197,10 +200,10 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *Product)
 func (store *PostgresProductStore) Delete(ctx context.Context, productId int64) error {
 	query := `DELETE FROM products WHERE id = $1`
 
-	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	res, err := store.db.ExecContext(ctx, query, productId)
+	res, err := store.db.ExecContext(queryCtx, query, productId)
 	if err != nil {
 		return err
 	}

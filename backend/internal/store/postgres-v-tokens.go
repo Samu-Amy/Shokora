@@ -22,11 +22,11 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, verificatio
 		VALUES ($1, $2, $3)
 	` // TODO: usa UPSERT
 
-	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
 	_, err := store.db.ExecContext(
-		ctx,
+		queryCtx,
 		query,
 		verificationTokens.HashedMagicLinkToken,
 		userId,

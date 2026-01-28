@@ -22,8 +22,9 @@ var (
 
 // - Timeouts -
 
-var (
+const (
 	medium_query_timeout = 8 * time.Second
+	long_query_timeout   = 12 * time.Second
 )
 
 // - Hashing -

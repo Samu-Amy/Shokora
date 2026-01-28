@@ -27,8 +27,11 @@ func (store *PostgresProductStore) GetMenuProducts(ctx context.Context, queryPag
 		LIMIT $2 OFFSET $3
 	`
 
+	queryCtx, cancel := context.WithTimeout(ctx, long_query_timeout) //TODO: va bene?
+	defer cancel()
+
 	rows, err := store.db.QueryContext(
-		ctx,
+		queryCtx,
 		query,
 		menuFilters.Search,
 		queryPaginationOptions.Limit,

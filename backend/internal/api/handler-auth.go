@@ -50,7 +50,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		BirthDate:    payload.BirthDate,
 	}
 
-	// Generate verification Token and OTP
+	// Generate verificationTokens (Magic Link and OTP)
 	verificationTokens, err := app.tokenAuthenticator.CreateVerificationTokens(auth.TokenEmailVerification)
 	if err != nil {
 		app.internalServerError(w, r, err)
@@ -61,11 +61,12 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	if err := app.service.Auth.CreateUserAndEmailVerificationTokens(ctx, user, verificationTokens); err != nil { // TODO: aggiungi scadenza token ed altro
 		app.parseError(w, r, err)
 		return
-	} // TODO: gestire meglio (verificare scadenza token, se scaduto cosa si fa?)
+	}
 
+	// TODO: fai creazione ed invio email in un metodo utils
 	activationURL := fmt.Sprintf("%s/verify-email/%s", app.config.FrontEndURL, verificationTokens.PlainMagicLinkToken)
 
-	// TODO: sistema le vars (anche OTP e scadenze (?))
+	// TODO: sistema le vars (anche OTP e scadenze (?)) - fai utils apposta per email verification, password reset e 2FA
 	vars := struct {
 		Name          string
 		ActivationURL string
@@ -81,12 +82,13 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.logger.Errorw("error sending welcome email", "error", err)
 
-		// Rollback user creation
-		if err := app.store.User.DeleteUserAndEmailVerificationToken(ctx, user.Id); err != nil {
-			app.logger.Errorw("error deleting user", "error", err)
-		}
+		// // Rollback user creation
+		// if err := app.store.User.DeleteUserAndEmailVerificationToken(ctx, user.Id); err != nil {
+		// 	app.logger.Errorw("error deleting user", "error", err)
+		// }
+		// TODO: evitare di eliminare user e token e dire di riprovare più tardi -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
 
-		app.internalServerError(w, r, err) // TODO: evitare di eliminare user e token e dire di riprovare più tardi -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
+		app.internalServerError(w, r, err)
 		return
 	}
 

@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+// TODO: forse molti metodi si possono rendere privati (es. quelli per generate e hash tokens)
+
 // - Authenticator -
 type TokenAuthenticator struct {
 	MagicLink  MagicLinkConfig
@@ -61,12 +63,12 @@ func NewTokenAuthenticator(MagicLink MagicLinkConfig, OTP OTPConfig, MaxRetries 
 
 func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificationType VerificationType) (*VerificationTokens, error) {
 	// Generate verification Token and OTP
-	plainMagicLinkToken, err := tokenAuthenticator.GenerateMagicLinkToken()
+	plainMagicLinkToken, err := tokenAuthenticator.generateMagicLinkToken()
 	if err != nil {
 		return nil, err
 	}
 
-	plainOTP, err := tokenAuthenticator.GenerateOTP()
+	plainOTP, err := tokenAuthenticator.generateOTP()
 	if err != nil {
 		return nil, err
 	}
@@ -85,8 +87,33 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificat
 	}, nil
 }
 
+// Regenerate
+func (tokenAuthenticator *TokenAuthenticator) RegenerateMagicLinkToken(verificationTokens *VerificationTokens) error {
+	newMagicLinkToken, err := tokenAuthenticator.generateMagicLinkToken()
+	if err != nil {
+		return err
+	}
+
+	verificationTokens.PlainMagicLinkToken = newMagicLinkToken
+	verificationTokens.HashedMagicLinkToken = tokenAuthenticator.HashMagicLinkToken(newMagicLinkToken)
+
+	return nil
+}
+
+func (tokenAuthenticator *TokenAuthenticator) RegenerateOTP(verificationTokens *VerificationTokens) error {
+	newOTP, err := tokenAuthenticator.generateOTP()
+	if err != nil {
+		return err
+	}
+
+	verificationTokens.PlainOTP = newOTP
+	verificationTokens.HashedOTP = tokenAuthenticator.HashOTP(newOTP, verificationTokens.VerificationType)
+
+	return nil
+}
+
 // Generate
-func (tokenAuthenticator *TokenAuthenticator) GenerateMagicLinkToken() (string, error) {
+func (tokenAuthenticator *TokenAuthenticator) generateMagicLinkToken() (string, error) {
 	buffer := make([]byte, tokenAuthenticator.MagicLink.ByteSize)
 
 	if _, err := rand.Read(buffer); err != nil {
@@ -96,7 +123,7 @@ func (tokenAuthenticator *TokenAuthenticator) GenerateMagicLinkToken() (string, 
 	return base64.RawURLEncoding.EncodeToString(buffer), nil
 }
 
-func (tokenAuthenticator *TokenAuthenticator) GenerateOTP() (string, error) { // TODO RICORDA: per la verifica dell'otp si usa anche lo user_id nella richiesta (l'otp potrebbe non essere unico nel db)
+func (tokenAuthenticator *TokenAuthenticator) generateOTP() (string, error) { // TODO RICORDA: per la verifica dell'otp si usa anche lo user_id nella richiesta (l'otp potrebbe non essere unico nel db)
 	length := tokenAuthenticator.OTP.Length
 
 	max := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(length)), nil) // Create a new *big.Int as 10^length (big.NewInt(10) ^ big.NewInt(int64(length)))
