@@ -15,7 +15,7 @@ type Service struct {
 	// Orders
 }
 
-func NewService(db *sql.DB, store *store.Storage, tokenAuthenticator auth.TokenAuthenticatorI) *Service {
+func NewService(db *sql.DB, store *store.Storage, tokenAuthenticator *auth.TokenAuthenticator) *Service {
 	return &Service{
 		Auth: NewAuthService(store.User, store.VTokens, db, tokenAuthenticator),
 	}

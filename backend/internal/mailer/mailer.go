@@ -8,9 +8,9 @@ import (
 // - Constants -
 
 const (
-	FromName                  = "Shokora"
-	MaxRetries                = 3
-	EmailVerificationTemplate = "email_verification.tmpl"
+	FromName                  string = "Shokora"
+	MaxRetries                uint8  = 3
+	EmailVerificationTemplate string = "email_verification.tmpl"
 )
 
 // - Templates -

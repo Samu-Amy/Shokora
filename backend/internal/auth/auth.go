@@ -1,33 +1,27 @@
 package auth
 
-import (
-	"time"
+// type JWTAuthenticatorI interface {
+// 	GenerateJWTToken(claims jwt.Claims) (string, error)
+// 	ValidateJWTToken(token string) (*jwt.Token, error)
+// }
 
-	"github.com/golang-jwt/jwt/v5"
-)
+// type TokenAuthenticatorI interface {
+// 	// Create a struct with verification Tokens (plain and hashed), verification type and otp expiry
+// 	CreateVerificationTokens(verificationType VerificationType) (*VerificationTokens, error)
 
-type JWTAuthenticatorI interface {
-	GenerateJWTToken(claims jwt.Claims) (string, error)
-	ValidateJWTToken(token string) (*jwt.Token, error)
-}
+// 	// Generate plain Tokens
+// 	GenerateMagicLinkToken() (string, error)
+// 	GenerateOTP() (string, error)
 
-type TokenAuthenticatorI interface {
-	// Create a struct with verification Tokens (plain and hashed), verification type and otp expiry
-	CreateVerificationTokens(verificationType VerificationType) (*VerificationTokens, error)
+// 	// Hash Tokens
+// 	HashMagicLinkToken(plainMagicLinkToken string) []byte
+// 	HashOTP(plainOTP string, verificationType VerificationType) []byte
 
-	// Generate plain Tokens
-	GenerateMagicLinkToken() (string, error)
-	GenerateOTP() (string, error)
+// 	// Verify Tokens
+// 	VerifyMagicLinkToken(plainToken string, hashedToken []byte) bool
+// 	VerifyOTP(plainOTP string, hashedToken []byte, verificationType VerificationType) bool
 
-	// Hash Tokens
-	HashMagicLinkToken(plainMagicLinkToken string) []byte
-	HashOTP(plainOTP string, verificationType VerificationType) []byte
-
-	// Verify Tokens
-	VerifyMagicLinkToken(plainToken string, hashedToken []byte) bool
-	VerifyOTP(plainOTP string, hashedToken []byte, verificationType VerificationType) bool
-
-	// Utils
-	getExpiration(verificationType VerificationType) time.Duration
-	getVerificationTypeString(verificationType VerificationType) string
-}
+// 	// Utils
+// 	getExpiration(verificationType VerificationType) time.Duration
+// 	getVerificationTypeString(verificationType VerificationType) string
+// }

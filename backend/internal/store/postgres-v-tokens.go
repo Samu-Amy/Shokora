@@ -16,7 +16,7 @@ func NewPostgresVTokenStore(db *sql.DB) *PostgresVTokensStore {
 	return &PostgresVTokensStore{db: db}
 }
 
-func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, transaction *sql.Tx, verificationTokens *auth.VerificationTokens, userId int64) error {
+func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, verificationTokens *auth.VerificationTokens, userId int64) error {
 	query := `
 		INSERT INTO verification_tokens (token, user_id, expiry)
 		VALUES ($1, $2, $3)
@@ -25,7 +25,7 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, transaction
 	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	_, err := transaction.ExecContext(
+	_, err := store.db.ExecContext(
 		ctx,
 		query,
 		verificationTokens.HashedMagicLinkToken,

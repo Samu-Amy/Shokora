@@ -22,8 +22,8 @@ import (
 type App struct {
 	config             Config
 	router             *chi.Mux
-	jwtAuthenticator   auth.JWTAuthenticatorI
-	tokenAuthenticator auth.TokenAuthenticatorI
+	jwtAuthenticator   *auth.JWTAuthenticator
+	tokenAuthenticator *auth.TokenAuthenticator
 	mailer             mailer.ClientI
 	store              *store.Storage
 	service            *service.Service
@@ -79,8 +79,8 @@ type TokenConfig struct {
 // - Functions/Methods -
 func NewApp(
 	config Config,
-	jwtAuthenticator auth.JWTAuthenticatorI,
-	tokenAuthenticator auth.TokenAuthenticatorI,
+	jwtAuthenticator *auth.JWTAuthenticator,
+	tokenAuthenticator *auth.TokenAuthenticator,
 	mailer mailer.ClientI,
 	store *store.Storage,
 	service *service.Service,

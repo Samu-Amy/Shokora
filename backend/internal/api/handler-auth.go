@@ -57,8 +57,6 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: gestire (nell'handler?) il retry nel caso non dovesse essere unico
-
 	// Create User and Email Verification Tokens
 	if err := app.service.Auth.CreateUserAndEmailVerificationTokens(ctx, user, verificationTokens); err != nil { // TODO: aggiungi scadenza token ed altro
 		app.parseError(w, r, err)
@@ -67,6 +65,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	activationURL := fmt.Sprintf("%s/verify-email/%s", app.config.FrontEndURL, verificationTokens.PlainMagicLinkToken)
 
+	// TODO: sistema le vars (anche OTP e scadenze (?))
 	vars := struct {
 		Name          string
 		ActivationURL string

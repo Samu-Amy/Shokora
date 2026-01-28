@@ -58,7 +58,8 @@ func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile, name, e
 		Html:    body.String(),
 	}
 
-	verificationId := uuid.New().String()
+	// Generate random verification id
+	verificationId := uuid.New().String() // TODO: fare qualcosa di più efficiente e più "sicuro" (per evitare duplicati e non inviare mail - anche se re-inviando la mail se ne genera uno nuovo)
 
 	options := &resend.SendEmailOptions{
 		IdempotencyKey: "verify-email/" + verificationId,
@@ -67,12 +68,20 @@ func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile, name, e
 	var retryErr error
 
 	// Send email (with retries)
-	for i := 0; i < MaxRetries; i++ {
+	for i := range MaxRetries {
+
+		// TODO: va bene (aggiungere timeout - magari nell'handler?), utile per retry e altre operazioni che prendono tempo?
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
 
 		_, retryErr = mailer.client.Emails.SendWithOptions(ctx, params, options)
 		if retryErr != nil {
+			// TODO: controlla errore (se per mail duplicata o email sbagliata (4xx)) -> no retry
 
-			// Exponential backoff
+			// Linear backoff
 			time.Sleep(time.Second * time.Duration(i+1))
 			continue
 		}
@@ -82,5 +91,5 @@ func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile, name, e
 
 	// TODO: fai controllo errore per errori di invio duplicato della stessa email (ma comunque ricevuta)
 
-	return fmt.Errorf("failed to send email after %d attempts, error: %v", MaxRetries, retryErr)
+	return fmt.Errorf("failed to send email after %d attempts, error: %v", MaxRetries, retryErr) // TODO: crea errore apposta
 }

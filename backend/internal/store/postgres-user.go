@@ -19,22 +19,24 @@ func NewPostgresUserStore(db *sql.DB) *PostgresUserStore {
 
 // ----- CREATE -----
 
-func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx, user *User) error {
+func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 	query := `
-		INSERT INTO users (first_name, last_name, email, password)
-		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at
-	` // TODO: aggiorna query (per image_url e birth_date)
+		INSERT INTO users (first_name, last_name, email, password, image_url, birth_date)
+		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at, updated_at
+	`
 
 	ctx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	err := transaction.QueryRowContext(
+	err := store.db.QueryRowContext(
 		ctx,
 		query,
 		user.FirstName,
 		user.LastName,
 		user.Email,
 		user.PasswordHash,
+		user.ImageUrl,
+		user.BirthDate,
 	).Scan(
 		&user.Id,
 		&user.CreatedAt,

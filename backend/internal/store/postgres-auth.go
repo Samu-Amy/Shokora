@@ -9,49 +9,9 @@ import (
 
 // TODO: fai lookup anche per verification_type (token + verification_type | OPT + email + verification_type + attempts) -- SET otp_attempts = otp_attempts + 1 (aggiorna atomicamente attempts)
 
-// ----- VERIFY EMAIL  -----
-
-// func (store *PostgresUserStore) VerifyEmail(ctx context.Context, plainToken string) error { // TODO: passare plain token e verificare con funzione util (?)
-// 	return withTransaction(store.db, ctx, func(transaction *sql.Tx) error {
-// 		// Find user related to the token
-// 		user, err := store.getUserFromEmailVerificationToken(ctx, transaction, plainToken)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		// Update user (email verified)
-// 		user.IsVerified = true
-// 		if err := store.setUserIsVerified(ctx, transaction, user.Id); err != nil {
-// 			return err
-// 		}
-
-// 		// Clean email verification token
-// 		if err := store.deleteEmailVerificationToken(ctx, transaction, user.Id); err != nil {
-// 			return err
-// 		}
-
-// 		return nil
-// 	})
-// }
-
-// ----- DELETE -----
-
-func (store *PostgresUserStore) DeleteUserAndEmailVerificationToken(ctx context.Context, userId int64) error {
-	return withTransaction(store.db, ctx, func(transaction *sql.Tx) error {
-		if err := store.Delete(ctx, transaction, userId); err != nil {
-			return err
-		}
-
-		if err := store.deleteEmailVerificationToken(ctx, transaction, userId); err != nil {
-			return err
-		}
-
-		return nil
-	})
-}
-
 // ----- PRIVATES -----
 
+// TODO: sposta in vtokens
 func (store *PostgresUserStore) getUserFromEmailVerificationToken(ctx context.Context, transaction *sql.Tx, plainToken string) (*User, error) {
 	query := `
 	SELECT u.id, u.first_name, u.last_name, u.email, u.is_verified, u.created_at, u.updated_at
@@ -93,6 +53,7 @@ func (store *PostgresUserStore) getUserFromEmailVerificationToken(ctx context.Co
 	return user, nil
 }
 
+// TODO: sposta in users
 func (store *PostgresUserStore) setUserIsVerified(ctx context.Context, transaction *sql.Tx, userId int64) error {
 	query := `
 		UPDATE users
@@ -109,6 +70,7 @@ func (store *PostgresUserStore) setUserIsVerified(ctx context.Context, transacti
 	return nil
 }
 
+// TODO: sposta in vtokens
 func (store *PostgresUserStore) deleteEmailVerificationToken(ctx context.Context, transaction *sql.Tx, userId int64) error {
 	query := `
 		DELETE FROM email_verification_tokens
