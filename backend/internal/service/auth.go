@@ -18,11 +18,9 @@ func NewAuthService(User store.UserRepository, VTokens store.VTokensRepository, 
 	return &AuthService{User, VTokens, db}
 }
 
-// type AuthService interface {
-// 	CreateUserAndEmailVerificationToken(ctx context.Context, user *store.User, verificationTokens *auth.VerificationTokens) error
-// }
+// ----- CREATE -----
 
-func (service *AuthService) CreateUserAndEmailVerificationToken(ctx context.Context, user *store.User, verificationTokens *auth.VerificationTokens) error {
+func (service *AuthService) CreateUserAndEmailVerificationTokens(ctx context.Context, user *store.User, verificationTokens *auth.VerificationTokens) error {
 	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
 		// Create user
 		if err := service.UserRepo.Create(ctx, transaction, user); err != nil {

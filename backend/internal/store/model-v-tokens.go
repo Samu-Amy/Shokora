@@ -8,6 +8,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/auth"
 )
 
+// Verification Tokens (Magic Link and OTP)
 type VTokens struct {
 	UserId             int64                 `json:"user_id"`
 	VerificationType   auth.VerificationType `json:"verification_type"`
@@ -21,5 +22,6 @@ type VTokens struct {
 }
 
 type VTokensRepository interface {
+	// Create tokens (for email verification | password reset | 2FA)
 	CreateTokens(ctx context.Context, transaction *sql.Tx, verificationTokens *auth.VerificationTokens, userId int64) error
 }

@@ -84,7 +84,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// Create User and Email Verification Tokens
-	if err := app.service.Auth.CreateUserAndEmailVerificationToken(ctx, user, verificationTokens); err != nil { // TODO: aggiungi scadenza token ed altro
+	if err := app.service.Auth.CreateUserAndEmailVerificationTokens(ctx, user, verificationTokens); err != nil { // TODO: aggiungi scadenza token ed altro
 		app.parseError(w, r, err)
 		return
 	} // TODO: gestire meglio (verificare scadenza token, se scaduto cosa si fa?)
