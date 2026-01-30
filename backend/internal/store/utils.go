@@ -13,11 +13,17 @@ import (
 // - Errors -
 
 var (
-	ErrNotFound         = errors.New("not found")
-	ErrVersionConlflict = errors.New("version conflict")
-	ErrDuplicateEmail   = errors.New("duplicate email")
-	ErrExpired          = errors.New("expired")
-	ErrUnauthorized     = errors.New("unauthorized")
+	// Generic
+	ErrNotFound         = errors.New("not_found")
+	ErrVersionConlflict = errors.New("version_conflict")
+
+	// Auth
+	ErrDuplicateEmail = errors.New("duplicate_email")
+	ErrDuplicateToken = errors.New("duplicate_token") // TODO: implementa errori
+	ErrDuplicateOTP   = errors.New("duplicate_otp")
+	ErrExpired        = errors.New("expired")
+
+	ErrUnauthorized = errors.New("unauthorized") // User does not exists or is not verified
 )
 
 // - Timeouts -

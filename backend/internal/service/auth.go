@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/store"
@@ -27,6 +28,8 @@ func (service *AuthService) CreateUserAndEmailVerificationTokens(ctx context.Con
 	if err := service.userRepo.Create(ctx, user); err != nil {
 		return err
 	}
+
+	// TODO: fare transaction per creazione user, stats and settings
 
 	ctx, cancel := context.WithTimeout(ctx, regenerate_token_timeout)
 	defer cancel()
@@ -79,30 +82,34 @@ func (service *AuthService) DeleteUserAndEmailVerificationToken(ctx context.Cont
 // ----- UTILS -----
 
 func (service *AuthService) createVerificationTokensWithRetries(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) error {
+	err := service.vTokensRepo.CreateTokens(ctx, userId, verificationTokens)
+	if err == nil {
+		return nil
+	}
+
+	fmt.Print("\n\n Creato token \n\n")
+
 	for range service.tokenAuthenticator.MaxRetries {
 
-		// TODO: (aggiungere timeout - magari nell'handler?), utile per retry e altre operazioni che prendono tempo, va bene?
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
 		}
 
-		err := service.vTokensRepo.CreateTokens(ctx, verificationTokens, userId) // TODO: invece che usare sempre questa, chiamarla una volta e poi fare switch con "UpdateMagicLinkToken" o "UpdateOTP" dopo averli rigenerati (in base all'errore)
-		if err == nil {
-			return nil
-		}
-
+		// Regenerate Tokens
 		switch {
 
-		// Regenerate email verification token
-		case errors.Is(err, store.ErrDuplicateMagicLinkToken):
+		// Magic Link Token
+		case errors.Is(err, store.ErrDuplicateToken):
 			err = service.tokenAuthenticator.RegenerateMagicLinkToken(verificationTokens)
 
-			// Regenerate otp
+			// TODO: fai query per aggiornare token
+			// OTP
 		case errors.Is(err, store.ErrDuplicateOTP):
 			err = service.tokenAuthenticator.RegenerateOTP(verificationTokens)
 
+			// TODO: fai query per aggiornare otp
 		default:
 			return err
 		}

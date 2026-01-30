@@ -27,8 +27,8 @@ type MagicLinkConfig struct {
 }
 
 type OTPConfig struct {
-	Length      int8
-	MaxAttempts int8
+	Length      uint8
+	MaxAttempts uint8
 	LongExp     time.Duration // For Email Verification
 	BaseExp     time.Duration // For Password Reset and 2FA
 	// CriticalExp time.Duration // For critical operations (es. 30s)
@@ -41,6 +41,7 @@ type VerificationTokens struct {
 	HashedMagicLinkToken []byte
 	PlainOTP             string
 	HashedOTP            []byte
+	MagicLinkTokenExp    time.Duration
 	OTPExp               time.Duration
 }
 
@@ -74,8 +75,8 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificat
 	}
 
 	// Hash verification Token and OTP
-	hashedMagicLinkToken := tokenAuthenticator.HashMagicLinkToken(plainMagicLinkToken)
-	hashedOTP := tokenAuthenticator.HashOTP(plainOTP, verificationType)
+	hashedMagicLinkToken := tokenAuthenticator.hashMagicLinkToken(plainMagicLinkToken)
+	hashedOTP := tokenAuthenticator.hashOTP(plainOTP, verificationType)
 
 	return &VerificationTokens{
 		VerificationType:     verificationType,
@@ -83,6 +84,7 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificat
 		HashedMagicLinkToken: hashedMagicLinkToken,
 		PlainOTP:             plainOTP,
 		HashedOTP:            hashedOTP,
+		MagicLinkTokenExp:    tokenAuthenticator.MagicLink.Exp,
 		OTPExp:               tokenAuthenticator.getExpiration(verificationType),
 	}, nil
 }
@@ -95,7 +97,7 @@ func (tokenAuthenticator *TokenAuthenticator) RegenerateMagicLinkToken(verificat
 	}
 
 	verificationTokens.PlainMagicLinkToken = newMagicLinkToken
-	verificationTokens.HashedMagicLinkToken = tokenAuthenticator.HashMagicLinkToken(newMagicLinkToken)
+	verificationTokens.HashedMagicLinkToken = tokenAuthenticator.hashMagicLinkToken(newMagicLinkToken)
 
 	return nil
 }
@@ -107,10 +109,29 @@ func (tokenAuthenticator *TokenAuthenticator) RegenerateOTP(verificationTokens *
 	}
 
 	verificationTokens.PlainOTP = newOTP
-	verificationTokens.HashedOTP = tokenAuthenticator.HashOTP(newOTP, verificationTokens.VerificationType)
+	verificationTokens.HashedOTP = tokenAuthenticator.hashOTP(newOTP, verificationTokens.VerificationType)
 
 	return nil
 }
+
+// Verification
+func (tokenAuthenticator *TokenAuthenticator) VerifyMagicLinkToken(plainToken string, hashedToken []byte) bool {
+	hash := tokenAuthenticator.hashMagicLinkToken(plainToken)
+
+	//? si può aggiungere padding al/ai token e fare comunque il controllo per evitare timing leak (ma rischiando di validare token sbagliati)
+	if len(hash) != 32 || len(hashedToken) != 32 {
+		return false
+	}
+
+	return subtle.ConstantTimeCompare(hash, hashedToken) == 1
+}
+
+func (tokenAuthenticator *TokenAuthenticator) VerifyOTP(plainOTP string, hashedToken []byte, verificationType VerificationType) bool {
+	hash := tokenAuthenticator.hashOTP(plainOTP, verificationType)
+	return hmac.Equal(hash, hashedToken)
+}
+
+// ----- ----- ----- PRIVATES ----- ----- -----
 
 // Generate
 func (tokenAuthenticator *TokenAuthenticator) generateMagicLinkToken() (string, error) {
@@ -136,32 +157,16 @@ func (tokenAuthenticator *TokenAuthenticator) generateOTP() (string, error) { //
 	return fmt.Sprintf("%0*d", length, otp), nil // Format with [length] numbers/zeros
 }
 
-// Hash and Verification
-func (tokenAuthenticator *TokenAuthenticator) HashMagicLinkToken(plainMagicLinkToken string) []byte {
+// Hash
+func (tokenAuthenticator *TokenAuthenticator) hashMagicLinkToken(plainMagicLinkToken string) []byte {
 	hash := sha256.Sum256([]byte(plainMagicLinkToken))
 	return hash[:] // From [32]byte to []byte
 }
 
-func (tokenAuthenticator *TokenAuthenticator) HashOTP(plainOTP string, verificationType VerificationType) []byte {
+func (tokenAuthenticator *TokenAuthenticator) hashOTP(plainOTP string, verificationType VerificationType) []byte {
 	mac := hmac.New(sha256.New, []byte(tokenAuthenticator.secret))
 	mac.Write([]byte(plainOTP + tokenAuthenticator.getVerificationTypeString(verificationType)))
 	return mac.Sum(nil)
-}
-
-func (tokenAuthenticator *TokenAuthenticator) VerifyMagicLinkToken(plainToken string, hashedToken []byte) bool {
-	hash := tokenAuthenticator.HashMagicLinkToken(plainToken)
-
-	//? si può aggiungere padding al/ai token e fare comunque il controllo per evitare timing leak (ma rischiando di validare token sbagliati)
-	if len(hash) != 32 || len(hashedToken) != 32 {
-		return false
-	}
-
-	return subtle.ConstantTimeCompare(hash, hashedToken) == 1
-}
-
-func (tokenAuthenticator *TokenAuthenticator) VerifyOTP(plainOTP string, hashedToken []byte, verificationType VerificationType) bool {
-	hash := tokenAuthenticator.HashOTP(plainOTP, verificationType)
-	return hmac.Equal(hash, hashedToken)
 }
 
 // - Utils -

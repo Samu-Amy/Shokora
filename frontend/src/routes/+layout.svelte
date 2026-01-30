@@ -12,6 +12,8 @@
   // TODO: aggiungi debounce (per evitare di creare cose più volte, inviare troppe email, ecc.)
 
   // TODO: aggiungi api call a "/api/v1/auth/me" per cercare di ottenere lo user (se autenticato), salvarlo nel context e mostrare "accedi" o l'icona utente (?)
+
+  // TODO: https://www.youtube.com/watch?v=ieECVME5ZLU (redirect a protected routes a cui si prova ad accedere senza essere loggati (dopo il login si va a quella pagina))
 </script>
 
 <svelte:head>

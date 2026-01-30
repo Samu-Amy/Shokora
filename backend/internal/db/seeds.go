@@ -111,7 +111,7 @@ func Seed(store store.Storage, db *sql.DB) {
 	transaction, _ := db.BeginTx(ctx, nil)
 
 	for _, user := range users {
-		if err := store.User.Create(ctx, transaction, user); err != nil {
+		if err := store.User.Create(ctx, user); err != nil {
 			_ = transaction.Rollback()
 			log.Println("Error creating user: ", err)
 			return

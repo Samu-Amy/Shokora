@@ -157,6 +157,7 @@ func (app *App) initRouter() *chi.Mux {
 			r.Route("/dev", func(r chi.Router) {
 				r.Use(app.devMiddleware)
 
+				// TODO: il ruolo dev non può essere settato dall'app (solo "a mano" nel db da docker)
 				// TODO: route per vedere metrics particolari, logs ed altre cose legate al development (?)
 				r.Get("/debug/vars", expvar.Handler().ServeHTTP)
 			})

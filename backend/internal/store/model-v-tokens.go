@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
@@ -21,14 +20,11 @@ type VTokens struct {
 	UpdatedAt          time.Time             `json:"updated_at"`   // Default now()
 }
 
-// Errors
-var (
-	ErrDuplicateMagicLinkToken = errors.New("duplicate_token") // TODO: implementa errori
-	ErrDuplicateOTP            = errors.New("duplicate_otp")
-)
-
 // Repository
 type VTokensRepositoryI interface {
 	// Create tokens (for email verification | password reset | 2FA)
-	CreateTokens(ctx context.Context, verificationTokens *auth.VerificationTokens, userId int64) error
+	CreateTokens(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) error
+
+	UpdateMagicLinkToken(ctx context.Context, userId int64, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error
+	UpdateOTP(ctx context.Context, userId int64, OTPHash []byte, OTPExp time.Duration) error
 }
