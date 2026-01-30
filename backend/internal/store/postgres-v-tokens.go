@@ -42,9 +42,13 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int6
 		time.Now().Add(verificationTokens.OTPExp),
 	)
 
-	// TODO: check errore duplicazione
 	if err != nil {
-		return err
+		switch {
+		case isPostgresErrorCode(err, UniqueViolationErr):
+			return ErrDuplicateToken
+		default:
+			return err
+		}
 	}
 
 	return nil
@@ -52,14 +56,59 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int6
 
 // ----- UPDATE -----
 
-func (store *PostgresVTokensStore) UpdateMagicLinkToken(ctx context.Context, userId int64, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error {
-	// TODO: implementa
+func (store *PostgresVTokensStore) UpdateMagicLinkToken(ctx context.Context, userId int64, verificationType auth.VerificationType, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error {
+	query := `
+		UPDATE verification_tokens
+		SET magic_link_token = $1, magic_link_token_exp = $2
+		WHERE user_id = $3 AND verification_type = $4
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
+	_, err := store.db.ExecContext(
+		queryCtx,
+		query,
+		magicLinkTokenHash,
+		time.Now().Add(magicLinkTokenExp),
+		userId,
+		verificationType,
+	)
+
+	if err != nil {
+		switch {
+		case isPostgresErrorCode(err, UniqueViolationErr):
+			return ErrDuplicateToken
+		default:
+			return err
+		}
+	}
 
 	return nil
 }
 
-func (store *PostgresVTokensStore) UpdateOTP(ctx context.Context, userId int64, OTPHash []byte, OTPExp time.Duration) error {
-	// TODO: implementa
+func (store *PostgresVTokensStore) UpdateOTP(ctx context.Context, userId int64, verificationType auth.VerificationType, otpHash []byte, otpExp time.Duration) error {
+	query := `
+		UPDATE verification_tokens
+		SET otp = $1, otp_exp = $2, otp_attempts = 0
+		WHERE user_id = $3 AND verification_type = $4
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
+	_, err := store.db.ExecContext(
+		queryCtx,
+		query,
+		otpHash,
+		time.Now().Add(otpExp),
+		userId,
+		verificationType,
+	)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

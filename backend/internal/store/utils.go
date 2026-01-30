@@ -8,9 +8,15 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 // - Errors -
+
+const (
+	UniqueViolationErr = pq.ErrorCode("23505")
+)
 
 var (
 	// Generic
@@ -25,6 +31,13 @@ var (
 
 	ErrUnauthorized = errors.New("unauthorized") // User does not exists or is not verified
 )
+
+func isPostgresErrorCode(err error, errcode pq.ErrorCode) bool {
+	if pgerr, ok := err.(*pq.Error); ok {
+		return pgerr.Code == errcode
+	}
+	return false
+}
 
 // - Timeouts -
 

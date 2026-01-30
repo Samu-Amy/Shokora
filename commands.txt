@@ -1,6 +1,6 @@
 Run backend:
 - cd /backend/
-  - "go run cmd/app/main.go"
+  - "go run cmd/app/main.go" // IMPORTANTE (se si fa il cd in app e poi "run go ." (o "run go main.go"), non riesce a leggere il file .env (cambia la working directory))
 
 Run database seeding:
 - cd /backend/

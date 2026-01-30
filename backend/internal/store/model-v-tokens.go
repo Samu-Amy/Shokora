@@ -25,6 +25,6 @@ type VTokensRepositoryI interface {
 	// Create tokens (for email verification | password reset | 2FA)
 	CreateTokens(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) error
 
-	UpdateMagicLinkToken(ctx context.Context, userId int64, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error
-	UpdateOTP(ctx context.Context, userId int64, OTPHash []byte, OTPExp time.Duration) error
+	UpdateMagicLinkToken(ctx context.Context, userId int64, verificationType auth.VerificationType, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error
+	UpdateOTP(ctx context.Context, userId int64, verificationType auth.VerificationType, otpHash []byte, otpExp time.Duration) error
 }

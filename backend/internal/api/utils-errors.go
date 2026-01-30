@@ -81,7 +81,7 @@ func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 		app.conflictError(w, r, err)
 
 	case errors.Is(err, store.ErrDuplicateEmail):
-		app.badRequestError(w, r, err) // TODO: passare quale dato è duplicato (email) per poter mostrare un messaggio più preciso all'utente (?)
+		app.badRequestError(w, r, err)
 
 	case errors.Is(err, store.ErrUnauthorized):
 		app.unauthorizedError(w, r, err)

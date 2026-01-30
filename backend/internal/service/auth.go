@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/store"
@@ -23,7 +22,7 @@ func NewAuthService(userRepo store.UserRepositoryI, vTokensRepo store.VTokensRep
 
 // ----- CREATE USER -----
 
-func (service *AuthService) CreateUserAndEmailVerificationTokens(ctx context.Context, user *store.User, verificationTokens *auth.VerificationTokens) error {
+func (service *AuthService) CreateUserAndEmailVerificationTokensWithRetries(ctx context.Context, user *store.User, verificationTokens *auth.VerificationTokens) error {
 	// Create user
 	if err := service.userRepo.Create(ctx, user); err != nil {
 		return err
@@ -31,11 +30,11 @@ func (service *AuthService) CreateUserAndEmailVerificationTokens(ctx context.Con
 
 	// TODO: fare transaction per creazione user, stats and settings
 
-	ctx, cancel := context.WithTimeout(ctx, regenerate_token_timeout)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, regenerate_token_timeout)
 	defer cancel()
 
 	// Create verification tokens
-	return service.createVerificationTokensWithRetries(ctx, user.Id, verificationTokens)
+	return service.createVerificationTokensWithRetries(ctxWithTimeout, user.Id, verificationTokens)
 }
 
 // ----- VERIFY EMAIL  -----
@@ -82,14 +81,14 @@ func (service *AuthService) DeleteUserAndEmailVerificationToken(ctx context.Cont
 // ----- UTILS -----
 
 func (service *AuthService) createVerificationTokensWithRetries(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) error {
+	// Create Tokens in db
 	err := service.vTokensRepo.CreateTokens(ctx, userId, verificationTokens)
 	if err == nil {
-		return nil
+		return nil // OK, return no error
 	}
 
-	fmt.Print("\n\n Creato token \n\n")
-
-	for range service.tokenAuthenticator.MaxRetries {
+	// Retry (regenerate tokens)
+	for range service.tokenAuthenticator.MaxRetries - 1 {
 
 		select {
 		case <-ctx.Done():
@@ -97,25 +96,31 @@ func (service *AuthService) createVerificationTokensWithRetries(ctx context.Cont
 		default:
 		}
 
-		// Regenerate Tokens
+		// Regenerate Tokens (if error is "duplicate token")
 		switch {
 
 		// Magic Link Token
 		case errors.Is(err, store.ErrDuplicateToken):
-			err = service.tokenAuthenticator.RegenerateMagicLinkToken(verificationTokens)
+			err2 := service.tokenAuthenticator.RegenerateMagicLinkToken(verificationTokens)
+			if err2 != nil {
+				continue // skip iteration
+			}
 
-			// TODO: fai query per aggiornare token
-			// OTP
-		case errors.Is(err, store.ErrDuplicateOTP):
-			err = service.tokenAuthenticator.RegenerateOTP(verificationTokens)
+			err = service.vTokensRepo.UpdateMagicLinkToken(ctx, userId, verificationTokens.VerificationType, verificationTokens.HashedMagicLinkToken, verificationTokens.MagicLinkTokenExp)
+			if err == nil {
+				return nil // OK, return no error
+			}
 
-			// TODO: fai query per aggiornare otp
+		// 	// OTP
+		// TODO: implementare controllo duplicazione e rigenerazione OTP?
+		// case errors.Is(err, store.ErrDuplicateOTP):
+		// 	err2 := service.tokenAuthenticator.RegenerateOTP(verificationTokens)
+
+		// 	// TODO: fai query per aggiornare otp
 		default:
-			return err
+			return err // Error is not solvable (not "duplicate token") -> return it
 		}
-
-		continue
 	}
 
-	return ErrMaxRetriesExceeded
+	return ErrMaxRetriesExceeded // Couldn't regenerate and save token successfully -> return error "max retries exceeded"
 }

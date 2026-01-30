@@ -1,11 +1,13 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payload"
 	"github.com/Samu-Amy/Shokora/internal/auth"
+	"github.com/Samu-Amy/Shokora/internal/mailer"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
@@ -56,41 +58,34 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create User and Email Verification Tokens
-	if err := app.service.Auth.CreateUserAndEmailVerificationTokens(ctx, user, verificationTokens); err != nil { // TODO: aggiungi scadenza token ed altro
+	if err := app.service.Auth.CreateUserAndEmailVerificationTokensWithRetries(ctx, user, verificationTokens); err != nil {
 		app.parseError(w, r, err)
 		return
 	}
 
 	// TODO: fai creazione ed invio email in un metodo utils
-	// activationURL := fmt.Sprintf("%s/verify-email/%s", app.config.FrontEndURL, verificationTokens.PlainMagicLinkToken)
+	activationURL := fmt.Sprintf("%s/verify-email/%s", app.config.FrontEndURL, verificationTokens.PlainMagicLinkToken)
 
 	// TODO: sistema le vars (anche OTP e scadenze (?)) - fai utils apposta per email verification, password reset e 2FA
-	// vars := struct {
-	// 	Name          string
-	// 	ActivationURL string
-	// }{
-	// 	Name:          user.FirstName,
-	// 	ActivationURL: activationURL,
-	// }
+	vars := struct {
+		Name          string
+		ActivationURL string
+	}{
+		Name:          user.FirstName,
+		ActivationURL: activationURL,
+	}
 
-	// isProdEnv := app.config.Env == "prod"
+	isProdEnv := app.config.Env == "prod"
 
 	// Send email
-	// err = app.mailer.SendEmail(ctx, mailer.EmailVerificationTemplate, user.FirstName, user.Email, vars, !isProdEnv)
-	// if err != nil {
-	// 	app.logger.Errorw("error sending welcome email", "error", err)
+	err = app.mailer.SendEmail(ctx, mailer.EmailVerificationTemplate, user.FirstName, user.Email, vars, !isProdEnv)
+	if err != nil {
+		app.logger.Errorw("error sending welcome email", "error", err)
+		app.internalServerError(w, r, err) // TODO: dire di riprovare più tardi -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
+		return
+	}
 
-	// 	// // Rollback user creation
-	// 	// if err := app.store.User.DeleteUserAndEmailVerificationToken(ctx, user.Id); err != nil {
-	// 	// 	app.logger.Errorw("error deleting user", "error", err)
-	// 	// }
-	// 	// TODO: evitare di eliminare user e token e dire di riprovare più tardi -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
-
-	// 	app.internalServerError(w, r, err)
-	// 	return
-	// }
-
-	app.logger.Infow("Email sent successfully")
+	app.logger.Infow("User and Tokens created, Email sent successfully")
 
 	// TODO: ricordati di scrivere di controllare nello spam
 
