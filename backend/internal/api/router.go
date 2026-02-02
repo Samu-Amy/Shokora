@@ -73,18 +73,23 @@ func (app *App) initRouter() *chi.Mux {
 
 		// - Auth Routes -
 		r.Route("/auth", func(r chi.Router) {
+			// Auth
 			r.Post("/user", app.registerUserHandler)
+			// r.Post("/login", ...) // TODO: se 2fa -> "verify-2fa[/{token}]" -> generate auth tokens ("tokens"), se no 2fa -> generate auth tokens ("tokens")
+			// r.Post("/logout", ...)
 
 			r.Post("/tokens", app.createTokenHandler)
-			// r.Post("/verify-email", app.verifyEmailWithOTPHandler)
-			r.Post("/verify-email/{token}", app.verifyEmailWithTokenHandler)
-			// r.Post("/verify-2fa", app.verify2FAWithOTPHandler)
-			// r.Post("/verify-2fa/{token}", app.verify2FAWithTokenHandler)
-			// TODO: implementa routes per login, reset password, ecc.
-			// r.Post("/login", ...) // TODO: se 2fa -> "verify-2fa[/{token}]" -> generate auth tokens ("tokens"), se no 2fa -> generate auth tokens ("tokens")
 			// r.Post("/refresh", ...)
-			// r.Post("/reset-password", ...)
-			// r.Post("/logout", ...)
+
+			// Verifications // TODO: implementa routes per login, reset password, ecc.
+			r.Post("/verify-email/otp", app.verifyEmailWithOTPHandler)
+			r.Post("/verify-email/{token}", app.verifyEmailWithTokenHandler)
+
+			// r.Post("/reset-password/otp", ...)
+			// r.Post("/reset-password/{token}", ...)
+
+			// r.Post("/verify-2fa/otp", app.verify2FAWithOTPHandler)
+			// r.Post("/verify-2fa/{token}", app.verify2FAWithTokenHandler)
 
 			r.Group(func(r chi.Router) {
 				// TODO: usare (o crearne uno simile) middleware auth per ottenere l'utente (?)

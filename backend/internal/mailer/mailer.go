@@ -7,10 +7,19 @@ import (
 
 // - Constants -
 
+// General
 const (
-	FromName                  string = "Shokora"
-	MaxRetries                uint8  = 3
-	EmailVerificationTemplate string = "email_verification.tmpl"
+	FromName   string = "Shokora"
+	MaxRetries uint8  = 3
+)
+
+// Template files
+type TemplateFile = string
+
+const (
+	EmailVerificationTemplate TemplateFile = "email_verification.tmpl"
+	PasswordResetTemplate     TemplateFile = "password_reset.tmpl"
+	TwoFactorAuthTemplate     TemplateFile = "two_factor_auth.tmpl"
 )
 
 // - Templates -

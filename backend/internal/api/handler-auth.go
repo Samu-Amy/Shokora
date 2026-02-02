@@ -1,13 +1,11 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payload"
 	"github.com/Samu-Amy/Shokora/internal/auth"
-	"github.com/Samu-Amy/Shokora/internal/mailer"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
@@ -63,22 +61,17 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: fai creazione ed invio email in un metodo utils
-	activationURL := fmt.Sprintf("%s/verify-email/%s", app.config.FrontEndURL, verificationTokens.PlainMagicLinkToken)
-
-	// TODO: sistema le vars (anche OTP e scadenze (?)) - fai utils apposta per email verification, password reset e 2FA
-	vars := struct {
-		Name          string
-		ActivationURL string
-	}{
-		Name:          user.FirstName,
-		ActivationURL: activationURL,
-	}
-
-	isProdEnv := app.config.Env == "prod"
-
 	// Send email
-	err = app.mailer.SendEmail(ctx, mailer.EmailVerificationTemplate, user.FirstName, user.Email, vars, !isProdEnv)
+	err = app.SendVerificationEmail(
+		ctx,
+		auth.TokenEmailVerification,
+		user.FirstName,
+		user.Email,
+		verificationTokens.PlainMagicLinkToken,
+		verificationTokens.PlainOTP,
+		verificationTokens.MagicLinkTokenExp,
+		verificationTokens.OTPExp,
+	)
 	if err != nil {
 		app.logger.Errorw("error sending welcome email", "error", err)
 		app.internalServerError(w, r, err) // TODO: dire di riprovare più tardi -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
@@ -98,11 +91,44 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 // ----- EMAIL VERIFICATION -----
 
+func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Get payload data
+	var payload payload.VerificationPayload
+
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Validate
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	if len(payload.OTP) != int(app.config.Auth.OTP.Length) {
+		app.badRequestError(w, r, ErrTokenInvalid)
+		return
+	}
+
+	// Verify
+	if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload.OTP); err != nil {
+		app.parseError(w, r, err)
+		return
+	}
+
+	//* No content
+	w.WriteHeader(http.StatusNoContent) // TODO: setta http-only cookies con token e invia user
+}
+
 func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	token := chi.URLParam(r, "token")
 
-	if err := app.service.Auth.VerifyEmail(ctx, token); err != nil {
+	// Verify
+	if err := app.service.Auth.VerifyEmailWithToken(ctx, token); err != nil {
 		app.parseError(w, r, err)
 		return
 	}

@@ -28,7 +28,7 @@ func (service *AuthService) CreateUserAndEmailVerificationTokensWithRetries(ctx 
 		return err
 	}
 
-	// TODO: fare transaction per creazione user, stats and settings
+	// TODO: fare transaction per creazione user, stats and settings (oppure crearle qua in successione e in caso di errore lasciar stare, però poi nell'update crearle se non esistono)
 
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, regenerate_token_timeout)
 	defer cancel()
@@ -39,21 +39,44 @@ func (service *AuthService) CreateUserAndEmailVerificationTokensWithRetries(ctx 
 
 // ----- VERIFY EMAIL  -----
 
-func (service *AuthService) VerifyEmail(ctx context.Context, plainToken string) error { // TODO: passare plain token e verificare con funzione util (?)
+func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, plainOTP string) error {
 	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
-		// // Find user related to the token
+		// Find user related to the token
 		// user, err := store.getUserFromEmailVerificationToken(ctx, transaction, plainToken)
 		// if err != nil {
 		// 	return err
 		// }
 
-		// // Update user (email verified)
+		// Update user (email verified)
 		// user.IsVerified = true
 		// if err := store.setUserIsVerified(ctx, transaction, user.Id); err != nil {
 		// 	return err
 		// }
 
-		// // Clean email verification token
+		// Clean email verification token
+		// if err := store.deleteEmailVerificationToken(ctx, transaction, user.Id); err != nil {
+		// 	return err
+		// }
+
+		return nil
+	})
+}
+
+func (service *AuthService) VerifyEmailWithToken(ctx context.Context, plainToken string) error { // TODO: passare plain token e verificare con funzione util (?)
+	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
+		// Find user related to the token
+		// user, err := store.getUserFromEmailVerificationToken(ctx, transaction, plainToken)
+		// if err != nil {
+		// 	return err
+		// }
+
+		// Update user (email verified)
+		// user.IsVerified = true
+		// if err := store.setUserIsVerified(ctx, transaction, user.Id); err != nil {
+		// 	return err
+		// }
+
+		// Clean email verification token
 		// if err := store.deleteEmailVerificationToken(ctx, transaction, user.Id); err != nil {
 		// 	return err
 		// }

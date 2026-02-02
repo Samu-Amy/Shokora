@@ -14,6 +14,8 @@
   // TODO: aggiungi api call a "/api/v1/auth/me" per cercare di ottenere lo user (se autenticato), salvarlo nel context e mostrare "accedi" o l'icona utente (?)
 
   // TODO: https://www.youtube.com/watch?v=ieECVME5ZLU (redirect a protected routes a cui si prova ad accedere senza essere loggati (dopo il login si va a quella pagina))
+
+  // TODO: per la ricerca aggiungere un timer per cercare i prodotti (o altro) solo dopo tot (es. 300ms) che l'utente ha smesso di scrivere
 </script>
 
 <svelte:head>

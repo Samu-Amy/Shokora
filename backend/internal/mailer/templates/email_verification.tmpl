@@ -1,4 +1,4 @@
-{{define "subject"}}Finish Registration with Shokora{{end}}
+{{define "subject"}}Verifica la tua email per l'account Shokora{{end}}
 
 {{define "body"}}
 <!doctype html>
@@ -8,10 +8,10 @@
   </head>
   <body>
     <p>Ciao {{.Name}},</p>
-    <p>Grazie per la registrazione...</p>
+    <p>Siamo felici di averti con noi!</p>
     <p>Prima di poter ordinare online devi confermare il tuo indirizzo email. Clicca sul link oppure inserisci il codice OTP per verificarlo.</p>
-    <p><a href="{{.ActivationURL}}">Conferma indirizzo email</a> (scade tra {{.MagicLinkExp}})</p>
-    <p>Codice OTP: {{.OTPToken}} (scade tra {{.OTPExp}})</p>
+    <p><a href="{{.ActivationURL}}">Conferma indirizzo email</a> (ha una durata di {{.MagicLinkExp}})</p>
+    <p>Codice OTP: {{.OTPToken}} (ha una durata di {{.OTPExp}})</p>
     <p>Se non hai eseguito l'accesso a Shokora, puoi ignorare questa email.</p>
 
     <p>Grazie,</p>

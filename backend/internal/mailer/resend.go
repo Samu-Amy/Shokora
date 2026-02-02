@@ -28,7 +28,7 @@ func NewResendMailer(apiKey, fromEmail string) *ResendMailer {
 	}
 }
 
-func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile, name, email string, data any, isSandbox bool) error {
+func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile TemplateFile, name, email string, data any, isSandbox bool) error {
 	// TODO: usa isSandbox
 
 	// Template parsing
