@@ -9,9 +9,10 @@ import (
 
 // Verification Tokens (Magic Link and OTP)
 type VTokens struct {
+	Id                 int64                 `json:"id"` // Generated
 	UserId             int64                 `json:"user_id"`
 	VerificationType   auth.VerificationType `json:"verification_type"`
-	MagicLinkTokenHash []byte                `json:"-"` // TODO: va bene "-"?
+	MagicLinkTokenHash []byte                `json:"-"`
 	MagicLinkTokenExp  time.Time             `json:"magic_link_token_exp"`
 	OTPHash            []byte                `json:"-"`
 	OTPExp             time.Time             `json:"otp_exp"`
@@ -23,8 +24,8 @@ type VTokens struct {
 // Repository
 type VTokensRepositoryI interface {
 	// Create tokens (for email verification | password reset | 2FA)
-	CreateTokens(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) error
+	CreateTokens(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) (int64, error)
 
-	UpdateMagicLinkToken(ctx context.Context, userId int64, verificationType auth.VerificationType, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error
-	UpdateOTP(ctx context.Context, userId int64, verificationType auth.VerificationType, otpHash []byte, otpExp time.Duration) error
+	UpdateMagicLinkTokenFromId(ctx context.Context, verificationId int64, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error
+	UpdateOTPFromId(ctx context.Context, verificationId int64, otpHash []byte, otpExp time.Duration) error
 }

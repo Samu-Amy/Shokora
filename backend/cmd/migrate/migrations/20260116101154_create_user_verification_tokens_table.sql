@@ -1,6 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS verification_tokens(
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   verification_type smallint NOT NULL CHECK (verification_type BETWEEN 0 AND 2),
   
@@ -14,7 +15,7 @@ CREATE TABLE IF NOT EXISTS verification_tokens(
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   
-  PRIMARY KEY (user_id, verification_type)
+  UNIQUE (user_id, verification_type)
   -- UNIQUE (user_id, otp_hash)
 );
 

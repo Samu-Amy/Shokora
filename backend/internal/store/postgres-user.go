@@ -22,7 +22,8 @@ func NewPostgresUserStore(db *sql.DB) *PostgresUserStore {
 func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 	query := `
 		INSERT INTO users (first_name, last_name, email, password, image_url, birth_date)
-		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at, updated_at
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id, created_at, updated_at
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)

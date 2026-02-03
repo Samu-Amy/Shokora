@@ -56,7 +56,8 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create User and Email Verification Tokens
-	if err := app.service.Auth.CreateUserAndEmailVerificationTokensWithRetries(ctx, user, verificationTokens); err != nil {
+	verificationId, err := app.service.Auth.CreateUserAndEmailVerificationTokensWithRetries(ctx, user, verificationTokens)
+	if err != nil {
 		app.parseError(w, r, err)
 		return
 	}
@@ -78,12 +79,14 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: prendere il verification_id (colonna da aggiungere nel db) e metterlo in http-only cookies per la verifica di otp (e forse magic link)
+
 	app.logger.Infow("User and Tokens created, Email sent successfully")
 
 	// TODO: ricordati di scrivere di controllare nello spam
 
 	//* Return user
-	if err := app.jsonResponse(w, http.StatusCreated, user); err != nil {
+	if err := app.jsonResponse(w, http.StatusCreated, user); err != nil { // TODO: ritorna anche verificationId
 		app.internalServerError(w, r, err)
 		return
 	}
@@ -93,6 +96,8 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
+	// TODO: qui l'utente dev'essere loggato -> prendi user.Id dallo user (nel context)
 
 	// Get payload data
 	var payload payload.VerificationPayload

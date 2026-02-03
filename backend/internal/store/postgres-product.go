@@ -19,7 +19,8 @@ func NewPostgresProductStore(db *sql.DB) *PostgresProductStore {
 func (store *PostgresProductStore) Create(ctx context.Context, product *Product) error {
 	query := `
 		INSERT INTO products (name, description, image_url, price, discount)
-		VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at, updated_at
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, created_at, updated_at
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)

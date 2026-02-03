@@ -9,9 +9,12 @@ import (
 )
 
 var (
-	ErrUserBlocked  = errors.New("user_blocked")
-	ErrTokenInvalid = errors.New("token_invalid")
-	ErrTokenExpired = errors.New("token_expired")
+	ErrUserNotFound      = errors.New("user_not_found")
+	ErrUserNotVerified   = errors.New("user_not_verified")
+	ErrUserNotAuthorized = errors.New("user_not_authorized")
+	ErrUserBlocked       = errors.New("user_blocked")
+	ErrTokenInvalid      = errors.New("token_invalid")
+	ErrTokenExpired      = errors.New("token_expired")
 	// TODO: aggiungere versioni per refresh token?
 )
 

@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -66,14 +65,14 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Get user
-		user, err := app.store.User.GetById(ctx, userId) // TODO: gestione caso utente non verificato (?)
+		user, err := app.store.User.GetById(ctx, userId)
 		if err != nil {
 			app.unauthorizedError(w, r, err)
 			return
 		}
 
 		if !user.IsActive {
-			app.unauthorizedError(w, r, err) // TODO: usa errore dedicato
+			app.unauthorizedError(w, r, err) // TODO: usa errore dedicato (bloccato)
 			return
 		}
 
@@ -84,21 +83,54 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// - Authorization - Roles -
+// - Authorization - Ownership - (non serve più)
 
-func (app *App) employeeMiddleware(next http.Handler) http.Handler {
+// // Verify that the data the user is trying to access is theirs.
+// // Must be called after the authMiddleware
+// func (app *App) userDataOwnershipMiddleware(next http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+// 		// Get user id from parameters
+// 		userId, err := app.getIdFromParam(r, userIdParam)
+// 		if err != nil {
+// 			app.badRequestError(w, r, err)
+// 			return
+// 		}
+
+// 		// Get User from context (auth middleware)
+// 		user, ok := getUserFromContext(r)
+// 		if !ok || user == nil {
+// 			app.unauthorizedError(w, r, ErrUserNotFound)
+// 			return
+// 		}
+
+// 		// Check User Id
+// 		if user.Id != userId {
+// 			app.forbiddenError(w, r, ErrUserNotAuthorized) // TODO: cambia (?)
+// 			return
+// 		}
+
+// 		next.ServeHTTP(w, r)
+// 	})
+// }
+
+// - Authorization - User Verified -
+
+// Verify that the user's email is verified.
+// Must be called after the authMiddleware
+func (app *App) userVerifiedMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Get User
+		// Get User from context (auth middleware)
 		user, ok := getUserFromContext(r)
 		if !ok || user == nil {
-			app.unauthorizedError(w, r, errors.New("user not found"))
+			app.unauthorizedError(w, r, ErrUserNotFound)
 			return
 		}
 
-		// Check User Role
-		if !user.IsRoleValid(store.RoleEmployee) {
-			app.forbiddenError(w, r, errors.New("user doesn't have the permission"))
+		// Check if User is verified
+		if !user.IsVerified {
+			app.unauthorizedError(w, r, ErrUserNotVerified) // TODO: in forntend chiedi verifica
 			return
 		}
 
@@ -106,6 +138,32 @@ func (app *App) employeeMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// - Authorization - Roles -
+
+// Verify that the user's role is >= employee.
+// Must be called after the authMiddleware
+func (app *App) employeeMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Get User
+		user, ok := getUserFromContext(r)
+		if !ok || user == nil {
+			app.unauthorizedError(w, r, ErrUserNotFound)
+			return
+		}
+
+		// Check User Role
+		if !user.IsRoleValid(store.RoleEmployee) {
+			app.forbiddenError(w, r, ErrUserNotAuthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Verify that the user's role is >= admin.
+// Must be called after the authMiddleware
 func (app *App) adminMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -114,13 +172,13 @@ func (app *App) adminMiddleware(next http.Handler) http.Handler {
 		// Get User
 		user, ok := getUserFromContext(r)
 		if !ok || user == nil {
-			app.unauthorizedError(w, r, errors.New("user not found"))
+			app.unauthorizedError(w, r, ErrUserNotFound)
 			return
 		}
 
 		// Check User Role
 		if !user.IsRoleValid(store.RoleAdmin) {
-			app.forbiddenError(w, r, errors.New("user doesn't have the permission"))
+			app.forbiddenError(w, r, ErrUserNotAuthorized)
 			return
 		}
 
@@ -128,48 +186,21 @@ func (app *App) adminMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// Verify that the user's role is >= dev.
+// Must be called after the authMiddleware
 func (app *App) devMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get User
 		user, ok := getUserFromContext(r)
 		if !ok || user == nil {
-			app.unauthorizedError(w, r, errors.New("user not found"))
+			app.unauthorizedError(w, r, ErrUserNotFound)
 			return
 		}
 
 		// Check User Role
 		if !user.IsRoleValid(store.RoleDev) {
-			app.forbiddenError(w, r, errors.New("user doesn't have the permission"))
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-// - Authorization - Ownership -
-
-func (app *App) userOwnershipMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Get user id
-		userId, err := app.getIdFromParam(r, userIdParam)
-		if err != nil {
-			app.badRequestError(w, r, err)
-			return
-		}
-
-		// Get User
-		user, ok := getUserFromContext(r)
-		if !ok || user == nil {
-			app.unauthorizedError(w, r, errors.New("user not found"))
-			return
-		}
-
-		// Check User Id
-		if user.Id != userId {
-			app.forbiddenError(w, r, errors.New("trying to update other user's data")) // TODO: cambia (?)
+			app.forbiddenError(w, r, ErrUserNotAuthorized)
 			return
 		}
 

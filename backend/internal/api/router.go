@@ -82,13 +82,13 @@ func (app *App) initRouter() *chi.Mux {
 			// r.Post("/refresh", ...)
 
 			// Verifications // TODO: implementa routes per login, reset password, ecc.
-			r.Post("/verify-email/otp", app.verifyEmailWithOTPHandler)
+			r.Post("/verify-email/otp", app.verifyEmailWithOTPHandler) // TODO: spostare in Auth-Protected Routes (?)
 			r.Post("/verify-email/{token}", app.verifyEmailWithTokenHandler)
 
-			// r.Post("/reset-password/otp", ...)
+			// r.Post("/reset-password/otp", ...) // TODO: versione logged (usa user Id) e versione non logged (la quale richiede l'email per poter verificare l'otp (in questo caso legato a email invece che user Id))
 			// r.Post("/reset-password/{token}", ...)
 
-			// r.Post("/verify-2fa/otp", app.verify2FAWithOTPHandler)
+			// r.Post("/verify-2fa/otp", app.verify2FAWithOTPHandler) // TODO: come verificare otp e utente (id o email) prima di fa accedere l'utente?
 			// r.Post("/verify-2fa/{token}", app.verify2FAWithTokenHandler)
 
 			r.Group(func(r chi.Router) {
@@ -99,22 +99,29 @@ func (app *App) initRouter() *chi.Mux {
 
 		// - Auth-Protected Routes -
 		r.Group(func(r chi.Router) {
-			r.Use(app.authMiddleware)
+			r.Use(app.authMiddleware) // Auth Middleware
 			// TODO: controllo modifiche -> gli utenti possono modificare solo il proprio profilo (solo le info di base, non ruolo o altro (quelli modificabili solo da admin))
 
 			// - Customers Routes -
 
 			// User Data
-			r.Route("/users/{userId}", func(r chi.Router) {
-				r.Use(app.userOwnershipMiddleware)
+			r.Route("/user", func(r chi.Router) {
+				// r.Use(app.userDataOwnershipMiddleware) // User Data Ownerhip Middleware
 
 				// TODO: aggiungi metodo per ottenere user (direttamente dal middleware, non dal db) (con middleware -> solo se è lo stesso di quello autenticato (cioè ottiene il suo profilo))
 				r.Patch("/", app.updateUserDataHandler)
+
+				// TODO: fai handlers per otterene le stats (con achievements), coupons ed altro
+				r.Use(app.userVerifiedMiddleware) // User Verified Middleware (+ User Data Ownerhip Middleware)
+				// r.Get("/stats", app.getUserStatsHandler)
+				// r.Get("/coupons", app.getUserCouponsHandler)
 			})
 
-			// Menu Orders
-
 			// Shop Orders
+			r.Group(func(r chi.Router) {
+				r.Use(app.userVerifiedMiddleware)
+				// r.Post("/orders", app.shopOrderHandler)
+			})
 
 			// - Employee (and Admin) Routes -
 			r.Route("/employee", func(r chi.Router) {
