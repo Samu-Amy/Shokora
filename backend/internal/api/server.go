@@ -63,7 +63,7 @@ type AuthConfig struct {
 	Token                       TokenConfig
 	MagicLink                   auth.MagicLinkConfig
 	OTP                         auth.OTPConfig
-	VerficationTokensMaxRetries uint8
+	VerficationTokensMaxRetries uint8 // Counting the first attempt
 	VerficationTokensSecret     string
 }
 

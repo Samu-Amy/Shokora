@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Samu-Amy/Shokora/internal/api/payload"
+	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
@@ -18,7 +18,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payload.RegisterUserPayload
+	var payload payloads.RegisterUserReqPayload
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
@@ -75,18 +75,21 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		app.logger.Errorw("error sending welcome email", "error", err)
-		app.internalServerError(w, r, err) // TODO: dire di riprovare più tardi -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
-		return
+		// app.internalServerError(w, r, err) // TODO: dire di riprovare più tardi? -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
+		// return
 	}
-
-	// TODO: prendere il verification_id (colonna da aggiungere nel db) e metterlo in http-only cookies per la verifica di otp (e forse magic link)
 
 	app.logger.Infow("User and Tokens created, Email sent successfully")
 
-	// TODO: ricordati di scrivere di controllare nello spam
+	// TODO: ricordati di scrivere di controllare nello spam (aggiungere timer al tasto per reinviare la mail (?))
+
+	resPayload := payloads.RegisterUserResPayload{
+		User:           payloads.CreateUserResPayload(user),
+		VerificationId: verificationId,
+	}
 
 	//* Return user
-	if err := app.jsonResponse(w, http.StatusCreated, user); err != nil { // TODO: ritorna anche verificationId
+	if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil { // TODO: ritorna anche verificationId
 		app.internalServerError(w, r, err)
 		return
 	}
@@ -100,7 +103,7 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 	// TODO: qui l'utente dev'essere loggato -> prendi user.Id dallo user (nel context)
 
 	// Get payload data
-	var payload payload.VerificationPayload
+	var payload payloads.OTPVerificationReqPayload
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
@@ -148,7 +151,7 @@ func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payload.UserLoginPayload
+	var payload payload.LoginUserReqPayload
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)

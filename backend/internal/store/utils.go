@@ -25,8 +25,7 @@ var (
 
 	// Auth
 	ErrDuplicateEmail = errors.New("duplicate_email")
-	ErrDuplicateToken = errors.New("duplicate_token") // TODO: implementa errori
-	ErrDuplicateOTP   = errors.New("duplicate_otp")
+	ErrDuplicateToken = errors.New("duplicate_token") // TODO: rendere più generico (?)
 	ErrExpired        = errors.New("expired")
 
 	ErrUnauthorized = errors.New("unauthorized") // User does not exists or is not verified

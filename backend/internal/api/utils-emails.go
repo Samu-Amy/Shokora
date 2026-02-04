@@ -20,6 +20,17 @@ type VerificationEmailData struct {
 // TODO: fai creazione ed invio email in un metodo utils (con opzione per tipo di verifica -> generazione url e scelta template adatti)
 // TODO: sistema le vars (anche OTP e scadenze (?)) - fai utils apposta per email verification, password reset e 2FA
 
+/*
+This method is used to send an email for "email verification", "password reset" or "2 Factor Auth". Parameters:
+
+context: context from the request
+
+verificationType: enum in auth package (TokenEmailVerification, TokenPasswordReset, TokenTwoFactorAuth)
+
+... user and token data
+
+return: error (from SendEmail method in mailer Client)
+*/
 func (app *App) SendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, user_name, email, plainMagicLinkToken, plainOTP string, magicLinkTokenExp, otpExp time.Duration) error {
 	var templateFile mailer.TemplateFile
 	var activationURL string

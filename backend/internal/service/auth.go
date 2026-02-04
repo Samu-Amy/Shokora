@@ -108,24 +108,27 @@ func (service *AuthService) createVerificationTokensWithRetries(ctx context.Cont
 	verificationId, err := service.vTokensRepo.CreateTokens(ctx, userId, verificationTokens)
 	if err == nil {
 		return verificationId, nil // OK, return no error
+
+	} else if !errors.Is(err, store.ErrDuplicateToken) {
+		return -1, err // Error (can't retry)
 	}
 
-	// Retry (regenerate tokens)
+	// Retries
 	for range service.tokenAuthenticator.MaxRetries - 1 {
 
 		select {
 		case <-ctx.Done():
-			return verificationId, ctx.Err()
+			return -1, ctx.Err()
 		default:
 		}
 
 		// Regenerate Tokens (if error is "duplicate token")
 		switch {
 
-		// Magic Link Token
+		// Duplicated Magic Link Token
 		case errors.Is(err, store.ErrDuplicateToken):
-			err2 := service.tokenAuthenticator.RegenerateMagicLinkToken(verificationTokens)
-			if err2 != nil {
+			err = service.tokenAuthenticator.RegenerateMagicLinkToken(verificationTokens)
+			if err != nil {
 				continue // skip iteration
 			}
 
@@ -135,9 +138,9 @@ func (service *AuthService) createVerificationTokensWithRetries(ctx context.Cont
 			}
 
 		default:
-			return verificationId, err // Error is not solvable (not "duplicate token") -> return it
+			return -1, err // Error is not solvable (not "duplicate token") -> return it
 		}
 	}
 
-	return verificationId, ErrMaxRetriesExceeded // Couldn't regenerate and save token successfully -> return error "max retries exceeded"
+	return -1, ErrMaxRetriesExceeded // Couldn't regenerate and save token successfully -> return error "max retries exceeded"
 }

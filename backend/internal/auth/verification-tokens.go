@@ -17,7 +17,7 @@ import (
 type TokenAuthenticator struct {
 	MagicLink  MagicLinkConfig
 	OTP        OTPConfig
-	MaxRetries uint8
+	MaxRetries uint8 // Counting the first attempt
 	secret     string
 }
 

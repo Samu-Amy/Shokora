@@ -15,7 +15,7 @@ type User struct {
 	ImageUrl     string    `json:"image_url"`
 	BirthDate    time.Time `json:"birth_date"`
 	IsVerified   bool      `json:"is_verified"` // Default false
-	IsActive     bool      `json:"is_active"`   // Default true // TODO: implementa is active nell'auth (in middleware?)
+	IsActive     bool      `json:"is_active"`   // Default true
 	Role         Role      `json:"role"`        // Default 0
 	CreatedAt    time.Time `json:"created_at"`  // Default now()
 	UpdatedAt    time.Time `json:"updated_at"`  // Default now()

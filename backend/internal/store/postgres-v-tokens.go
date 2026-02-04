@@ -19,7 +19,7 @@ func NewPostgresVTokenStore(db *sql.DB) *PostgresVTokensStore {
 // ----- CREATE -----
 
 func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) (int64, error) {
-	// if user_id and verification_type -> update (set) columns with new values (tokens, exps) and reset otp attempts
+	// if pair (user_id, verification_type) exists -> update (set) columns with new values (tokens, exps) and reset otp attempts
 	// else create new row
 	query := `
 		INSERT INTO verification_tokens (user_id, verification_type, magic_link_token, magic_link_token_exp, otp, otp_exp)

@@ -14,7 +14,7 @@ func (app *App) createProductHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payload.CreateProductPayload
+	var payload payload.CreateProductReqPayload
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
@@ -95,7 +95,7 @@ func (app *App) updateProductHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get payload data
-	var payload payload.UpdateProductPayload
+	var payload payload.UpdateProductReqPayload
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
 		return

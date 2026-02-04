@@ -71,6 +71,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		// Check if user is not blocked
 		if !user.IsActive {
 			app.unauthorizedError(w, r, err) // TODO: usa errore dedicato (bloccato)
 			return
