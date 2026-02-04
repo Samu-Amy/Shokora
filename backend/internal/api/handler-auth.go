@@ -151,7 +151,7 @@ func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payload.LoginUserReqPayload
+	var payload payloads.LoginUserReqPayload
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)

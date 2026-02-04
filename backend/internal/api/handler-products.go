@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Samu-Amy/Shokora/internal/api/payload"
+	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/store"
 )
 
@@ -14,7 +14,7 @@ func (app *App) createProductHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payload.CreateProductReqPayload
+	var payload payloads.CreateProductReqPayload
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
@@ -95,7 +95,7 @@ func (app *App) updateProductHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get payload data
-	var payload payload.UpdateProductReqPayload
+	var payload payloads.UpdateProductReqPayload
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
