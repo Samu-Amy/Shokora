@@ -4,7 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"strings"
+
+	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 )
 
 type PostgresUserStore struct {
@@ -47,8 +48,8 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 	if err != nil {
 		// TODO: sistema (?)
 		switch {
-		case strings.Contains(err.Error(), "email_key"):
-			return ErrDuplicateEmail
+		case isPostgresErrorCode(err, UniqueViolationErr):
+			return errorcodes.ErrDuplicateEmail
 		default:
 			return err
 		}
@@ -91,7 +92,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, ErrNotFound
+			return nil, errorcodes.ErrNotFound
 		default:
 			return nil, err
 		}
@@ -132,7 +133,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, ErrUnauthorized // TODO: gestisci (nel caso esista ma non verificato non dovrebbe essere "not found" -> controllare dopo is_verified (?))
+			return nil, errorcodes.ErrUnauthorized // TODO: gestisci (nel caso esista ma non verificato non dovrebbe essere "not found" -> controllare dopo is_verified (?))
 		default:
 			return nil, err
 		}
@@ -151,7 +152,7 @@ func (store *PostgresUserStore) Delete(ctx context.Context, transaction *sql.Tx,
 	defer cancel()
 
 	_, err := transaction.ExecContext(queryCtx, query, userId)
-	if err != nil {
+	if err != nil { // TODO: gestire id non trovato (?)
 		return err
 	}
 

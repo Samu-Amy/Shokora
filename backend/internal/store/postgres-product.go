@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
+	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 )
 
 type PostgresProductStore struct {
@@ -81,7 +83,7 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, ErrNotFound
+			return nil, errorcodes.ErrNotFound
 		default:
 			return nil, err
 		}
@@ -187,7 +189,7 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *Product)
 			// ...check if product exists...
 			// return ErrVersionConlflict
 
-			return ErrNotFound
+			return errorcodes.ErrNotFound
 		default:
 			return err
 		}
@@ -216,7 +218,7 @@ func (store *PostgresProductStore) Delete(ctx context.Context, productId int64) 
 
 	// Nothing deleted
 	if rows == 0 {
-		return ErrNotFound
+		return errorcodes.ErrNotFound
 	}
 
 	return nil
