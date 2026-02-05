@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
+	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 	"github.com/Samu-Amy/Shokora/internal/store"
 )
 
@@ -22,10 +23,10 @@ func NewAuthService(userRepo store.UserRepositoryI, vTokensRepo store.VTokensRep
 
 // ----- CREATE USER -----
 
-func (service *AuthService) CreateUserAndEmailVerificationTokensWithRetries(ctx context.Context, user *store.User, verificationTokens *auth.VerificationTokens) (int64, error) {
+func (service *AuthService) CreateUserAndEmailVerificationTokensWithRetries(ctx context.Context, user *store.User, verificationTokens *auth.VerificationTokens) (*int64, error) {
 	// Create user
 	if err := service.userRepo.Create(ctx, user); err != nil {
-		return -1, err
+		return nil, err
 	}
 
 	// TODO: fare transaction per creazione user, stats and settings (oppure crearle qua in successione e in caso di errore lasciar stare, però poi nell'update crearle se non esistono)
@@ -103,14 +104,14 @@ func (service *AuthService) DeleteUserAndEmailVerificationToken(ctx context.Cont
 
 // ----- UTILS -----
 
-func (service *AuthService) createVerificationTokensWithRetries(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) (int64, error) {
+func (service *AuthService) createVerificationTokensWithRetries(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) (*int64, error) {
 	// Create Tokens in db
 	verificationId, err := service.vTokensRepo.CreateTokens(ctx, userId, verificationTokens)
 	if err == nil {
 		return verificationId, nil // OK, return no error
 
-	} else if !errors.Is(err, store.ErrDuplicateToken) {
-		return verificationId, err // Error (can't retry)
+	} else if !errors.Is(err, errorcodes.InternalErrDuplicateToken) {
+		return nil, err // Error (can't retry)
 	}
 
 	// Retries
@@ -118,7 +119,7 @@ func (service *AuthService) createVerificationTokensWithRetries(ctx context.Cont
 
 		select {
 		case <-ctx.Done():
-			return verificationId, ctx.Err()
+			return nil, ctx.Err()
 		default:
 		}
 
@@ -126,7 +127,7 @@ func (service *AuthService) createVerificationTokensWithRetries(ctx context.Cont
 		switch {
 
 		// Duplicated Magic Link Token
-		case errors.Is(err, store.ErrDuplicateToken):
+		case errors.Is(err, errorcodes.InternalErrDuplicateToken):
 			err = service.tokenAuthenticator.RegenerateMagicLinkToken(verificationTokens)
 			if err != nil {
 				continue // skip iteration
@@ -138,9 +139,9 @@ func (service *AuthService) createVerificationTokensWithRetries(ctx context.Cont
 			}
 
 		default:
-			return verificationId, err // Error is not solvable (not "duplicate token") -> return it
+			return nil, err // Error is not solvable (not "duplicate token") -> return it
 		}
 	}
 
-	return verificationId, ErrMaxRetriesExceeded // Couldn't regenerate and save token successfully -> return error "max retries exceeded"
+	return nil, errorcodes.ErrMaxRetriesExceeded // Couldn't regenerate and save token successfully -> return error "max retries exceeded"
 }

@@ -3,13 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"time"
-)
-
-// - Errors -
-var (
-	ErrMaxRetriesExceeded = errors.New("max_retries")
 )
 
 // - Timeouts -

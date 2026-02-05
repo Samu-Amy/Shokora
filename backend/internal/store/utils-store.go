@@ -3,7 +3,6 @@ package store
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -16,19 +15,6 @@ import (
 
 const (
 	UniqueViolationErr = pq.ErrorCode("23505")
-)
-
-var (
-	// Generic
-	ErrNotFound         = errors.New("not_found")
-	ErrVersionConlflict = errors.New("version_conflict")
-
-	// Auth
-	ErrDuplicateEmail = errors.New("duplicate_email")
-	ErrDuplicateToken = errors.New("duplicate_token") // TODO: rendere più generico (?)
-	ErrExpired        = errors.New("expired")
-
-	ErrUnauthorized = errors.New("unauthorized") // User does not exists or is not verified
 )
 
 func isPostgresErrorCode(err error, errcode pq.ErrorCode) bool {

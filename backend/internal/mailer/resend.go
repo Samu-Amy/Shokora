@@ -3,10 +3,10 @@ package mailer
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"html/template"
 	"time"
 
+	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 	"github.com/google/uuid"
 	"github.com/resend/resend-go/v2"
 )
@@ -91,5 +91,5 @@ func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile Template
 
 	// TODO: fai controllo errore per errori di invio duplicato della stessa email (ma comunque ricevuta)
 
-	return fmt.Errorf("failed to send email after %d attempts, error: %v", MaxRetries, retryErr) // TODO: crea errore apposta
+	return errorcodes.ErrMaxRetriesExceeded
 }

@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 )
 
 // TODO: fai lookup anche per verification_type (token + verification_type | OPT + email + verification_type + attempts) -- SET otp_attempts = otp_attempts + 1 (aggiorna atomicamente attempts)
@@ -44,7 +46,7 @@ func (store *PostgresUserStore) getUserFromEmailVerificationToken(ctx context.Co
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, ErrNotFound
+			return nil, errorcodes.ErrNotFound
 		default:
 			return nil, err
 		}

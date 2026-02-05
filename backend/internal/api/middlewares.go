@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -36,14 +37,14 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 		// Get Auth header
 		authHeader := r.Header.Get("Authorization") // TODO: fai functions utils (?)
 		if authHeader == "" {
-			app.unauthorizedError(w, r, ErrTokenInvalid)
+			app.unauthorizedError(w, r, errorcodes.ErrInvalid)
 			return
 		}
 
 		// Parse Auth header ("authorization: Bearer <token>")
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			app.unauthorizedError(w, r, ErrTokenInvalid)
+			app.unauthorizedError(w, r, errorcodes.ErrInvalid)
 			return
 		}
 
@@ -51,7 +52,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 
 		jwtToken, err := app.jwtAuthenticator.ValidateJWTToken(token)
 		if err != nil {
-			app.unauthorizedError(w, r, ErrTokenExpired)
+			app.unauthorizedError(w, r, errorcodes.ErrExpired)
 			return
 		}
 
@@ -125,13 +126,13 @@ func (app *App) userVerifiedMiddleware(next http.Handler) http.Handler {
 		// Get User from context (auth middleware)
 		user, ok := getUserFromContext(r)
 		if !ok || user == nil {
-			app.unauthorizedError(w, r, ErrUserNotFound)
+			app.unauthorizedError(w, r, errorcodes.ErrNotFound)
 			return
 		}
 
 		// Check if User is verified
 		if !user.IsVerified {
-			app.unauthorizedError(w, r, ErrUserNotVerified) // TODO: in forntend chiedi verifica
+			app.unauthorizedError(w, r, errorcodes.ErrNotVerified) // TODO: in forntend chiedi verifica
 			return
 		}
 
@@ -149,13 +150,13 @@ func (app *App) employeeMiddleware(next http.Handler) http.Handler {
 		// Get User
 		user, ok := getUserFromContext(r)
 		if !ok || user == nil {
-			app.unauthorizedError(w, r, ErrUserNotFound)
+			app.unauthorizedError(w, r, errorcodes.ErrNotFound)
 			return
 		}
 
 		// Check User Role
 		if !user.IsRoleValid(store.RoleEmployee) {
-			app.forbiddenError(w, r, ErrUserNotAuthorized)
+			app.forbiddenError(w, r, errorcodes.ErrUnauthorized)
 			return
 		}
 
@@ -173,13 +174,13 @@ func (app *App) adminMiddleware(next http.Handler) http.Handler {
 		// Get User
 		user, ok := getUserFromContext(r)
 		if !ok || user == nil {
-			app.unauthorizedError(w, r, ErrUserNotFound)
+			app.unauthorizedError(w, r, errorcodes.ErrNotFound)
 			return
 		}
 
 		// Check User Role
 		if !user.IsRoleValid(store.RoleAdmin) {
-			app.forbiddenError(w, r, ErrUserNotAuthorized)
+			app.forbiddenError(w, r, errorcodes.ErrUnauthorized)
 			return
 		}
 
@@ -195,13 +196,13 @@ func (app *App) devMiddleware(next http.Handler) http.Handler {
 		// Get User
 		user, ok := getUserFromContext(r)
 		if !ok || user == nil {
-			app.unauthorizedError(w, r, ErrUserNotFound)
+			app.unauthorizedError(w, r, errorcodes.ErrNotFound)
 			return
 		}
 
 		// Check User Role
 		if !user.IsRoleValid(store.RoleDev) {
-			app.forbiddenError(w, r, ErrUserNotAuthorized)
+			app.forbiddenError(w, r, errorcodes.ErrUnauthorized)
 			return
 		}
 

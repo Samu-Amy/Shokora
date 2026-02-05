@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
+	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 )
 
 type PostgresVTokensStore struct {
@@ -18,7 +19,7 @@ func NewPostgresVTokenStore(db *sql.DB) *PostgresVTokensStore {
 
 // ----- CREATE -----
 
-func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) (int64, error) {
+func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) (*int64, error) {
 	// if pair (user_id, verification_type) exists -> update (set) columns with new values (tokens, exps) and reset otp attempts
 	// else create new row
 	query := `
@@ -50,13 +51,13 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int6
 	if err != nil {
 		switch {
 		case isPostgresErrorCode(err, UniqueViolationErr):
-			return -1, ErrDuplicateToken
+			return nil, errorcodes.InternalErrDuplicateToken
 		default:
-			return -1, err
+			return nil, err
 		}
 	}
 
-	return verificationId, nil
+	return &verificationId, nil
 }
 
 // ----- UPDATE -----
@@ -82,7 +83,7 @@ func (store *PostgresVTokensStore) UpdateMagicLinkTokenFromId(ctx context.Contex
 	if err != nil {
 		switch {
 		case isPostgresErrorCode(err, UniqueViolationErr):
-			return ErrDuplicateToken
+			return errorcodes.InternalErrDuplicateToken
 		default:
 			return err
 		}

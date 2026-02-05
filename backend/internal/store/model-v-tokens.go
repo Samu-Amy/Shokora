@@ -24,7 +24,7 @@ type VTokens struct {
 // Repository
 type VTokensRepositoryI interface {
 	// Create (or update, if already exist) magic link token and otp for email verification | password reset | 2FA
-	CreateTokens(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) (int64, error)
+	CreateTokens(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) (*int64, error)
 
 	UpdateMagicLinkTokenFromId(ctx context.Context, verificationId int64, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error
 	UpdateOTPFromId(ctx context.Context, verificationId int64, otpHash []byte, otpExp time.Duration) error

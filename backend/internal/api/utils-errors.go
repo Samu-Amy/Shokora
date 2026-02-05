@@ -5,17 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/Samu-Amy/Shokora/internal/store"
-)
-
-var (
-	ErrUserNotFound      = errors.New("user_not_found")
-	ErrUserNotVerified   = errors.New("user_not_verified")
-	ErrUserNotAuthorized = errors.New("user_not_authorized")
-	ErrUserBlocked       = errors.New("user_blocked")
-	ErrTokenInvalid      = errors.New("token_invalid")
-	ErrTokenExpired      = errors.New("token_expired")
-	// TODO: aggiungere versioni per refresh token?
+	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 )
 
 // TODO: passa errori strutturati (sopra) al frontend (invece che hardcoded strings)
@@ -77,17 +67,26 @@ func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 	case errors.Is(err, context.DeadlineExceeded):
 		app.requestTimeoutError(w, r, err)
 
-	case errors.Is(err, store.ErrNotFound):
+	case errors.Is(err, errorcodes.ErrNotFound):
 		app.notFoundError(w, r, err)
 
-	case errors.Is(err, store.ErrVersionConlflict):
+	case errors.Is(err, errorcodes.ErrConlflict):
 		app.conflictError(w, r, err)
 
-	case errors.Is(err, store.ErrDuplicateEmail):
+	case errors.Is(err, errorcodes.ErrDuplicateEmail):
 		app.badRequestError(w, r, err)
 
-	case errors.Is(err, store.ErrUnauthorized):
+	case errors.Is(err, errorcodes.ErrUnauthorized):
+	case errors.Is(err, errorcodes.ErrNotVerified):
 		app.unauthorizedError(w, r, err)
+
+	// Better to handle these case by case
+	case errors.Is(err, errorcodes.ErrMaxRetriesExceeded):
+	case errors.Is(err, errorcodes.ErrInvalid):
+	case errors.Is(err, errorcodes.ErrExpired):
+	case errors.Is(err, errorcodes.ErrVerification):
+	case errors.Is(err, errorcodes.ErrEmailNotSent):
+		app.internalServerError(w, r, err)
 
 	default:
 		app.internalServerError(w, r, err)

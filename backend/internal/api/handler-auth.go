@@ -1,11 +1,13 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
+	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
@@ -14,6 +16,15 @@ import (
 
 // ----- REGISTER -----
 
+/*
+Return
+  - RegisterUserResPayload
+
+Errors
+  - ErrDuplicateEmail
+  - ErrMaxRetriesExceeded (magic link verification token generation)
+  - ErrEmailNotSent	(magic link verification token)
+*/
 func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -55,16 +66,31 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Define non-blocking errors (token not created or email not sent)
-	var verificationErrors []string
+	// Create Response Payload
+	resPayload := payloads.RegisterUserResPayload{}
 
 	// Create User and Email Verification Tokens
 	verificationId, err := app.service.Auth.CreateUserAndEmailVerificationTokensWithRetries(ctx, user, verificationTokens)
+	resPayload.User = payloads.CreateUserResPayload(user) // Add user to payload
 	if err != nil {
-		verificationErrors = append(verificationErrors, "send_email_error") // TODO: generaliza e controlla il tipo di errore (aggiorna parseError()?)
-		// app.parseError(w, r, err) // TODO: se errore per tokens (es. retries) -> inviare comunque utente (magari segnare inqualche modo l'errore)
-		// return
+		switch {
+		case errors.Is(err, errorcodes.ErrMaxRetriesExceeded): // Can't create unique verification token
+
+			resPayload.Error = errorcodes.ErrVerification.Error() // Add error to payload
+
+			//* Return user, verificationID and error
+			if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
+				app.internalServerError(w, r, err)
+			}
+			return
+
+		default:
+			app.parseError(w, r, err)
+			return
+		}
 	}
+
+	resPayload.VerificationId = verificationId // Ad verification id to payload
 
 	// Send email
 	err = app.SendVerificationEmail(
@@ -79,23 +105,32 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		app.logger.Warnf("error sending welcome email", "error", err)
-		verificationErrors = append(verificationErrors, "send_email_error") // TODO: generaliza
-		// app.internalServerError(w, r, err) // TODO: dire di riprovare più tardi? -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
-		// return
+
+		switch {
+		case errors.Is(err, errorcodes.ErrMaxRetriesExceeded): // Can't create unique verification token
+
+			resPayload.Error = errorcodes.ErrEmailNotSent.Error() // Add error to payload
+
+			//* Return user, verificationID and error
+			if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
+				app.internalServerError(w, r, err)
+			}
+			return
+
+		default:
+			app.parseError(w, r, err)
+			return
+		}
+
+		// TODO: dire di riprovare più tardi? -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
 	}
 
 	app.logger.Infow("User and Tokens created, Email sent successfully")
 
 	// TODO: ricordati di scrivere di controllare nello spam (aggiungere timer al tasto per reinviare la mail (?))
 
-	resPayload := payloads.RegisterUserResPayload{
-		User:           payloads.CreateUserResPayload(user),
-		VerificationId: verificationId,
-		Errors:         verificationErrors,
-	}
-
-	//* Return user
-	if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil { // TODO: ritorna anche verificationId
+	//* Return user and verificationID
+	if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
@@ -123,7 +158,7 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	if len(payload.OTP) != int(app.config.Auth.OTP.Length) {
-		app.badRequestError(w, r, ErrTokenInvalid)
+		app.badRequestError(w, r, errorcodes.ErrInvalid) // Invalid token
 		return
 	}
 
