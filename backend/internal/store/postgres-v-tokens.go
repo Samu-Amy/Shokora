@@ -27,7 +27,7 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int6
 		ON CONFLICT (user_id, verification_type)
 		DO UPDATE SET magic_link_token = $3, magic_link_token_exp = $4, otp = $5, otp_exp = $6, otp_attempts = 0
 		RETURNING id
-	` // TODO: sistema "conflict"
+	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()

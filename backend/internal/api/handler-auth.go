@@ -55,11 +55,15 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Define non-blocking errors (token not created or email not sent)
+	var verificationErrors []string
+
 	// Create User and Email Verification Tokens
 	verificationId, err := app.service.Auth.CreateUserAndEmailVerificationTokensWithRetries(ctx, user, verificationTokens)
 	if err != nil {
-		app.parseError(w, r, err)
-		return
+		verificationErrors = append(verificationErrors, "send_email_error") // TODO: generaliza e controlla il tipo di errore (aggiorna parseError()?)
+		// app.parseError(w, r, err) // TODO: se errore per tokens (es. retries) -> inviare comunque utente (magari segnare inqualche modo l'errore)
+		// return
 	}
 
 	// Send email
@@ -74,7 +78,8 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		verificationTokens.OTPExp,
 	)
 	if err != nil {
-		app.logger.Errorw("error sending welcome email", "error", err)
+		app.logger.Warnf("error sending welcome email", "error", err)
+		verificationErrors = append(verificationErrors, "send_email_error") // TODO: generaliza
 		// app.internalServerError(w, r, err) // TODO: dire di riprovare più tardi? -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
 		// return
 	}
@@ -86,6 +91,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	resPayload := payloads.RegisterUserResPayload{
 		User:           payloads.CreateUserResPayload(user),
 		VerificationId: verificationId,
+		Errors:         verificationErrors,
 	}
 
 	//* Return user
