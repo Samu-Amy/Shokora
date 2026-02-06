@@ -111,10 +111,12 @@ func (app *App) initRouter() *chi.Mux {
 				// TODO: aggiungi metodo per ottenere user (direttamente dal middleware, non dal db) (con middleware -> solo se è lo stesso di quello autenticato (cioè ottiene il suo profilo))
 				r.Patch("/", app.updateUserDataHandler)
 
-				// TODO: fai handlers per otterene le stats (con achievements), coupons ed altro
-				r.Use(app.userVerifiedMiddleware) // User Verified Middleware (+ User Data Ownerhip Middleware)
-				// r.Get("/stats", app.getUserStatsHandler)
-				// r.Get("/coupons", app.getUserCouponsHandler)
+				r.Group(func(r chi.Router) {
+					// TODO: fai handlers per otterene le stats (con achievements), coupons ed altro
+					r.Use(app.userVerifiedMiddleware) // User Verified Middleware (+ User Data Ownerhip Middleware)
+					// r.Get("/stats", app.getUserStatsHandler)
+					// r.Get("/coupons", app.getUserCouponsHandler)
+				})
 			})
 
 			// Shop Orders
