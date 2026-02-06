@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
@@ -115,4 +116,77 @@ func (store *PostgresVTokensStore) UpdateOTPFromId(ctx context.Context, verifica
 	}
 
 	return nil
+}
+
+// ----- VERIFY -----
+
+func (store *PostgresVTokensStore) VerifyMagicLink(ctx context.Context, hashedToken []byte) (*int64, *auth.VerificationType, error) {
+	query := `
+		SELECT user_id, verification_type
+		FROM verification_tokens
+		WHERE magic_link_token = $1 AND magic_link_token_exp > $2
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
+	var userId int64
+	var verificationType auth.VerificationType
+
+	err := store.db.QueryRowContext(
+		queryCtx,
+		query,
+		hashedToken,
+		time.Now(),
+	).Scan(
+		&userId,
+		&verificationType,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, nil, errorcodes.ErrNotFound
+		default:
+			return nil, nil, err
+		}
+	}
+
+	return &userId, &verificationType, nil
+}
+
+func (store *PostgresVTokensStore) VerifyOTP(ctx context.Context, verificationI int64, hashedOTP []byte, maxOTPAttempts uint8) (*int64, *auth.VerificationType, error) {
+	query := `
+		SELECT user_id, verification_type
+		FROM verification_tokens
+		WHERE otp = $1 AND otp_attempts <= $2 AND otp_exp > $3
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
+	var userId int64
+	var verificationType auth.VerificationType
+
+	err := store.db.QueryRowContext(
+		queryCtx,
+		query,
+		hashedOTP,
+		maxOTPAttempts,
+		time.Now(),
+	).Scan(
+		&userId,
+		&verificationType,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, nil, errorcodes.ErrNotFound
+		default:
+			return nil, nil, err
+		}
+	}
+
+	return &userId, &verificationType, nil
 }

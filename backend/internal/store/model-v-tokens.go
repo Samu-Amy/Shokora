@@ -21,6 +21,8 @@ type VTokens struct {
 	UpdatedAt          time.Time             `json:"updated_at"`   // Default now()
 }
 
+// TODO: evita magic link per reset password e 2fa (anche perché 2fa dopo deve generare i token di accesso, quindi dev'essere sul dispositivo su cui si vuole accedere)
+
 // Repository
 type VTokensRepositoryI interface {
 	// Create (or update, if already exist) magic link token and otp for email verification | password reset | 2FA
@@ -28,4 +30,8 @@ type VTokensRepositoryI interface {
 
 	UpdateMagicLinkTokenFromId(ctx context.Context, verificationId int64, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error
 	UpdateOTPFromId(ctx context.Context, verificationId int64, otpHash []byte, otpExp time.Duration) error
+
+	// TODO: fare metodi apposta per password e/o 2fa (es. nel caso dovessi fare join con users)
+	VerifyMagicLink(ctx context.Context, hashedToken []byte) (int64, *auth.VerificationType, error)
+	VerifyOTP(ctx context.Context, verificationId int64, hashedOTP []byte) (int64, *auth.VerificationType, error)
 }

@@ -136,12 +136,36 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// TODO: genera token auth e setta i cookie
+
+// ----- LOGIN -----
+
+func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO: gestisci casi user non verificato e user verificato ma con 2fa richiesta (se 2fa -> "verify-2fa[/{token}]" -> generate auth tokens ("tokens"), se no 2fa -> generate auth tokens ("tokens"))
+
+	// TODO: ritorna user (se non verificato ritorna RegisterUserResPayload?)
+}
+
 // ----- EMAIL VERIFICATION -----
+
+func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	token := chi.URLParam(r, verificationTokenParam) // Get "token" param
+
+	// TODO: hash token
+
+	// Verify
+	if err := app.service.Auth.VerifyEmailWithToken(ctx, token); err != nil {
+		app.parseError(w, r, err)
+		return
+	}
+
+	//* No content
+	w.WriteHeader(http.StatusNoContent)
+}
 
 func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
-	// TODO: qui l'utente dev'essere loggato -> prendi user.Id dallo user (nel context)
 
 	// Get payload data
 	var payload payloads.OTPVerificationReqPayload
@@ -169,25 +193,12 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	//* No content
-	w.WriteHeader(http.StatusNoContent) // TODO: setta http-only cookies con token e invia user
-}
-
-func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	token := chi.URLParam(r, "token")
-
-	// Verify
-	if err := app.service.Auth.VerifyEmailWithToken(ctx, token); err != nil {
-		app.parseError(w, r, err)
-		return
-	}
-
-	//* No content
-	w.WriteHeader(http.StatusNoContent) // TODO: setta http-only cookies con token e invia user
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // ----- TOKENS -----
 
+// TODO: da "incorporare" in register, login (se no 2fa) e in 2fa (se attiva)
 func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

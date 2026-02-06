@@ -142,6 +142,27 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 	return &user, nil
 }
 
+// ----- UPDATE -----
+
+func (store *PostgresUserStore) SetIsVerified(ctx context.Context, transaction *sql.Tx, userId int64) error { // TODO: togli transaction (?)
+	query := `
+		UPDATE users
+		SET is_verified = true
+		WHERE id = $1
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
+	_, err := transaction.ExecContext(queryCtx, query, userId)
+	if err != nil {
+		// TODO: migliorare error handling (?)
+		return err
+	}
+
+	return nil
+}
+
 // ----- DELETE -----
 
 // TODO: come gestire l'id che rimane referenziato?

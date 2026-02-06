@@ -75,7 +75,7 @@ func (app *App) initRouter() *chi.Mux {
 		r.Route("/auth", func(r chi.Router) {
 			// Auth
 			r.Post("/user", app.registerUserHandler)
-			// r.Post("/login", ...) // TODO: se 2fa -> "verify-2fa[/{token}]" -> generate auth tokens ("tokens"), se no 2fa -> generate auth tokens ("tokens")
+			r.Post("/login", app.loginUserHandler)
 			// r.Post("/logout", ...)
 
 			r.Post("/tokens", app.createTokenHandler)

@@ -14,7 +14,7 @@ import (
 // ----- PRIVATES -----
 
 // TODO: sposta in vtokens
-func (store *PostgresUserStore) getUserFromEmailVerificationToken(ctx context.Context, transaction *sql.Tx, plainToken string) (*User, error) {
+func (store *PostgresUserStore) getUserFromEmailVerificationToken(ctx context.Context, transaction *sql.Tx, hashedToken string) (*User, error) {
 	query := `
 	SELECT u.id, u.first_name, u.last_name, u.email, u.is_verified, u.created_at, u.updated_at
 	FROM users u
@@ -31,7 +31,7 @@ func (store *PostgresUserStore) getUserFromEmailVerificationToken(ctx context.Co
 	err := transaction.QueryRowContext(
 		queryCtx,
 		query,
-		HashToken(plainToken),
+		hashedToken,
 		time.Now(),
 	).Scan(
 		&user.Id,
@@ -53,26 +53,6 @@ func (store *PostgresUserStore) getUserFromEmailVerificationToken(ctx context.Co
 	}
 
 	return user, nil
-}
-
-// TODO: sposta in users
-func (store *PostgresUserStore) setUserIsVerified(ctx context.Context, transaction *sql.Tx, userId int64) error {
-	query := `
-		UPDATE users
-		SET is_verified = true
-		WHERE id = $1
-	`
-
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
-	defer cancel()
-
-	_, err := transaction.ExecContext(queryCtx, query, userId)
-	if err != nil {
-		// TODO: migliorare error handling (?)
-		return err
-	}
-
-	return nil
 }
 
 // TODO: sposta in vtokens

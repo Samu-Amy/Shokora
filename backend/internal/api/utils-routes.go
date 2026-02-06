@@ -29,12 +29,13 @@ func getUserFromContext(r *http.Request) (*store.User, bool) {
 // Constants
 const userIdParam = "userId"
 const productIdParam = "productId"
+const verificationTokenParam = "token"
 
 // Methods
-func (app *App) getIdFromParam(r *http.Request, idParamName string) (int64, error) {
-	idParam := chi.URLParam(r, idParamName)
+func (app *App) getInt64FromParam(r *http.Request, idParamName string) (int64, error) {
+	param := chi.URLParam(r, idParamName)
 
-	resourceId, err := strconv.ParseInt(idParam, 10, 64)
+	resourceId, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
 		return -1, err
 	}

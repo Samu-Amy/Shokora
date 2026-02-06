@@ -41,7 +41,6 @@ func (user *User) IsRoleValid(requiredRole Role) bool {
 type UserRepositoryI interface {
 	// Auth main
 	// ResendEmailVerificationEmail(ctx context.Context, email string) error // TODO: cambia nome
-	// VerifyEmail(ctx context.Context, plainToken string) error // TODO: dividi tra users e vtokens e sposta questo metodo nel service
 	// DeleteUserAndEmailVerificationToken(ctx context.Context, userId int64) error
 
 	// Auth utils

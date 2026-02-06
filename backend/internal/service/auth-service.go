@@ -40,36 +40,26 @@ func (service *AuthService) CreateUserAndEmailVerificationTokensWithRetries(ctx 
 
 // ----- VERIFY EMAIL  -----
 
-func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, plainOTP string) error {
+func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToken string) error {
 	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
-		// Find user related to the token
-		// user, err := store.getUserFromEmailVerificationToken(ctx, transaction, plainToken)
-		// if err != nil {
-		// 	return err
-		// }
 
-		// Update user (email verified)
-		// user.IsVerified = true
-		// if err := store.setUserIsVerified(ctx, transaction, user.Id); err != nil {
-		// 	return err
-		// }
-
-		// Clean email verification token
-		// if err := store.deleteEmailVerificationToken(ctx, transaction, user.Id); err != nil {
-		// 	return err
-		// }
+		// TODO: controlla verificationType se verifica andata a buon fine
 
 		return nil
 	})
 }
 
-func (service *AuthService) VerifyEmailWithToken(ctx context.Context, plainToken string) error { // TODO: passare plain token e verificare con funzione util (?)
+func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verificationId int64, hashedOTP string) error {
 	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
 		// Find user related to the token
 		// user, err := store.getUserFromEmailVerificationToken(ctx, transaction, plainToken)
 		// if err != nil {
 		// 	return err
 		// }
+
+		// TODO: controlla verificationType se verifica andata a buon fine
+
+		// TODO: aggiorna attempts se verifica fallita, altrimenti elimina record
 
 		// Update user (email verified)
 		// user.IsVerified = true

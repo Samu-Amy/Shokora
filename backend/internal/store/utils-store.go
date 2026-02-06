@@ -1,8 +1,6 @@
 package store
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"net/http"
 	"strconv"
 	"strings"
@@ -30,12 +28,6 @@ const (
 	medium_query_timeout = 8 * time.Second
 	long_query_timeout   = 12 * time.Second
 )
-
-// - Hashing -
-func HashToken(plainToken string) string {
-	hash := sha256.Sum256([]byte(plainToken))
-	return hex.EncodeToString(hash[:])
-}
 
 // - Pagination -
 

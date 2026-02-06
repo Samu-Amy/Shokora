@@ -16,7 +16,7 @@ func (app *App) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get user id
-	userId, err := app.getIdFromParam(r, userIdParam)
+	userId, err := app.getInt64FromParam(r, userIdParam)
 	if err != nil {
 		app.badRequestError(w, r, err)
 		return

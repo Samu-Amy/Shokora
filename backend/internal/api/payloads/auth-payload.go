@@ -35,20 +35,22 @@ type OTPField struct {
 
 // - Request Payloads -
 
+// Auth
 type RegisterUserReqPayload struct {
 	UserData
 	EmailField
 	PasswordField
 }
 
-type OTPVerificationReqPayload struct {
-	VerificationIdField
-	OTPField
-}
-
 type LoginUserReqPayload struct {
 	EmailField
 	PasswordField
+}
+
+// Verification
+type OTPVerificationReqPayload struct {
+	VerificationIdField
+	OTPField
 }
 
 // - Response Payloads -

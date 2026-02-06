@@ -55,7 +55,7 @@ func (app *App) getProductHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get product id
-	productId, err := app.getIdFromParam(r, productIdParam)
+	productId, err := app.getInt64FromParam(r, productIdParam)
 	if err != nil {
 		app.badRequestError(w, r, err)
 		return
@@ -81,7 +81,7 @@ func (app *App) updateProductHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get product id
-	productId, err := app.getIdFromParam(r, productIdParam)
+	productId, err := app.getInt64FromParam(r, productIdParam)
 	if err != nil {
 		app.badRequestError(w, r, err)
 		return
@@ -147,7 +147,7 @@ func (app *App) deleteProductHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get product id
-	productId, err := app.getIdFromParam(r, productIdParam)
+	productId, err := app.getInt64FromParam(r, productIdParam)
 	if err != nil {
 		app.badRequestError(w, r, err)
 		return
