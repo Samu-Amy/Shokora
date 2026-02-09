@@ -24,6 +24,7 @@ var (
 
 	// - Low Level -
 	InternalErrDuplicateToken = errors.New("duplicate_token")
+	ErrInvalidEmailVars       = errors.New("invalid_email_vars")
 
 	// Old
 

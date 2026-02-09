@@ -11,7 +11,7 @@ import (
 )
 
 type AuthService struct {
-	userRepo           store.UserRepositoryI
+	userRepo           store.UserRepositoryI // TODO: serve (tolta creazione utente)?
 	vTokensRepo        store.VTokensRepositoryI
 	db                 *sql.DB
 	tokenAuthenticator *auth.TokenAuthenticator
@@ -21,21 +21,53 @@ func NewAuthService(userRepo store.UserRepositoryI, vTokensRepo store.VTokensRep
 	return &AuthService{userRepo, vTokensRepo, db, tokenAuthenticator}
 }
 
-// ----- CREATE USER -----
+// ----- CREATE TOKENS -----
 
-func (service *AuthService) CreateUserAndEmailVerificationTokensWithRetries(ctx context.Context, user *store.User, verificationTokens *auth.VerificationTokens) (*int64, error) {
-	// Create user
-	if err := service.userRepo.Create(ctx, user); err != nil {
-		return nil, err
-	}
-
-	// TODO: fare transaction per creazione user, stats and settings (oppure crearle qua in successione e in caso di errore lasciar stare, però poi nell'update crearle se non esistono)
+func (service *AuthService) CreateVerificationTokensWithRetries(ctx context.Context, user *store.User, verificationTokens *auth.VerificationTokens) (*int64, error) {
 
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, regenerate_token_timeout)
 	defer cancel()
 
-	// Create verification tokens
-	return service.createVerificationTokensWithRetries(ctxWithTimeout, user.Id, verificationTokens)
+	// Create Tokens in db
+	verificationId, err := service.vTokensRepo.CreateTokens(ctxWithTimeout, user.Id, verificationTokens)
+	if err == nil {
+		return verificationId, nil // OK, return no error
+
+	} else if !errors.Is(err, errorcodes.InternalErrDuplicateToken) {
+		return nil, err // Error (can't retry)
+	}
+
+	// Retries
+	for range service.tokenAuthenticator.MaxRetries - 1 {
+
+		// Timeout
+		select {
+		case <-ctxWithTimeout.Done():
+			return nil, ctxWithTimeout.Err()
+		default:
+		}
+
+		// Regenerate Tokens (if error is "duplicate token")
+		switch {
+
+		// Duplicated Magic Link Token
+		case errors.Is(err, errorcodes.InternalErrDuplicateToken):
+			err = service.tokenAuthenticator.RegenerateMagicLinkToken(verificationTokens)
+			if err != nil {
+				continue // skip iteration
+			}
+
+			verificationId, err = service.vTokensRepo.CreateTokens(ctx, user.Id, verificationTokens)
+			if err == nil {
+				return verificationId, nil // OK, return no error
+			}
+
+		default:
+			return nil, err // Error is not solvable (not "duplicate token") -> return it
+		}
+	}
+
+	return nil, errorcodes.ErrMaxRetriesExceeded // Couldn't regenerate and save token successfully -> return error "max retries exceeded"
 }
 
 // ----- VERIFY EMAIL  -----
@@ -90,48 +122,4 @@ func (service *AuthService) DeleteUserAndEmailVerificationToken(ctx context.Cont
 
 		return nil
 	})
-}
-
-// ----- UTILS -----
-
-func (service *AuthService) createVerificationTokensWithRetries(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) (*int64, error) {
-	// Create Tokens in db
-	verificationId, err := service.vTokensRepo.CreateTokens(ctx, userId, verificationTokens)
-	if err == nil {
-		return verificationId, nil // OK, return no error
-
-	} else if !errors.Is(err, errorcodes.InternalErrDuplicateToken) {
-		return nil, err // Error (can't retry)
-	}
-
-	// Retries
-	for range service.tokenAuthenticator.MaxRetries - 1 {
-
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-
-		// Regenerate Tokens (if error is "duplicate token")
-		switch {
-
-		// Duplicated Magic Link Token
-		case errors.Is(err, errorcodes.InternalErrDuplicateToken):
-			err = service.tokenAuthenticator.RegenerateMagicLinkToken(verificationTokens)
-			if err != nil {
-				continue // skip iteration
-			}
-
-			verificationId, err = service.vTokensRepo.CreateTokens(ctx, userId, verificationTokens)
-			if err == nil {
-				return verificationId, nil // OK, return no error
-			}
-
-		default:
-			return nil, err // Error is not solvable (not "duplicate token") -> return it
-		}
-	}
-
-	return nil, errorcodes.ErrMaxRetriesExceeded // Couldn't regenerate and save token successfully -> return error "max retries exceeded"
 }

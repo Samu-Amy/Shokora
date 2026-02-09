@@ -19,7 +19,7 @@ type TemplateFile = string
 const (
 	EmailVerificationTemplate TemplateFile = "email_verification.tmpl"
 	PasswordResetTemplate     TemplateFile = "password_reset.tmpl"
-	TwoFactorAuthTemplate     TemplateFile = "two_factor_auth.tmpl"
+	TwoFactorAuthTemplate     TemplateFile = "two_factor_auth.tmpl" // TODO: ricorda di non mettere magic link in 2FA
 )
 
 // - Templates -

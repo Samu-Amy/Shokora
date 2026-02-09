@@ -34,6 +34,13 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int6
 	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
+	// Fix magic link exp
+	var magicLinkExp any
+	if verificationTokens.HashedMagicLinkToken != nil {
+		magicLinkExp = time.Now().Add(verificationTokens.MagicLinkTokenExp)
+	}
+
+	// Create tokens
 	var verificationId int64
 
 	err := store.db.QueryRowContext(
@@ -42,7 +49,7 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int6
 		userId,
 		verificationTokens.VerificationType,
 		verificationTokens.HashedMagicLinkToken,
-		time.Now().Add(verificationTokens.MagicLinkTokenExp),
+		magicLinkExp,
 		verificationTokens.HashedOTP,
 		time.Now().Add(verificationTokens.OTPExp),
 	).Scan(

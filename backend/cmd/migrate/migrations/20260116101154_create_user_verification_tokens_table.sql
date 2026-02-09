@@ -15,8 +15,15 @@ CREATE TABLE IF NOT EXISTS verification_tokens(
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   
-  UNIQUE (user_id, verification_type)
+  UNIQUE (user_id, verification_type),
   -- UNIQUE (user_id, otp_hash)
+
+  CONSTRAINT magic_link_consistency
+  CHECK (
+    (magic_link_token IS NULL AND magic_link_token_exp IS NULL)
+    OR
+    (magic_link_token IS NOT NULL AND magic_link_token_exp IS NOT NULL)
+  )
 );
 
 CREATE TRIGGER update_verification_tokens_updated_at

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"net/http"
 	"time"
 
@@ -24,6 +23,11 @@ Errors
   - ErrDuplicateEmail
   - ErrMaxRetriesExceeded (magic link verification token generation)
   - ErrEmailNotSent	(magic link verification token)
+  - ErrInvalidEmailVars (magic link verification token missing)
+
+Payload Error types
+  - ErrVerification
+  - ErrEmailNotSent
 */
 func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -59,35 +63,43 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		BirthDate:    payload.BirthDate,
 	}
 
-	// Generate verificationTokens (Magic Link and OTP)
-	verificationTokens, err := app.tokenAuthenticator.CreateVerificationTokens(auth.EmailVerification)
-	if err != nil {
-		app.internalServerError(w, r, err)
-		return
-	}
-
 	// Create Response Payload
 	resPayload := payloads.RegisterUserResPayload{}
 
-	// Create User and Email Verification Tokens
-	verificationId, err := app.service.Auth.CreateUserAndEmailVerificationTokensWithRetries(ctx, user, verificationTokens)
+	// Create user in db
+	if err := app.store.User.Create(ctx, user); err != nil { // TODO: fare transaction per creazione user, stats and settings (oppure crearle nell'update se non esistono)
+		app.parseError(w, r, err)
+		return
+	}
+
 	resPayload.User = payloads.CreateUserResPayload(user) // Add user to payload
+
+	// Generate verificationTokens (Magic Link and OTP)
+	verificationTokens, err := app.tokenAuthenticator.CreateVerificationTokens(auth.EmailVerification)
 	if err != nil {
-		switch {
-		case errors.Is(err, errorcodes.ErrMaxRetriesExceeded): // Can't create unique verification token
+		app.logger.Warnw("error generating verification tokens", "error", err)
 
-			resPayload.Error = errorcodes.ErrVerification.Error() // Add error to payload
+		resPayload.Error = errorcodes.ErrVerification.Error() // Add error to payload
 
-			//* Return user, verificationID and error
-			if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
-				app.internalServerError(w, r, err)
-			}
-			return
-
-		default:
-			app.parseError(w, r, err)
-			return
+		//* Return user, verificationID and error
+		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
+			app.internalServerError(w, r, err)
 		}
+		return
+	}
+
+	// Create Email Verification Tokens
+	verificationId, err := app.service.Auth.CreateVerificationTokensWithRetries(ctx, user, verificationTokens)
+	if err != nil {
+		app.logger.Warnw("error creating email verification tokens in db", "error", err)
+
+		resPayload.Error = errorcodes.ErrVerification.Error() // Add error to payload
+
+		//* Return user, verificationID and error
+		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
+			app.internalServerError(w, r, err)
+		}
+		return
 	}
 
 	resPayload.VerificationId = verificationId // Ad verification id to payload
@@ -104,28 +116,20 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		verificationTokens.OTPExp,
 	)
 	if err != nil {
-		app.logger.Warnf("error sending welcome email", "error", err)
+		app.logger.Warnw("error sending welcome email", "error", err)
 
-		switch {
-		case errors.Is(err, errorcodes.ErrMaxRetriesExceeded): // Can't create unique verification token
+		resPayload.Error = errorcodes.ErrEmailNotSent.Error() // Add error to payload
 
-			resPayload.Error = errorcodes.ErrEmailNotSent.Error() // Add error to payload
-
-			//* Return user, verificationID and error
-			if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
-				app.internalServerError(w, r, err)
-			}
-			return
-
-		default:
-			app.parseError(w, r, err)
-			return
+		//* Return user, verificationID and error
+		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
+			app.internalServerError(w, r, err)
 		}
+		return
 
 		// TODO: dire di riprovare più tardi? -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
 	}
 
-	app.logger.Infow("User and Tokens created, Email sent successfully")
+	app.logger.Info("User and Tokens created, Email sent successfully")
 
 	// TODO: ricordati di scrivere di controllare nello spam (aggiungere timer al tasto per reinviare la mail (?))
 
