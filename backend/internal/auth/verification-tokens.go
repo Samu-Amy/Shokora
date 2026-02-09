@@ -37,7 +37,7 @@ type OTPConfig struct {
 // - Tokens -
 type VerificationTokens struct {
 	VerificationType     VerificationType
-	PlainMagicLinkToken  string
+	PlainMagicLinkToken  *string
 	HashedMagicLinkToken []byte
 	PlainOTP             string
 	HashedOTP            []byte
@@ -49,9 +49,9 @@ type VerificationTokens struct {
 type VerificationType uint8
 
 const (
-	TokenEmailVerification VerificationType = 0
-	TokenPasswordReset     VerificationType = 1
-	TokenTwoFactorAuth     VerificationType = 2
+	EmailVerification VerificationType = 0
+	PasswordReset     VerificationType = 1
+	TwoFactorAuth     VerificationType = 2
 )
 
 // - Constructor -
@@ -63,19 +63,26 @@ func NewTokenAuthenticator(MagicLink MagicLinkConfig, OTP OTPConfig, MaxRetries 
 // - Methods -
 
 func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificationType VerificationType) (*VerificationTokens, error) {
-	// Generate verification Token and OTP
-	plainMagicLinkToken, err := tokenAuthenticator.generateMagicLinkToken()
-	if err != nil {
-		return nil, err
+
+	// Generate and hash verification Token (only for email verification and password reset)
+	var plainMagicLinkToken *string = nil
+	var hashedMagicLinkToken []byte = nil
+
+	if verificationType != TwoFactorAuth {
+		plainMagicLinkToken, err := tokenAuthenticator.generateMagicLinkToken()
+		if err != nil {
+			return nil, err
+		}
+
+		hashedMagicLinkToken = tokenAuthenticator.HashMagicLinkToken(plainMagicLinkToken)
 	}
 
+	// Generate and hash OTP
 	plainOTP, err := tokenAuthenticator.generateOTP()
 	if err != nil {
 		return nil, err
 	}
 
-	// Hash verification Token and OTP
-	hashedMagicLinkToken := tokenAuthenticator.HashMagicLinkToken(plainMagicLinkToken)
 	hashedOTP := tokenAuthenticator.HashOTP(plainOTP, verificationType)
 
 	return &VerificationTokens{
@@ -115,7 +122,10 @@ func (tokenAuthenticator *TokenAuthenticator) RegenerateOTP(verificationTokens *
 }
 
 // Verification
-func (tokenAuthenticator *TokenAuthenticator) VerifyMagicLinkToken(plainToken string, hashedToken []byte) bool {
+func (tokenAuthenticator *TokenAuthenticator) VerifyMagicLinkToken(plainToken *string, hashedToken []byte) bool {
+	if plainToken == nil || hashedToken == nil { // theoretically hashedToken should be also checked from len(hashedToken), since would return 0 if nil (so is redundant)
+		return false
+	}
 	hash := tokenAuthenticator.HashMagicLinkToken(plainToken)
 
 	//? si può aggiungere padding al/ai token e fare comunque il controllo per evitare timing leak (ma rischiando di validare token sbagliati)
@@ -134,14 +144,15 @@ func (tokenAuthenticator *TokenAuthenticator) VerifyOTP(plainOTP string, hashedT
 // ----- ----- ----- PRIVATES ----- ----- -----
 
 // Generate
-func (tokenAuthenticator *TokenAuthenticator) generateMagicLinkToken() (string, error) {
+func (tokenAuthenticator *TokenAuthenticator) generateMagicLinkToken() (*string, error) {
 	buffer := make([]byte, tokenAuthenticator.MagicLink.ByteSize)
 
 	if _, err := rand.Read(buffer); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return base64.RawURLEncoding.EncodeToString(buffer), nil
+	token := base64.RawURLEncoding.EncodeToString(buffer)
+	return &token, nil
 }
 
 func (tokenAuthenticator *TokenAuthenticator) generateOTP() (string, error) { // TODO RICORDA: per la verifica dell'otp si usa anche lo user_id nella richiesta (l'otp potrebbe non essere unico nel db)
@@ -158,8 +169,11 @@ func (tokenAuthenticator *TokenAuthenticator) generateOTP() (string, error) { //
 }
 
 // Hash
-func (tokenAuthenticator *TokenAuthenticator) HashMagicLinkToken(plainMagicLinkToken string) []byte {
-	hash := sha256.Sum256([]byte(plainMagicLinkToken))
+func (tokenAuthenticator *TokenAuthenticator) HashMagicLinkToken(plainMagicLinkToken *string) []byte {
+	if plainMagicLinkToken == nil {
+		return nil
+	}
+	hash := sha256.Sum256([]byte(*plainMagicLinkToken))
 	return hash[:] // From [32]byte to []byte
 }
 
@@ -176,11 +190,10 @@ func (tokenAuthenticator *TokenAuthenticator) getExpiration(verificationType Ver
 
 	switch verificationType {
 
-	case TokenEmailVerification:
+	case EmailVerification, PasswordReset:
 		exp = tokenAuthenticator.OTP.LongExp
 
-	case TokenPasswordReset:
-	case TokenTwoFactorAuth:
+	case TwoFactorAuth:
 		exp = tokenAuthenticator.OTP.BaseExp
 
 	default:
@@ -195,13 +208,13 @@ func (tokenAuthenticator *TokenAuthenticator) getVerificationTypeString(verifica
 
 	switch verificationType {
 
-	case TokenEmailVerification:
+	case EmailVerification:
 		verificationTypeString = "email_verification"
 
-	case TokenPasswordReset:
+	case PasswordReset:
 		verificationTypeString = "password_reset"
 
-	case TokenTwoFactorAuth:
+	case TwoFactorAuth:
 		verificationTypeString = "two_factor_auth"
 	}
 

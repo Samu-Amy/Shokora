@@ -70,8 +70,8 @@ func main() {
 			OTP: auth.OTPConfig{
 				Length:      6, // Suggested: between 4 and 10
 				MaxAttempts: 5,
-				LongExp:     10 * time.Minute, // 10 min (email verification)
-				BaseExp:     5 * time.Minute,  // 5 min (password reset, 2FA)
+				LongExp:     10 * time.Minute, // 10 min (email verification, password reset)
+				BaseExp:     5 * time.Minute,  // 5 min (2FA)
 			},
 			VerficationTokensSecret: env.GetString("VERIFICATION_TOKENS_SECRET", "076477e061001e898408230972c4ec67b806b38449860c8304e04e0ef33b60be"),
 		},

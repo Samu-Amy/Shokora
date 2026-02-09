@@ -60,7 +60,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate verificationTokens (Magic Link and OTP)
-	verificationTokens, err := app.tokenAuthenticator.CreateVerificationTokens(auth.TokenEmailVerification)
+	verificationTokens, err := app.tokenAuthenticator.CreateVerificationTokens(auth.EmailVerification)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -95,7 +95,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Send email
 	err = app.SendVerificationEmail(
 		ctx,
-		auth.TokenEmailVerification,
+		auth.EmailVerification,
 		user.FirstName,
 		user.Email,
 		verificationTokens.PlainMagicLinkToken,
@@ -187,7 +187,7 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	// Verify
-	if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload.OTP); err != nil {
+	if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload.VerificationId, payload.OTP); err != nil {
 		app.parseError(w, r, err)
 		return
 	}

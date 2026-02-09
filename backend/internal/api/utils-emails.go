@@ -31,23 +31,9 @@ verificationType: enum in auth package (TokenEmailVerification, TokenPasswordRes
 
 return: error (from SendEmail method in mailer Client)
 */
-func (app *App) SendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, user_name, email, plainMagicLinkToken, plainOTP string, magicLinkTokenExp, otpExp time.Duration) error {
+func (app *App) SendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, user_name, email string, plainMagicLinkToken *string, plainOTP string, magicLinkTokenExp, otpExp time.Duration) error {
 	var templateFile mailer.TemplateFile
 	var activationURL string
-
-	switch verificationType {
-	case auth.TokenEmailVerification:
-		templateFile = mailer.EmailVerificationTemplate
-		activationURL = fmt.Sprintf("%s/verify-email/%s", app.config.FrontEndURL, plainMagicLinkToken)
-
-	case auth.TokenPasswordReset:
-		templateFile = mailer.PasswordResetTemplate
-		activationURL = fmt.Sprintf("%s/reset-password/%s", app.config.FrontEndURL, plainMagicLinkToken)
-
-	case auth.TokenTwoFactorAuth:
-		templateFile = mailer.TwoFactorAuthTemplate
-		activationURL = fmt.Sprintf("%s/verify-2fa/%s", app.config.FrontEndURL, plainMagicLinkToken)
-	}
 
 	vars := struct {
 		Name          string
@@ -56,11 +42,28 @@ func (app *App) SendVerificationEmail(ctx context.Context, verificationType auth
 		OTPToken      string
 		OTPExp        string
 	}{
-		Name:          user_name,
-		ActivationURL: activationURL,
-		MagicLinkExp:  FormatDurationToMinutes(magicLinkTokenExp),
-		OTPToken:      plainOTP,
-		OTPExp:        FormatDurationToMinutes(otpExp),
+		Name:         user_name,
+		MagicLinkExp: FormatDurationToMinutes(magicLinkTokenExp),
+		OTPToken:     plainOTP,
+		OTPExp:       FormatDurationToMinutes(otpExp),
+	}
+
+	switch verificationType {
+	case auth.EmailVerification:
+		templateFile = mailer.EmailVerificationTemplate
+		activationURL = "verify-email"
+
+	case auth.PasswordReset:
+		templateFile = mailer.PasswordResetTemplate
+		activationURL = "reset-password"
+
+	case auth.TwoFactorAuth:
+		templateFile = mailer.TwoFactorAuthTemplate
+	}
+
+	if plainMagicLinkToken != nil {
+		activationURL = fmt.Sprintf("%s/%s/%s", app.config.FrontEndURL, activationURL, plainMagicLinkToken)
+		vars.ActivationURL = activationURL // TODO: continua
 	}
 
 	isProdEnv := app.config.Env == "prod"

@@ -21,7 +21,7 @@ type VTokens struct {
 	UpdatedAt          time.Time             `json:"updated_at"`   // Default now()
 }
 
-// TODO: evita magic link per reset password e 2fa (anche perché 2fa dopo deve generare i token di accesso, quindi dev'essere sul dispositivo su cui si vuole accedere)
+// TODO: evita magic link per e 2fa (anche perché 2fa dopo deve generare i token di accesso, quindi dev'essere sul dispositivo su cui si vuole accedere)
 
 // Repository
 type VTokensRepositoryI interface {

@@ -39,13 +39,12 @@ func (user *User) IsRoleValid(requiredRole Role) bool {
 
 // Repository
 type UserRepositoryI interface {
-	// Auth main
-	// ResendEmailVerificationEmail(ctx context.Context, email string) error // TODO: cambia nome
-	// DeleteUserAndEmailVerificationToken(ctx context.Context, userId int64) error
+	// Auth
+	SetIsVerified(ctx context.Context, transaction *sql.Tx, userId int64) error
+	// SetIsActive(ctx context.Context, userId int64, isActive bool) error // TODO: implementa (per bloccare/sbloccare users)
 
 	// Auth utils
 	getUserFromEmailVerificationToken(ctx context.Context, transaction *sql.Tx, plainToken string) (*User, error)
-	setUserIsVerified(ctx context.Context, transaction *sql.Tx, userId int64) error
 	deleteEmailVerificationToken(ctx context.Context, transaction *sql.Tx, userId int64) error
 
 	// Users
