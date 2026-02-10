@@ -83,10 +83,10 @@ func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToke
 	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
 
 		// Get data
-		magicLinkTokenPayload, err := service.vTokensRepo.VerifyMagicLink(ctx, hashedToken)
+		magicLinkTokenQueryData, err := service.vTokensRepo.GetMagicLinkData(ctx, hashedToken)
 		if err != nil {
 			switch {
-			case errors.Is(err, errorcodes.ErrNotFound), magicLinkTokenPayload.VerificationType != auth.EmailVerification: // Token not exists or is for another verification
+			case errors.Is(err, errorcodes.ErrNotFound), magicLinkTokenQueryData.VerificationType != auth.EmailVerification: // Token not exists or is for another verification
 				return errorcodes.ErrInvalid
 			default:
 				return err
@@ -94,18 +94,18 @@ func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToke
 		}
 
 		// Check expiry
-		if magicLinkTokenPayload.Exp.Before(time.Now()) {
+		if magicLinkTokenQueryData.Exp.Before(time.Now()) {
 			return errorcodes.InternalErrExpired
 		}
 
 		// Verify user
-		err = service.userRepo.Verify(ctx, magicLinkTokenPayload.UserId)
+		err = service.userRepo.Verify(ctx, magicLinkTokenQueryData.UserId)
 		if err != nil {
 			return err
 		}
 
 		// Delete token
-		_ = service.vTokensRepo.Delete(ctx, magicLinkTokenPayload.VerificationId) // If it fails to delete there are no problems
+		_ = service.vTokensRepo.Delete(ctx, magicLinkTokenQueryData.VerificationId) // If it fails to delete there are no problems
 
 		return nil
 	})
@@ -115,30 +115,54 @@ func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToke
 Errors
   - ErrInvalid
   - InternalErrExpired
+  - ErrMaxAttemptsExceeded
   - Other db errors
 */
-func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verificationId int64, hashedOTP []byte) error {
+func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verificationId int64, hashedOTP []byte, maxAttempts uint8) error {
 	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
-		// Find user related to the token
-		// user, err := store.getUserFromEmailVerificationToken(ctx, transaction, plainToken)
-		// if err != nil {
-		// 	return err
-		// }
 
-		// TODO: controlla verificationType, attempts e exp se verifica andata a buon fine
+		var verificationErr error
 
-		// TODO: aggiorna attempts se verifica fallita, altrimenti elimina record
+		// Get data
+		otpQueryData, err := service.vTokensRepo.GetOTPData(ctx, verificationId, hashedOTP)
+		if err != nil {
+			switch {
+			case errors.Is(err, errorcodes.ErrNotFound): // OTP Not valid
+				return errorcodes.ErrInvalid
+			default:
+				return err // db/query error
+			}
+		}
 
-		// Update user (email verified)
-		// user.IsVerified = true
-		// if err := store.setUserIsVerified(ctx, transaction, user.Id); err != nil {
-		// 	return err
-		// }
+		// Check expiry
+		if otpQueryData.Exp.Before(time.Now()) {
 
-		// Clean email verification token
-		// if err := store.deleteEmailVerificationToken(ctx, transaction, user.Id); err != nil {
-		// 	return err
-		// }
+			verificationErr = errorcodes.InternalErrExpired
+
+		} else if otpQueryData.Attempts >= maxAttempts {
+
+			// Check attempts
+			verificationErr = errorcodes.ErrMaxAttemptsExceeded
+		}
+
+		// Increment attempts and Handle errors
+		if verificationErr != nil {
+			err := service.vTokensRepo.UpdateAttempts(ctx, verificationId, maxAttempts)
+			if err != nil {
+				verificationErr = err // MaxAttemptsExceeded or db/query error
+			}
+
+			return verificationErr
+		}
+
+		// Verify user
+		err = service.userRepo.Verify(ctx, otpQueryData.UserId)
+		if err != nil {
+			return err
+		}
+
+		// Delete token
+		_ = service.vTokensRepo.Delete(ctx, verificationId) // If it fails to delete there are no problems
 
 		return nil
 	})

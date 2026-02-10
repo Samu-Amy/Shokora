@@ -125,9 +125,38 @@ func (store *PostgresVTokensStore) UpdateOTPFromId(ctx context.Context, verifica
 	return nil
 }
 
+func (store *PostgresVTokensStore) UpdateAttempts(ctx context.Context, verificationId int64, maxOTPAttempts uint8) error {
+	query := `
+		UPDATE verification_tokens
+		SET otp_attempts = otp_attempts + 1
+		WHERE id = $1 AND otp_attempts < $2
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
+	_, err := store.db.ExecContext(
+		queryCtx,
+		query,
+		verificationId,
+		maxOTPAttempts,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return errorcodes.ErrMaxAttemptsExceeded // We should know the verificationId is correct
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
 // ----- VERIFY -----
 
-func (store *PostgresVTokensStore) VerifyMagicLink(ctx context.Context, hashedToken []byte) (*MagicLinkTokenPayload, error) {
+func (store *PostgresVTokensStore) GetMagicLinkData(ctx context.Context, hashedToken []byte) (*MagicLinkTokenPayload, error) {
 	query := `
 		SELECT id, user_id, verification_type, magic_link_token_exp
 		FROM verification_tokens
@@ -162,7 +191,7 @@ func (store *PostgresVTokensStore) VerifyMagicLink(ctx context.Context, hashedTo
 	return &magicLinkTokenPayload, nil
 }
 
-func (store *PostgresVTokensStore) VerifyOTP(ctx context.Context, verificationId int64, hashedOTP []byte) (*OTPPayload, error) {
+func (store *PostgresVTokensStore) GetOTPData(ctx context.Context, verificationId int64, hashedOTP []byte) (*OTPPayload, error) {
 	query := `
 		SELECT user_id, verification_type, otp_attempts, otp_exp
 		FROM verification_tokens

@@ -7,13 +7,14 @@ var (
 
 	// Generic
 	ErrNotFound           = errors.New("not_found")
-	ErrConlflict          = errors.New("conflict") // Version conflict (on resource update)
+	ErrConflict           = errors.New("conflict") // Version conflict (on resource update)
 	ErrMaxRetriesExceeded = errors.New("max_retries")
 
 	// Auth
 	ErrDuplicateEmail = errors.New("duplicate_email")
 
-	ErrInvalid = errors.New("invalid")
+	ErrInvalid             = errors.New("invalid")
+	ErrMaxAttemptsExceeded = errors.New("max_attempts")
 
 	ErrVerification = errors.New("verification_error")
 	ErrEmailNotSent = errors.New("email_not_sent")

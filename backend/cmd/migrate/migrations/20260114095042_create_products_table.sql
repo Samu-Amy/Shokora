@@ -16,6 +16,8 @@ CREATE TRIGGER update_products_updated_at
 BEFORE UPDATE ON products
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
+
+-- TODO: aggiungi index (es. su nome e descrizione)?
 -- +goose StatementEnd
 
 

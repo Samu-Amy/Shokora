@@ -10,13 +10,12 @@ CREATE TABLE IF NOT EXISTS verification_tokens(
   
   otp bytea NOT NULL,
   otp_exp timestamp(0) with time zone NOT NULL,
-  otp_attempts smallint NOT NULL DEFAULT 0,
+  otp_attempts smallint NOT NULL DEFAULT 0 CHECK (otp_attempts BETWEEN 0 AND 255),
   
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   
   UNIQUE (user_id, verification_type),
-  -- UNIQUE (user_id, otp_hash)
 
   CONSTRAINT magic_link_consistency
   CHECK (

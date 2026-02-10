@@ -16,7 +16,7 @@ type VTokens struct {
 	MagicLinkTokenExp  time.Time             `json:"magic_link_token_exp"`
 	OTPHash            []byte                `json:"-"`
 	OTPExp             time.Time             `json:"otp_exp"`
-	OTPAttempts        uint8                 `json:"otp_attempts"` // Default 0
+	OTPAttempts        uint8                 `json:"otp_attempts"` // Default 0 (otp attempts for (user_id, verificationType))
 	CreatedAt          time.Time             `json:"created_at"`   // Default now()
 	UpdatedAt          time.Time             `json:"updated_at"`   // Default now()
 }
@@ -31,9 +31,11 @@ type VTokensRepositoryI interface {
 	UpdateMagicLinkTokenFromId(ctx context.Context, verificationId int64, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error
 	UpdateOTPFromId(ctx context.Context, verificationId int64, otpHash []byte, otpExp time.Duration) error
 
+	UpdateAttempts(ctx context.Context, verificationId int64, maxOTPAttempts uint8) error
+
 	// TODO: fare metodi apposta per password e/o 2fa (es. nel caso dovessi fare join con users)
-	VerifyMagicLink(ctx context.Context, hashedToken []byte) (*MagicLinkTokenPayload, error)
-	VerifyOTP(ctx context.Context, verificationId int64, hashedOTP []byte) (*OTPPayload, error)
+	GetMagicLinkData(ctx context.Context, hashedToken []byte) (*MagicLinkTokenPayload, error)
+	GetOTPData(ctx context.Context, verificationId int64, hashedOTP []byte) (*OTPPayload, error)
 
 	Delete(ctx context.Context, verificationId int64) error
 }

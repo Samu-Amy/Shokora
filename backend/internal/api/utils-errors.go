@@ -10,7 +10,7 @@ import (
 
 // TODO: passa errori strutturati (sopra) al frontend (invece che hardcoded strings)
 
-// - Return an error -
+// - Internal Errors (fixed message) -
 func (app *App) internalServerError(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Errorw("internal server error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
@@ -31,16 +31,35 @@ func (app *App) requestTimeoutError(w http.ResponseWriter, r *http.Request, err 
 	writeJSONError(w, http.StatusRequestTimeout, "failed to process request in time")
 }
 
+func (app *App) unauthorizedError(w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Warnf("unauthorized error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+
+	writeJSONError(w, http.StatusUnauthorized, "unauthorized")
+}
+
+// - Dynamic Errors (message from error) -
+
 func (app *App) badRequestError(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Warnf("bad request error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
-	writeJSONError(w, http.StatusBadRequest, err.Error())
+	errorMessage := "bad_request"
+
+	// Frontend receives "ErrInvalid"
+	if errors.Is(err, errorcodes.InternalErrExpired) {
+		err = errorcodes.ErrInvalid
+	}
+
+	if errors.Is(err, errorcodes.ErrDuplicateEmail) || errors.Is(err, errorcodes.ErrInvalid) {
+		errorMessage = err.Error()
+	}
+
+	writeJSONError(w, http.StatusBadRequest, errorMessage)
 }
 
 func (app *App) notFoundError(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Warnf("not found error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
-	writeJSONError(w, http.StatusNotFound, "not found")
+	writeJSONError(w, http.StatusNotFound, "not_found")
 }
 
 func (app *App) conflictError(w http.ResponseWriter, r *http.Request, err error) {
@@ -49,17 +68,19 @@ func (app *App) conflictError(w http.ResponseWriter, r *http.Request, err error)
 	writeJSONError(w, http.StatusConflict, "conflict")
 }
 
-func (app *App) unauthorizedError(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Warnf("unauthorized error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
-
-	writeJSONError(w, http.StatusUnauthorized, "unauthorized")
-}
-
 func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Warnf("forbiddeb error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	app.logger.Warnf("forbidden error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
-	writeJSONError(w, http.StatusForbidden, "forbidden")
+	errorMessage := "forbidden"
+
+	if errors.Is(err, errorcodes.ErrMaxAttemptsExceeded) {
+		errorMessage = err.Error()
+	}
+
+	writeJSONError(w, http.StatusForbidden, errorMessage)
 }
+
+// TODO: attenzione agli errori che passano al frontend (bisogna usare solo quelli di errorcodes per evitare leaks di informazioni)
 
 // - Parse error -
 func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
@@ -70,14 +91,17 @@ func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 	case errors.Is(err, errorcodes.ErrNotFound):
 		app.notFoundError(w, r, err)
 
-	case errors.Is(err, errorcodes.ErrConlflict):
+	case errors.Is(err, errorcodes.ErrConflict):
 		app.conflictError(w, r, err)
 
-	case errors.Is(err, errorcodes.ErrDuplicateEmail), errors.Is(err, errorcodes.ErrInvalid):
+	case errors.Is(err, errorcodes.ErrDuplicateEmail), errors.Is(err, errorcodes.ErrInvalid), errors.Is(err, errorcodes.InternalErrExpired):
 		app.badRequestError(w, r, err)
 
 	case errors.Is(err, errorcodes.ErrUnauthorized), errors.Is(err, errorcodes.ErrNotVerified):
 		app.unauthorizedError(w, r, err)
+
+	case errors.Is(err, errorcodes.ErrMaxAttemptsExceeded):
+		app.forbiddenError(w, r, err)
 
 	// Better to handle these case by case
 	case errors.Is(err, errorcodes.ErrMaxRetriesExceeded), errors.Is(err, errorcodes.ErrVerification), errors.Is(err, errorcodes.ErrEmailNotSent):

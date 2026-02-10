@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"net/http"
 	"time"
 
@@ -164,11 +163,6 @@ func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Reque
 
 	// Verify
 	if err := app.service.Auth.VerifyEmailWithToken(ctx, hashedToken); err != nil {
-		// Frontend receives only "ErrInvalid"
-		if errors.Is(err, errorcodes.InternalErrExpired) {
-			err = errorcodes.ErrInvalid
-		}
-
 		app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
 		return
 	}
@@ -203,12 +197,10 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 	hashedOTP := app.tokenAuthenticator.HashOTP(payload.OTP, auth.EmailVerification)
 
 	// Verify
-	if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload.VerificationId, hashedOTP); err != nil {
-		app.parseError(w, r, err)
+	if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload.VerificationId, hashedOTP, app.config.Auth.OTP.MaxAttempts); err != nil {
+		app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
 		return
 	}
-
-	// TODO: continua (?)
 
 	//* No content
 	w.WriteHeader(http.StatusNoContent)
