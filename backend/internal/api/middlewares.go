@@ -52,7 +52,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 
 		jwtToken, err := app.jwtAuthenticator.ValidateJWTToken(token)
 		if err != nil {
-			app.unauthorizedError(w, r, errorcodes.ErrExpired)
+			app.unauthorizedError(w, r, errorcodes.InternalErrExpired)
 			return
 		}
 

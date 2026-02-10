@@ -73,19 +73,14 @@ func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 	case errors.Is(err, errorcodes.ErrConlflict):
 		app.conflictError(w, r, err)
 
-	case errors.Is(err, errorcodes.ErrDuplicateEmail):
+	case errors.Is(err, errorcodes.ErrDuplicateEmail), errors.Is(err, errorcodes.ErrInvalid):
 		app.badRequestError(w, r, err)
 
-	case errors.Is(err, errorcodes.ErrUnauthorized):
-	case errors.Is(err, errorcodes.ErrNotVerified):
+	case errors.Is(err, errorcodes.ErrUnauthorized), errors.Is(err, errorcodes.ErrNotVerified):
 		app.unauthorizedError(w, r, err)
 
 	// Better to handle these case by case
-	case errors.Is(err, errorcodes.ErrMaxRetriesExceeded):
-	case errors.Is(err, errorcodes.ErrInvalid):
-	case errors.Is(err, errorcodes.ErrExpired):
-	case errors.Is(err, errorcodes.ErrVerification):
-	case errors.Is(err, errorcodes.ErrEmailNotSent):
+	case errors.Is(err, errorcodes.ErrMaxRetriesExceeded), errors.Is(err, errorcodes.ErrVerification), errors.Is(err, errorcodes.ErrEmailNotSent):
 		app.internalServerError(w, r, err)
 
 	default:

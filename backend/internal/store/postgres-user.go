@@ -144,7 +144,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 
 // ----- UPDATE -----
 
-func (store *PostgresUserStore) SetIsVerified(ctx context.Context, transaction *sql.Tx, userId int64) error { // TODO: togli transaction (?)
+func (store *PostgresUserStore) Verify(ctx context.Context, userId int64) error {
 	query := `
 		UPDATE users
 		SET is_verified = true
@@ -154,12 +154,15 @@ func (store *PostgresUserStore) SetIsVerified(ctx context.Context, transaction *
 	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	_, err := transaction.ExecContext(queryCtx, query, userId)
+	_, err := store.db.ExecContext(queryCtx, query, userId)
 	if err != nil {
-		// TODO: migliorare error handling (?)
-		return err
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return errorcodes.ErrNotFound
+		default:
+			return err
+		}
 	}
-
 	return nil
 }
 

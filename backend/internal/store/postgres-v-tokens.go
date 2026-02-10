@@ -127,73 +127,95 @@ func (store *PostgresVTokensStore) UpdateOTPFromId(ctx context.Context, verifica
 
 // ----- VERIFY -----
 
-func (store *PostgresVTokensStore) VerifyMagicLink(ctx context.Context, hashedToken []byte) (*int64, *auth.VerificationType, error) {
+func (store *PostgresVTokensStore) VerifyMagicLink(ctx context.Context, hashedToken []byte) (*MagicLinkTokenPayload, error) {
 	query := `
-		SELECT user_id, verification_type
+		SELECT id, user_id, verification_type, magic_link_token_exp
 		FROM verification_tokens
-		WHERE magic_link_token = $1 AND magic_link_token_exp > $2
+		WHERE magic_link_token = $1
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	var userId int64
-	var verificationType auth.VerificationType
+	var magicLinkTokenPayload MagicLinkTokenPayload
 
 	err := store.db.QueryRowContext(
 		queryCtx,
 		query,
 		hashedToken,
-		time.Now(),
 	).Scan(
-		&userId,
-		&verificationType,
+		&magicLinkTokenPayload.VerificationId,
+		&magicLinkTokenPayload.UserId,
+		&magicLinkTokenPayload.VerificationType,
+		&magicLinkTokenPayload.Exp,
 	)
 
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, nil, errorcodes.ErrNotFound
+			return nil, errorcodes.ErrNotFound
 		default:
-			return nil, nil, err
+			return nil, err
 		}
 	}
 
-	return &userId, &verificationType, nil
+	return &magicLinkTokenPayload, nil
 }
 
-func (store *PostgresVTokensStore) VerifyOTP(ctx context.Context, verificationI int64, hashedOTP []byte, maxOTPAttempts uint8) (*int64, *auth.VerificationType, error) {
+func (store *PostgresVTokensStore) VerifyOTP(ctx context.Context, verificationId int64, hashedOTP []byte) (*OTPPayload, error) {
 	query := `
-		SELECT user_id, verification_type
+		SELECT user_id, verification_type, otp_attempts, otp_exp
 		FROM verification_tokens
-		WHERE otp = $1 AND otp_attempts <= $2 AND otp_exp > $3
+		WHERE id = $1 AND otp = $2
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	var userId int64
-	var verificationType auth.VerificationType
+	var otpPayload OTPPayload
 
 	err := store.db.QueryRowContext(
 		queryCtx,
 		query,
+		verificationId,
 		hashedOTP,
-		maxOTPAttempts,
-		time.Now(),
 	).Scan(
-		&userId,
-		&verificationType,
+		&otpPayload.UserId,
+		&otpPayload.VerificationType,
+		&otpPayload.Attempts,
+		&otpPayload.Exp,
 	)
 
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, nil, errorcodes.ErrNotFound
+			return nil, errorcodes.ErrNotFound
 		default:
-			return nil, nil, err
+			return nil, err
 		}
 	}
 
-	return &userId, &verificationType, nil
+	return &otpPayload, nil
+}
+
+// ----- DELETE -----
+func (store *PostgresVTokensStore) Delete(ctx context.Context, verificationId int64) error {
+	query := `
+	DELETE from verification_tokens WHERE id = $1
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
+	_, err := store.db.ExecContext(
+		queryCtx,
+		query,
+		verificationId,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

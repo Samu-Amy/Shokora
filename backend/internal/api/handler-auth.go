@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -74,6 +75,8 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	resPayload.User = payloads.CreateUserResPayload(user) // Add user to payload
 
+	// TODO: genera token auth e setta i cookie (basta user.Id)
+
 	// Generate verificationTokens (Magic Link and OTP)
 	verificationTokens, err := app.tokenAuthenticator.CreateVerificationTokens(auth.EmailVerification)
 	if err != nil {
@@ -140,8 +143,6 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: genera token auth e setta i cookie
-
 // ----- LOGIN -----
 
 func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -154,13 +155,21 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	token := chi.URLParam(r, verificationTokenParam) // Get "token" param
 
-	// TODO: hash token
+	// Get "token" param
+	token := chi.URLParam(r, verificationTokenParam)
+
+	// Hash token
+	hashedToken := app.tokenAuthenticator.HashMagicLinkToken(&token)
 
 	// Verify
-	if err := app.service.Auth.VerifyEmailWithToken(ctx, token); err != nil {
-		app.parseError(w, r, err)
+	if err := app.service.Auth.VerifyEmailWithToken(ctx, hashedToken); err != nil {
+		// Frontend receives only "ErrInvalid"
+		if errors.Is(err, errorcodes.InternalErrExpired) {
+			err = errorcodes.ErrInvalid
+		}
+
+		app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
 		return
 	}
 
@@ -190,11 +199,16 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Hash OTP
+	hashedOTP := app.tokenAuthenticator.HashOTP(payload.OTP, auth.EmailVerification)
+
 	// Verify
-	if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload.VerificationId, payload.OTP); err != nil {
+	if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload.VerificationId, hashedOTP); err != nil {
 		app.parseError(w, r, err)
 		return
 	}
+
+	// TODO: continua (?)
 
 	//* No content
 	w.WriteHeader(http.StatusNoContent)

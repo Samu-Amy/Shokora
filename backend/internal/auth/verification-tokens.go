@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
-	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
 	"math/big"
@@ -96,6 +95,21 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificat
 	}, nil
 }
 
+// Hash
+func (tokenAuthenticator *TokenAuthenticator) HashMagicLinkToken(plainMagicLinkToken *string) []byte {
+	if plainMagicLinkToken == nil {
+		return nil
+	}
+	hash := sha256.Sum256([]byte(*plainMagicLinkToken))
+	return hash[:] // From [32]byte to []byte
+}
+
+func (tokenAuthenticator *TokenAuthenticator) HashOTP(plainOTP string, verificationType VerificationType) []byte {
+	mac := hmac.New(sha256.New, []byte(tokenAuthenticator.secret))
+	mac.Write([]byte(plainOTP + tokenAuthenticator.getVerificationTypeString(verificationType)))
+	return mac.Sum(nil)
+}
+
 // Regenerate
 func (tokenAuthenticator *TokenAuthenticator) RegenerateMagicLinkToken(verificationTokens *VerificationTokens) error {
 	newMagicLinkToken, err := tokenAuthenticator.generateMagicLinkToken()
@@ -121,25 +135,25 @@ func (tokenAuthenticator *TokenAuthenticator) RegenerateOTP(verificationTokens *
 	return nil
 }
 
-// Verification
-func (tokenAuthenticator *TokenAuthenticator) VerifyMagicLinkToken(plainToken *string, hashedToken []byte) bool {
-	if plainToken == nil || hashedToken == nil { // theoretically hashedToken should be also checked from len(hashedToken), since would return 0 if nil (so is redundant)
-		return false
-	}
-	hash := tokenAuthenticator.HashMagicLinkToken(plainToken)
+// Verification (solo se li ho già in memoria e voglio evitare query)
+// func (tokenAuthenticator *TokenAuthenticator) VerifyMagicLinkToken(plainToken *string, hashedToken []byte) bool {
+// 	if plainToken == nil || hashedToken == nil { // theoretically hashedToken should be also checked from len(hashedToken), since would return 0 if nil (so is redundant)
+// 		return false
+// 	}
+// 	hash := tokenAuthenticator.HashMagicLinkToken(plainToken)
 
-	//? si può aggiungere padding al/ai token e fare comunque il controllo per evitare timing leak (ma rischiando di validare token sbagliati)
-	if len(hash) != 32 || len(hashedToken) != 32 {
-		return false
-	}
+// 	//? si può aggiungere padding al/ai token e fare comunque il controllo per evitare timing leak (ma rischiando di validare token sbagliati)
+// 	if len(hash) != 32 || len(hashedToken) != 32 {
+// 		return false
+// 	}
 
-	return subtle.ConstantTimeCompare(hash, hashedToken) == 1
-}
+// 	return subtle.ConstantTimeCompare(hash, hashedToken) == 1
+// }
 
-func (tokenAuthenticator *TokenAuthenticator) VerifyOTP(plainOTP string, hashedToken []byte, verificationType VerificationType) bool {
-	hash := tokenAuthenticator.HashOTP(plainOTP, verificationType)
-	return hmac.Equal(hash, hashedToken)
-}
+// func (tokenAuthenticator *TokenAuthenticator) VerifyOTP(plainOTP string, hashedToken []byte, verificationType VerificationType) bool {
+// 	hash := tokenAuthenticator.HashOTP(plainOTP, verificationType)
+// 	return hmac.Equal(hash, hashedToken)
+// }
 
 // ----- ----- ----- PRIVATES ----- ----- -----
 
@@ -166,21 +180,6 @@ func (tokenAuthenticator *TokenAuthenticator) generateOTP() (string, error) { //
 	}
 
 	return fmt.Sprintf("%0*d", length, otp), nil // Format with [length] numbers/zeros
-}
-
-// Hash
-func (tokenAuthenticator *TokenAuthenticator) HashMagicLinkToken(plainMagicLinkToken *string) []byte {
-	if plainMagicLinkToken == nil {
-		return nil
-	}
-	hash := sha256.Sum256([]byte(*plainMagicLinkToken))
-	return hash[:] // From [32]byte to []byte
-}
-
-func (tokenAuthenticator *TokenAuthenticator) HashOTP(plainOTP string, verificationType VerificationType) []byte {
-	mac := hmac.New(sha256.New, []byte(tokenAuthenticator.secret))
-	mac.Write([]byte(plainOTP + tokenAuthenticator.getVerificationTypeString(verificationType)))
-	return mac.Sum(nil)
 }
 
 // - Utils -

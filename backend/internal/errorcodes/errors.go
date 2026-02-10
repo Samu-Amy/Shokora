@@ -14,7 +14,6 @@ var (
 	ErrDuplicateEmail = errors.New("duplicate_email")
 
 	ErrInvalid = errors.New("invalid")
-	ErrExpired = errors.New("expired")
 
 	ErrVerification = errors.New("verification_error")
 	ErrEmailNotSent = errors.New("email_not_sent")
@@ -23,8 +22,9 @@ var (
 	ErrNotVerified  = errors.New("not_verified") // User must verify email
 
 	// - Low Level -
-	InternalErrDuplicateToken = errors.New("duplicate_token")
-	ErrInvalidEmailVars       = errors.New("invalid_email_vars")
+	InternalErrExpired          = errors.New("expired")
+	InternalErrDuplicateToken   = errors.New("duplicate_token")
+	InternalErrInvalidEmailVars = errors.New("invalid_email_vars") // SendEmail called with wrong variables for the template
 
 	// Old
 

@@ -40,7 +40,7 @@ func (user *User) IsRoleValid(requiredRole Role) bool {
 // Repository
 type UserRepositoryI interface {
 	// Auth
-	SetIsVerified(ctx context.Context, transaction *sql.Tx, userId int64) error
+	Verify(ctx context.Context, userId int64) error
 	// SetIsActive(ctx context.Context, userId int64, isActive bool) error // TODO: implementa (per bloccare/sbloccare users)
 
 	// Auth utils

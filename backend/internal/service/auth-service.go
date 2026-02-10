@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/errorcodes"
@@ -72,16 +73,51 @@ func (service *AuthService) CreateVerificationTokensWithRetries(ctx context.Cont
 
 // ----- VERIFY EMAIL  -----
 
-func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToken string) error {
+/*
+Errors
+  - ErrInvalid
+  - InternalErrExpired
+  - Other db errors
+*/
+func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToken []byte) error {
 	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
 
-		// TODO: controlla verificationType se verifica andata a buon fine
+		// Get data
+		magicLinkTokenPayload, err := service.vTokensRepo.VerifyMagicLink(ctx, hashedToken)
+		if err != nil {
+			switch {
+			case errors.Is(err, errorcodes.ErrNotFound), magicLinkTokenPayload.VerificationType != auth.EmailVerification: // Token not exists or is for another verification
+				return errorcodes.ErrInvalid
+			default:
+				return err
+			}
+		}
+
+		// Check expiry
+		if magicLinkTokenPayload.Exp.Before(time.Now()) {
+			return errorcodes.InternalErrExpired
+		}
+
+		// Verify user
+		err = service.userRepo.Verify(ctx, magicLinkTokenPayload.UserId)
+		if err != nil {
+			return err
+		}
+
+		// Delete token
+		_ = service.vTokensRepo.Delete(ctx, magicLinkTokenPayload.VerificationId) // If it fails to delete there are no problems
 
 		return nil
 	})
 }
 
-func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verificationId int64, hashedOTP string) error {
+/*
+Errors
+  - ErrInvalid
+  - InternalErrExpired
+  - Other db errors
+*/
+func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verificationId int64, hashedOTP []byte) error {
 	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
 		// Find user related to the token
 		// user, err := store.getUserFromEmailVerificationToken(ctx, transaction, plainToken)
@@ -89,7 +125,7 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verification
 		// 	return err
 		// }
 
-		// TODO: controlla verificationType se verifica andata a buon fine
+		// TODO: controlla verificationType, attempts e exp se verifica andata a buon fine
 
 		// TODO: aggiorna attempts se verifica fallita, altrimenti elimina record
 
@@ -107,6 +143,10 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verification
 		return nil
 	})
 }
+
+// ----- RESET PASSWORD  -----
+
+// ----- TWO FACTOR AUTH  -----
 
 // ----- DELETE USER -----
 

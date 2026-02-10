@@ -53,7 +53,7 @@ func (app *App) SendVerificationEmail(ctx context.Context, verificationType auth
 	// Email Verification and Password Reset (magic link + OTP)
 	if plainMagicLinkToken == nil {
 		app.logger.Warnf("plainMagicLinkToken required for %v", verificationType)
-		return errorcodes.ErrInvalidEmailVars
+		return errorcodes.InternalErrInvalidEmailVars
 	}
 
 	var templateFile mailer.TemplateFile

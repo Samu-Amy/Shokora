@@ -35,6 +35,8 @@
   });
 
   // TODO: per il reset della password mettere opzione "disconnetti da tutti i dispositivi" -> elimina tutti i Refresh Token (di tutte le sessioni) di quell'utente
+
+  // TODO: apri pagina otp solo se c'è verification_id nel payload (altrimenti non si può verificare con l'otp)
 </script>
 
 <svelte:head>
