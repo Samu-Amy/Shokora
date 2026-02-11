@@ -33,7 +33,7 @@ return: error (from SendEmail method in mailer Client)
 */
 func (app *App) SendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, user_name, email string, plainMagicLinkToken *string, plainOTP string, magicLinkTokenExp, otpExp time.Duration) error {
 
-	isProdEnv := app.config.Env == "prod"
+	isSandbox := app.config.Mail.SandboxEnv
 
 	// 2FA (only OTP)
 	if verificationType == auth.TwoFactorAuth {
@@ -47,12 +47,12 @@ func (app *App) SendVerificationEmail(ctx context.Context, verificationType auth
 			OTPExp:   FormatDurationToMinutes(otpExp),
 		}
 
-		return app.mailer.SendEmail(ctx, mailer.TwoFactorAuthTemplate, user_name, email, vars, !isProdEnv)
+		return app.mailer.SendEmail(ctx, mailer.TwoFactorAuthTemplate, user_name, email, vars, isSandbox)
 	}
 
 	// Email Verification and Password Reset (magic link + OTP)
 	if plainMagicLinkToken == nil {
-		app.logger.Warnf("plainMagicLinkToken required for %v", verificationType)
+		app.logger.Warnf("plainMagicLinkToken required for verification type: %v", verificationType)
 		return errorcodes.InternalErrInvalidEmailVars
 	}
 
@@ -85,5 +85,5 @@ func (app *App) SendVerificationEmail(ctx context.Context, verificationType auth
 		OTPExp:        FormatDurationToMinutes(otpExp),
 	}
 
-	return app.mailer.SendEmail(ctx, templateFile, user_name, email, vars, !isProdEnv)
+	return app.mailer.SendEmail(ctx, templateFile, user_name, email, vars, isSandbox)
 }

@@ -25,13 +25,13 @@ type PasswordField struct {
 
 // - Verification Payload Fields -
 
-type VerificationIdField struct {
-	VerificationId int64 `json:"verification_id" validate:"required,gte=0"`
-}
+// type VerificationIdField struct {
+// 	VerificationId int64 `json:"verification_id" validate:"gte=0"`
+// }
 
-type OTPField struct {
-	OTP string `json:"otp" validate:"required,min=4,max=10"`
-}
+// type OTPField struct {
+// 	OTP string `json:"otp" validate:"required,min=4,max=10"`
+// }
 
 // - Request Payloads -
 
@@ -49,8 +49,8 @@ type LoginUserReqPayload struct {
 
 // Verification
 type OTPVerificationReqPayload struct {
-	VerificationIdField
-	OTPField
+	VerificationId int64  `json:"verification_id" validate:"gte=0"`
+	OTP            string `json:"otp" validate:"required,min=4,max=10"`
 }
 
 // - Response Payloads -

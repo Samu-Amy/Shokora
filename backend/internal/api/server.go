@@ -50,8 +50,9 @@ type DbConfig struct {
 }
 
 type MailConfig struct {
-	Resend    ResendConfig
-	FromEmail string
+	Resend     ResendConfig
+	FromEmail  string
+	SandboxEnv bool
 }
 
 type ResendConfig struct {

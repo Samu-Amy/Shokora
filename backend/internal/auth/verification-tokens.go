@@ -66,9 +66,10 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificat
 	// Generate and hash verification Token (only for email verification and password reset)
 	var plainMagicLinkToken *string = nil
 	var hashedMagicLinkToken []byte = nil
+	var err error
 
 	if verificationType != TwoFactorAuth {
-		plainMagicLinkToken, err := tokenAuthenticator.generateMagicLinkToken()
+		plainMagicLinkToken, err = tokenAuthenticator.generateMagicLinkToken()
 		if err != nil {
 			return nil, err
 		}

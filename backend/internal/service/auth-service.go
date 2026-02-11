@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
@@ -101,6 +102,7 @@ func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToke
 		// Verify user
 		err = service.userRepo.Verify(ctx, magicLinkTokenQueryData.UserId)
 		if err != nil {
+			log.Printf("Verify User Error: %v", err)
 			return err
 		}
 
@@ -128,26 +130,26 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verification
 		if err != nil {
 			switch {
 			case errors.Is(err, errorcodes.ErrNotFound): // OTP Not valid
-				return errorcodes.ErrInvalid
+				verificationErr = errorcodes.ErrInvalid
 			default:
 				return err // db/query error
 			}
 		}
 
 		// Check expiry
-		if otpQueryData.Exp.Before(time.Now()) {
+		if otpQueryData != nil && otpQueryData.Exp.Before(time.Now()) {
 
 			verificationErr = errorcodes.InternalErrExpired
 
-		} else if otpQueryData.Attempts >= maxAttempts {
+		} else if otpQueryData != nil && otpQueryData.Attempts >= maxAttempts {
 
 			// Check attempts
 			verificationErr = errorcodes.ErrMaxAttemptsExceeded
 		}
 
 		// Increment attempts and Handle errors
-		if verificationErr != nil {
-			err := service.vTokensRepo.UpdateAttempts(ctx, verificationId, maxAttempts)
+		if otpQueryData == nil || verificationErr != nil {
+			err = service.vTokensRepo.UpdateAttempts(ctx, verificationId, maxAttempts)
 			if err != nil {
 				verificationErr = err // MaxAttemptsExceeded or db/query error
 			}
@@ -158,6 +160,7 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verification
 		// Verify user
 		err = service.userRepo.Verify(ctx, otpQueryData.UserId)
 		if err != nil {
+			log.Printf("Verify User Error: %v", err)
 			return err
 		}
 

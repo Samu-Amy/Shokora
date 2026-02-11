@@ -51,7 +51,8 @@ func main() {
 			Resend: api.ResendConfig{
 				ApiKey: env.GetString("RESEND_API_KEY", ""),
 			},
-			FromEmail: env.GetString("FROM_EMAIL", ""),
+			FromEmail:  env.GetString("FROM_EMAIL", ""),
+			SandboxEnv: env.GetBool("SANDBOX", false),
 		},
 		Auth: api.AuthConfig{
 			HashingCost: 12, // bcrypt.DefaultCost = 10
@@ -78,7 +79,7 @@ func main() {
 		RateLimiter: ratelimiter.RateLimiterConfig{
 			RequestsPerTimeFrame: env.GetInt("RATE_LIMITER_REQUESTS_COUNT", 20), // TODO: fix (cambia)
 			TimeFrame:            5 * time.Second,
-			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", false), // TODO: sistema rate limiter e riattivalo
+			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true), // TODO: sistema rate limiter e riattivalo
 		},
 	}
 

@@ -135,7 +135,7 @@ func (store *PostgresVTokensStore) UpdateAttempts(ctx context.Context, verificat
 	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	_, err := store.db.ExecContext(
+	res, err := store.db.ExecContext(
 		queryCtx,
 		query,
 		verificationId,
@@ -145,10 +145,19 @@ func (store *PostgresVTokensStore) UpdateAttempts(ctx context.Context, verificat
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return errorcodes.ErrMaxAttemptsExceeded // We should know the verificationId is correct
+			return errorcodes.ErrInvalid // VerificationId is not valid
 		default:
 			return err
 		}
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return errorcodes.ErrMaxAttemptsExceeded // No errors (verificationId is correct), but no rows modified -> max attempts exceeded
 	}
 
 	return nil

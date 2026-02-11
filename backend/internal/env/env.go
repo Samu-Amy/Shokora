@@ -41,13 +41,13 @@ func GetBool(key string, fallback bool) bool {
 		return fallback
 	}
 
-	valAsInt, err := strconv.ParseBool(val)
+	valAsBool, err := strconv.ParseBool(strings.Trim(val, " "))
 	if err != nil {
 		log.Printf("Returning fallback for env var: %s\n\n", key)
 		return fallback
 	}
 
-	return valAsInt
+	return valAsBool
 }
 
 func LoadCORSOrigins(fallback []string) []string {
