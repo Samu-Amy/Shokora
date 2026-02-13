@@ -136,7 +136,7 @@ func (tokenAuthenticator *TokenAuthenticator) RegenerateOTP(verificationTokens *
 	return nil
 }
 
-// Verification (solo se li ho già in memoria e voglio evitare query)
+// Verification
 // func (tokenAuthenticator *TokenAuthenticator) VerifyMagicLinkToken(plainToken *string, hashedToken []byte) bool {
 // 	if plainToken == nil || hashedToken == nil { // theoretically hashedToken should be also checked from len(hashedToken), since would return 0 if nil (so is redundant)
 // 		return false
@@ -151,10 +151,10 @@ func (tokenAuthenticator *TokenAuthenticator) RegenerateOTP(verificationTokens *
 // 	return subtle.ConstantTimeCompare(hash, hashedToken) == 1
 // }
 
-// func (tokenAuthenticator *TokenAuthenticator) VerifyOTP(plainOTP string, hashedToken []byte, verificationType VerificationType) bool {
-// 	hash := tokenAuthenticator.HashOTP(plainOTP, verificationType)
-// 	return hmac.Equal(hash, hashedToken)
-// }
+// Verification
+func (tokenAuthenticator *TokenAuthenticator) VerifyOTP(hashedOtp1 []byte, hashedOtp2 []byte) bool {
+	return hmac.Equal(hashedOtp1, hashedOtp2)
+}
 
 // ----- ----- ----- PRIVATES ----- ----- -----
 

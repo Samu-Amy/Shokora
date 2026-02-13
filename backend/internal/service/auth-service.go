@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"log"
-	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/errorcodes"
@@ -77,40 +76,32 @@ func (service *AuthService) CreateVerificationTokensWithRetries(ctx context.Cont
 /*
 Errors
   - ErrInvalid
-  - InternalErrExpired
   - Other db errors
 */
 func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToken []byte) error {
-	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
 
-		// Get data
-		magicLinkTokenQueryData, err := service.vTokensRepo.GetMagicLinkData(ctx, hashedToken)
-		if err != nil {
-			switch {
-			case errors.Is(err, errorcodes.ErrNotFound), magicLinkTokenQueryData.VerificationType != auth.EmailVerification: // Token not exists or is for another verification
-				return errorcodes.ErrInvalid
-			default:
-				return err
-			}
-		}
-
-		// Check expiry
-		if magicLinkTokenQueryData.Exp.Before(time.Now()) {
-			return errorcodes.InternalErrExpired
-		}
-
-		// Verify user
-		err = service.userRepo.Verify(ctx, magicLinkTokenQueryData.UserId)
-		if err != nil {
-			log.Printf("Verify User Error: %v", err)
+	// Verify and Get data
+	magicLinkTokenQueryData, err := service.vTokensRepo.VerifyMagicLink(ctx, hashedToken, auth.EmailVerification)
+	if err != nil {
+		switch {
+		case errors.Is(err, errorcodes.ErrNotFound): // Token not valid
+			return errorcodes.ErrInvalid
+		default:
 			return err
 		}
+	}
 
-		// Delete token
-		_ = service.vTokensRepo.Delete(ctx, magicLinkTokenQueryData.VerificationId) // If it fails to delete there are no problems
+	// Verify user
+	err = service.userRepo.Verify(ctx, magicLinkTokenQueryData.UserId)
+	if err != nil {
+		log.Printf("Verify User Error: %v", err)
+		return err
+	}
 
-		return nil
-	})
+	// Delete token
+	_ = service.vTokensRepo.Delete(ctx, magicLinkTokenQueryData.VerificationId) // If it fails to delete there are no problems
+
+	return nil
 }
 
 /*
@@ -121,72 +112,27 @@ Errors
   - Other db errors
 */
 func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verificationId int64, hashedOTP []byte, maxAttempts uint8) error {
-	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
 
-		var verificationErr error
+	// Get data
+	otpQueryData, err := service.verifyOtp(ctx, verificationId, hashedOTP, maxAttempts, auth.EmailVerification)
+	if err != nil {
+		log.Printf("Verify OTP Error: %v", err)
+		return err
+	}
 
-		// Get data
-		otpQueryData, err := service.vTokensRepo.GetOTPData(ctx, verificationId, hashedOTP)
-		if err != nil {
-			switch {
-			case errors.Is(err, errorcodes.ErrNotFound): // OTP Not valid
-				verificationErr = errorcodes.ErrInvalid
-			default:
-				return err // db/query error
-			}
-		}
+	// Verify user
+	err = service.userRepo.Verify(ctx, otpQueryData.UserId)
+	if err != nil {
+		log.Printf("Verify User Error: %v", err)
+		return err
+	}
 
-		// Check expiry
-		if otpQueryData != nil && otpQueryData.Exp.Before(time.Now()) {
+	// Delete token
+	_ = service.vTokensRepo.Delete(ctx, verificationId) // If it fails to delete there are no problems
 
-			verificationErr = errorcodes.InternalErrExpired
-
-		} else if otpQueryData != nil && otpQueryData.Attempts >= maxAttempts {
-
-			// Check attempts
-			verificationErr = errorcodes.ErrMaxAttemptsExceeded
-		}
-
-		// Increment attempts and Handle errors
-		if otpQueryData == nil || verificationErr != nil {
-			err = service.vTokensRepo.UpdateAttempts(ctx, verificationId, maxAttempts)
-			if err != nil {
-				verificationErr = err // MaxAttemptsExceeded or db/query error
-			}
-
-			return verificationErr
-		}
-
-		// Verify user
-		err = service.userRepo.Verify(ctx, otpQueryData.UserId)
-		if err != nil {
-			log.Printf("Verify User Error: %v", err)
-			return err
-		}
-
-		// Delete token
-		_ = service.vTokensRepo.Delete(ctx, verificationId) // If it fails to delete there are no problems
-
-		return nil
-	})
+	return nil
 }
 
 // ----- RESET PASSWORD  -----
 
 // ----- TWO FACTOR AUTH  -----
-
-// ----- DELETE USER -----
-
-func (service *AuthService) DeleteUserAndEmailVerificationToken(ctx context.Context, userId int64) error {
-	return withTransaction(service.db, ctx, func(transaction *sql.Tx) error {
-		if err := service.userRepo.Delete(ctx, transaction, userId); err != nil {
-			return err
-		}
-
-		// if err := service.vTokensRepo.deleteEmailVerificationToken(ctx, transaction, userId); err != nil {
-		// 	return err
-		// }
-
-		return nil
-	})
-}

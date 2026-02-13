@@ -125,7 +125,7 @@ func (store *PostgresVTokensStore) UpdateOTPFromId(ctx context.Context, verifica
 	return nil
 }
 
-func (store *PostgresVTokensStore) UpdateAttempts(ctx context.Context, verificationId int64, maxOTPAttempts uint8) error {
+func (store *PostgresVTokensStore) UpdateOtpAttempts(ctx context.Context, verificationId int64, maxOTPAttempts uint8) error {
 	query := `
 		UPDATE verification_tokens
 		SET otp_attempts = otp_attempts + 1
@@ -163,48 +163,13 @@ func (store *PostgresVTokensStore) UpdateAttempts(ctx context.Context, verificat
 	return nil
 }
 
-// ----- VERIFY -----
+// ----- GET -----
 
-func (store *PostgresVTokensStore) GetMagicLinkData(ctx context.Context, hashedToken []byte) (*MagicLinkTokenPayload, error) {
+func (store *PostgresVTokensStore) GetOTPData(ctx context.Context, verificationId int64, verificationType auth.VerificationType) (*OTPPayload, error) {
 	query := `
-		SELECT id, user_id, verification_type, magic_link_token_exp
+		SELECT user_id, otp, otp_attempts, otp_exp
 		FROM verification_tokens
-		WHERE magic_link_token = $1
-	`
-
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
-	defer cancel()
-
-	var magicLinkTokenPayload MagicLinkTokenPayload
-
-	err := store.db.QueryRowContext(
-		queryCtx,
-		query,
-		hashedToken,
-	).Scan(
-		&magicLinkTokenPayload.VerificationId,
-		&magicLinkTokenPayload.UserId,
-		&magicLinkTokenPayload.VerificationType,
-		&magicLinkTokenPayload.Exp,
-	)
-
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return nil, errorcodes.ErrNotFound
-		default:
-			return nil, err
-		}
-	}
-
-	return &magicLinkTokenPayload, nil
-}
-
-func (store *PostgresVTokensStore) GetOTPData(ctx context.Context, verificationId int64, hashedOTP []byte) (*OTPPayload, error) {
-	query := `
-		SELECT user_id, verification_type, otp_attempts, otp_exp
-		FROM verification_tokens
-		WHERE id = $1 AND otp = $2
+		WHERE id = $1 AND verification_type = $2
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
@@ -216,10 +181,10 @@ func (store *PostgresVTokensStore) GetOTPData(ctx context.Context, verificationI
 		queryCtx,
 		query,
 		verificationId,
-		hashedOTP,
+		verificationType, // Only for best practice
 	).Scan(
 		&otpPayload.UserId,
-		&otpPayload.VerificationType,
+		&otpPayload.HashedOtp,
 		&otpPayload.Attempts,
 		&otpPayload.Exp,
 	)
@@ -234,6 +199,42 @@ func (store *PostgresVTokensStore) GetOTPData(ctx context.Context, verificationI
 	}
 
 	return &otpPayload, nil
+}
+
+// ----- VERIFY -----
+
+func (store *PostgresVTokensStore) VerifyMagicLink(ctx context.Context, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkTokenPayload, error) {
+	query := `
+		SELECT id, user_id
+		FROM verification_tokens
+		WHERE magic_link_token = $1 AND verification_type = $2 AND magic_link_token_exp > NOW()
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
+	var magicLinkTokenPayload MagicLinkTokenPayload
+
+	err := store.db.QueryRowContext(
+		queryCtx,
+		query,
+		hashedToken,
+		verificationType, // Only for best practice
+	).Scan(
+		&magicLinkTokenPayload.VerificationId,
+		&magicLinkTokenPayload.UserId,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, errorcodes.ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &magicLinkTokenPayload, nil
 }
 
 // ----- DELETE -----

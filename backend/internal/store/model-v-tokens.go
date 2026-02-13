@@ -31,11 +31,11 @@ type VTokensRepositoryI interface {
 	UpdateMagicLinkTokenFromId(ctx context.Context, verificationId int64, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error
 	UpdateOTPFromId(ctx context.Context, verificationId int64, otpHash []byte, otpExp time.Duration) error
 
-	UpdateAttempts(ctx context.Context, verificationId int64, maxOTPAttempts uint8) error
+	UpdateOtpAttempts(ctx context.Context, verificationId int64, maxOTPAttempts uint8) error
 
-	// TODO: fare metodi apposta per password e/o 2fa (es. nel caso dovessi fare join con users)
-	GetMagicLinkData(ctx context.Context, hashedToken []byte) (*MagicLinkTokenPayload, error)
-	GetOTPData(ctx context.Context, verificationId int64, hashedOTP []byte) (*OTPPayload, error)
+	GetOTPData(ctx context.Context, verificationId int64, verificationType auth.VerificationType) (*OTPPayload, error)
+
+	VerifyMagicLink(ctx context.Context, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkTokenPayload, error)
 
 	Delete(ctx context.Context, verificationId int64) error
 }

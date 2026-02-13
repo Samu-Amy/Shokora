@@ -40,11 +40,9 @@ func (app *App) SendVerificationEmail(ctx context.Context, verificationType auth
 		vars := struct {
 			Name     string
 			OTPToken string
-			OTPExp   string
 		}{
 			Name:     user_name,
 			OTPToken: plainOTP,
-			OTPExp:   FormatDurationToMinutes(otpExp),
 		}
 
 		return app.mailer.SendEmail(ctx, mailer.TwoFactorAuthTemplate, user_name, email, vars, isSandbox)
@@ -74,15 +72,11 @@ func (app *App) SendVerificationEmail(ctx context.Context, verificationType auth
 	vars := struct {
 		Name          string
 		ActivationURL string
-		MagicLinkExp  string
 		OTPToken      string
-		OTPExp        string
 	}{
 		Name:          user_name,
 		ActivationURL: activationURL,
-		MagicLinkExp:  FormatDurationToMinutes(magicLinkTokenExp),
 		OTPToken:      plainOTP,
-		OTPExp:        FormatDurationToMinutes(otpExp),
 	}
 
 	return app.mailer.SendEmail(ctx, templateFile, user_name, email, vars, isSandbox)

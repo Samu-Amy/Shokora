@@ -2,22 +2,18 @@ package store
 
 import (
 	"time"
-
-	"github.com/Samu-Amy/Shokora/internal/auth"
 )
 
 // - Payloads -
 
 type MagicLinkTokenPayload struct {
-	VerificationId   int64
-	UserId           int64
-	VerificationType auth.VerificationType
-	Exp              time.Time
+	VerificationId int64
+	UserId         int64
 }
 
 type OTPPayload struct {
-	UserId           int64
-	VerificationType auth.VerificationType
-	Attempts         uint8
-	Exp              time.Time
+	UserId    int64
+	HashedOtp []byte
+	Attempts  uint8
+	Exp       time.Time
 }

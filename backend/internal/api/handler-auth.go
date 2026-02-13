@@ -164,6 +164,7 @@ func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Reque
 	// Verify
 	if err := app.service.Auth.VerifyEmailWithToken(ctx, hashedToken); err != nil {
 		app.logger.Warnw("Error with Email Verification using Token (for more details read previous line)", "error", err)
+
 		app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
 		return
 	}
@@ -200,6 +201,7 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 	// Verify
 	if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload.VerificationId, hashedOTP, app.config.Auth.OTP.MaxAttempts); err != nil {
 		app.logger.Warnw("Error with Email Verification using OTP (for more details read previous line)", "error", err)
+
 		app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
 		return
 	}
