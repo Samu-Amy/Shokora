@@ -59,7 +59,7 @@ func (app *App) initRouter() *chi.Mux {
 	//* - Routes - *
 
 	// v1
-	router.Route("/api/v1", func(r chi.Router) {
+	router.Route("/api/v1", func(r chi.Router) { //! Se la route dovesse cambiare, modificare path cookies
 		// - Public Routes (commons) -
 
 		r.Get("/health", app.checkHealthHandler) //! TODO: togli

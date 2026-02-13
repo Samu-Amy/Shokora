@@ -135,6 +135,8 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: ricordati di scrivere di controllare nello spam (aggiungere timer al tasto per reinviare la mail (?))
 
+	// TODO: setta cookie auth (prima di ogni return)
+
 	//* Return user and verificationID
 	if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
 		app.internalServerError(w, r, err)
