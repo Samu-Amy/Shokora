@@ -33,7 +33,7 @@ type VTokensRepositoryI interface {
 
 	UpdateOtpAttempts(ctx context.Context, verificationId int64, maxOTPAttempts uint8) error
 
-	GetOTPData(ctx context.Context, verificationId int64, verificationType auth.VerificationType) (*OTPPayload, error)
+	GetOtpData(ctx context.Context, verificationId int64, verificationType auth.VerificationType) (*OTPPayload, error)
 
 	VerifyMagicLink(ctx context.Context, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkTokenPayload, error)
 

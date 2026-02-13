@@ -165,7 +165,7 @@ func (store *PostgresVTokensStore) UpdateOtpAttempts(ctx context.Context, verifi
 
 // ----- GET -----
 
-func (store *PostgresVTokensStore) GetOTPData(ctx context.Context, verificationId int64, verificationType auth.VerificationType) (*OTPPayload, error) {
+func (store *PostgresVTokensStore) GetOtpData(ctx context.Context, verificationId int64, verificationType auth.VerificationType) (*OTPPayload, error) {
 	query := `
 		SELECT user_id, otp, otp_attempts, otp_exp
 		FROM verification_tokens

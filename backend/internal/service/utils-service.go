@@ -44,9 +44,10 @@ func withTransaction(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) er
 // - Verification Tokens -
 
 func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64, hashedOTP []byte, maxAttempts uint8, verificationType auth.VerificationType) (*store.OTPPayload, error) {
+	// TODO: usare transaction per GetOtpData e UpdateOtpAttempts?
 
 	// Get data
-	otpQueryData, err := service.vTokensRepo.GetOTPData(ctx, verificationId, verificationType)
+	otpQueryData, err := service.vTokensRepo.GetOtpData(ctx, verificationId, verificationType)
 	if err != nil {
 		switch {
 		case errors.Is(err, errorcodes.ErrNotFound): // Not valid (id does not exists or wrong verificationType)
@@ -56,28 +57,30 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64,
 		}
 	}
 
-	// Verify other data
-	var verificationErr error
-
-	if otpQueryData != nil && otpQueryData.Exp.Before(time.Now()) { // Check expiry
-		verificationErr = errorcodes.InternalErrExpired
-
-	} else if otpQueryData != nil && otpQueryData.Attempts >= maxAttempts { // Check attempts
-		verificationErr = errorcodes.ErrMaxAttemptsExceeded
+	// Verify attempts
+	if otpQueryData.Attempts >= maxAttempts {
+		return nil, errorcodes.ErrMaxAttemptsExceeded
 	}
 
-	// Validate OTP // TODO: controlla
-	validOtp := service.tokenAuthenticator.VerifyOTP(hashedOTP, otpQueryData.HashedOtp)
-	if !validOtp {
-		verificationErr = errorcodes.ErrInvalid
+	// Verify expiry
+	if otpQueryData.Exp.Before(time.Now()) {
+		return nil, errorcodes.InternalErrExpired
+	}
+
+	// Validate OTP
+	isOtpValid := service.tokenAuthenticator.VerifyOTP(hashedOTP, otpQueryData.HashedOtp)
+	if !isOtpValid {
 
 		// Increment attempts and Handle errors
 		err = service.vTokensRepo.UpdateOtpAttempts(ctx, verificationId, maxAttempts)
-		if err != nil && verificationErr != errorcodes.ErrInvalid {
-			verificationErr = err // MaxAttemptsExceeded or db/query error
+
+		// Attempts updated successfully but OTP not valid
+		if err == nil {
+			err = errorcodes.ErrInvalid
 		}
-		return nil, errorcodes.ErrInvalid
+
+		return nil, err
 	}
 
-	return otpQueryData, verificationErr
+	return otpQueryData, nil
 }
