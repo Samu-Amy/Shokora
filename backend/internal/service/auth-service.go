@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/errorcodes"
@@ -83,6 +82,7 @@ func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToke
 	// Verify and Get data
 	magicLinkTokenQueryData, err := service.vTokensRepo.VerifyMagicLink(ctx, hashedToken, auth.EmailVerification)
 	if err != nil {
+		// log.Printf("Verify OTP Error: %v", err)
 		switch {
 		case errors.Is(err, errorcodes.ErrNotFound): // Token not valid
 			return errorcodes.ErrInvalid
@@ -94,7 +94,7 @@ func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToke
 	// Verify user
 	err = service.userRepo.Verify(ctx, magicLinkTokenQueryData.UserId)
 	if err != nil {
-		log.Printf("Verify User Error: %v", err)
+		// log.Printf("Verify User Error: %v", err)
 		return err
 	}
 
@@ -116,14 +116,14 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verification
 	// Get data
 	otpQueryData, err := service.verifyOtp(ctx, verificationId, hashedOTP, maxAttempts, auth.EmailVerification)
 	if err != nil {
-		log.Printf("Verify OTP Error: %v", err)
+		// log.Printf("Verify OTP Error: %v", err)
 		return err
 	}
 
 	// Verify user
 	err = service.userRepo.Verify(ctx, otpQueryData.UserId)
 	if err != nil {
-		log.Printf("Verify User Error: %v", err)
+		// log.Printf("Verify User Error: %v", err)
 		return err
 	}
 
