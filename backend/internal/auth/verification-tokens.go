@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"math/big"
 	"time"
@@ -69,12 +68,12 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificat
 	var err error
 
 	if verificationType != TwoFactorAuth {
-		plainMagicLinkToken, err = tokenAuthenticator.generateMagicLinkToken()
+		plainMagicLinkToken, err = GenerateToken(tokenAuthenticator.MagicLink.ByteSize)
 		if err != nil {
 			return nil, err
 		}
 
-		hashedMagicLinkToken = tokenAuthenticator.HashMagicLinkToken(plainMagicLinkToken)
+		hashedMagicLinkToken = HashToken(plainMagicLinkToken)
 	}
 
 	// Generate and hash OTP
@@ -96,15 +95,6 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificat
 	}, nil
 }
 
-// Hash
-func (tokenAuthenticator *TokenAuthenticator) HashMagicLinkToken(plainMagicLinkToken *string) []byte {
-	if plainMagicLinkToken == nil {
-		return nil
-	}
-	hash := sha256.Sum256([]byte(*plainMagicLinkToken))
-	return hash[:] // From [32]byte to []byte
-}
-
 func (tokenAuthenticator *TokenAuthenticator) HashOTP(plainOTP string, verificationType VerificationType) []byte {
 	mac := hmac.New(sha256.New, []byte(tokenAuthenticator.secret))
 	mac.Write([]byte(plainOTP + tokenAuthenticator.getVerificationTypeString(verificationType)))
@@ -113,13 +103,13 @@ func (tokenAuthenticator *TokenAuthenticator) HashOTP(plainOTP string, verificat
 
 // Regenerate
 func (tokenAuthenticator *TokenAuthenticator) RegenerateMagicLinkToken(verificationTokens *VerificationTokens) error {
-	newMagicLinkToken, err := tokenAuthenticator.generateMagicLinkToken()
+	newMagicLinkToken, err := GenerateToken(tokenAuthenticator.MagicLink.ByteSize)
 	if err != nil {
 		return err
 	}
 
 	verificationTokens.PlainMagicLinkToken = newMagicLinkToken
-	verificationTokens.HashedMagicLinkToken = tokenAuthenticator.HashMagicLinkToken(newMagicLinkToken)
+	verificationTokens.HashedMagicLinkToken = HashToken(newMagicLinkToken)
 
 	return nil
 }
@@ -157,18 +147,6 @@ func (tokenAuthenticator *TokenAuthenticator) VerifyOTP(hashedOtp1 []byte, hashe
 }
 
 // ----- ----- ----- PRIVATES ----- ----- -----
-
-// Generate
-func (tokenAuthenticator *TokenAuthenticator) generateMagicLinkToken() (*string, error) {
-	buffer := make([]byte, tokenAuthenticator.MagicLink.ByteSize)
-
-	if _, err := rand.Read(buffer); err != nil {
-		return nil, err
-	}
-
-	token := base64.RawURLEncoding.EncodeToString(buffer)
-	return &token, nil
-}
 
 func (tokenAuthenticator *TokenAuthenticator) generateOTP() (string, error) { // TODO RICORDA: per la verifica dell'otp si usa anche lo user_id nella richiesta (l'otp potrebbe non essere unico nel db)
 	length := tokenAuthenticator.OTP.Length

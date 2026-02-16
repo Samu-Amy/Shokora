@@ -69,12 +69,13 @@ type AuthConfig struct {
 }
 
 type TokenConfig struct {
-	Secret             string
-	Audience           string
-	Issuer             string
-	AccessTokenExp     time.Duration
-	RefreshTokenExp    time.Duration
-	RefreshTokenMaxExp time.Duration // How long the expiration can be extended for
+	Secret               string
+	Audience             string
+	Issuer               string
+	AccessTokenExp       time.Duration
+	RefreshTokenByteSize int
+	RefreshTokenExp      time.Duration
+	RefreshTokenMaxExp   time.Duration // How long the expiration can be extended for
 }
 
 // - Functions/Methods -

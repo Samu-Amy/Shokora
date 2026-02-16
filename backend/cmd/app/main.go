@@ -57,12 +57,13 @@ func main() {
 		Auth: api.AuthConfig{
 			HashingCost: 12, // bcrypt.DefaultCost = 10
 			Token: api.TokenConfig{
-				Secret:             env.GetString("AUTH_TOKEN_SECRET", "4a4c345b5064c9a85fff749313ff25310085a606a47232c94e9d898470c6e854"), // TODO: usa "openssl rand -hex 32" per generare token
-				Audience:           "shokora",
-				Issuer:             "shokora",
-				AccessTokenExp:     15 * time.Minute,    // 15 min (suggested: 15-60 min) //TODO: alza a 30 (?)
-				RefreshTokenExp:    28 * 24 * time.Hour, // 28 days (suggested: 7-30 days) // TODO: due opzioni, una breve (es. 7 giorni) ed una "ricordami" (es. circa 30 giorni) ed eventualmente se si accede spesso si può allungare un po' la scadenza (?)
-				RefreshTokenMaxExp: 90 * 24 * time.Hour, // 90 days (suggested: max 90 days)
+				Secret:               env.GetString("AUTH_TOKEN_SECRET", "4a4c345b5064c9a85fff749313ff25310085a606a47232c94e9d898470c6e854"), // TODO: usa "openssl rand -hex 32" per generare token
+				Audience:             "shokora",
+				Issuer:               "shokora",
+				AccessTokenExp:       15 * time.Minute, // 15 min (suggested: 15-60 min) //TODO: alza a 30 (?)
+				RefreshTokenByteSize: 32,
+				RefreshTokenExp:      28 * 24 * time.Hour, // 28 days (suggested: 7-30 days) // TODO: due opzioni, una breve (es. 7 giorni) ed una "ricordami" (es. circa 30 giorni) ed eventualmente se si accede spesso si può allungare un po' la scadenza (?)
+				RefreshTokenMaxExp:   90 * 24 * time.Hour, // 90 days (suggested: max 90 days)
 			},
 			MagicLink: auth.MagicLinkConfig{
 				ByteSize: 32,

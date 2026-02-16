@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -27,8 +28,12 @@ func (app *App) setAuthCookies(w http.ResponseWriter, userId int64) error {
 		return err
 	}
 
-	// TODO: crea refresh token
-	refreshToken := ""
+	// TODO: va bene solo per creazione nuova sessione (register e login/2fa) ma nel caso di refresh?
+	// TODO: se login fare pulizia (eliminare token di sessioni scadute)?
+	refreshToken, err := app.generateRefreshToken(userId)
+	if err != nil {
+		return err
+	}
 
 	// Create and set cookie
 	accessCookie := http.Cookie{
@@ -43,7 +48,7 @@ func (app *App) setAuthCookies(w http.ResponseWriter, userId int64) error {
 
 	refreshCookie := http.Cookie{
 		Name:     "refresh_token",
-		Value:    refreshToken,
+		Value:    refreshToken, // Plain token
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
@@ -55,4 +60,32 @@ func (app *App) setAuthCookies(w http.ResponseWriter, userId int64) error {
 	http.SetCookie(w, &refreshCookie)
 
 	return nil
+}
+
+func (app *App) generateRefreshToken(userId int64) (*string, error) {
+	token, err := auth.GenerateToken(app.config.Auth.Token.RefreshTokenByteSize)
+	if err != nil {
+		return nil, err
+	}
+
+	// Hash token and create Session Id
+	hashedToken := auth.HashToken(token)
+
+	// TODO: crea uuid session
+	sessionId, err := auth.GenerateSessionId()
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken := auth.RefreshToken{
+		UserId:      userId,
+		SessionId:   *sessionId,
+		HashedToken: hashedToken,
+		Exp:         app.config.Auth.Token.RefreshTokenExp,
+	}
+
+	// Save token in
+	app.store.
+
+	return token, nil
 }

@@ -24,10 +24,10 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int6
 	// if pair (user_id, verification_type) exists -> update (set) columns with new values (tokens, exps) and reset otp attempts
 	// else create new row
 	query := `
-		INSERT INTO verification_tokens (user_id, verification_type, magic_link_token, magic_link_token_exp, otp, otp_exp)
+		INSERT INTO verification_tokens (user_id, verification_type, magic_link_token_hash, magic_link_token_exp, otp_hash, otp_exp)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		ON CONFLICT (user_id, verification_type)
-		DO UPDATE SET magic_link_token = $3, magic_link_token_exp = $4, otp = $5, otp_exp = $6, otp_attempts = 0
+		DO UPDATE SET magic_link_token_hash = $3, magic_link_token_exp = $4, otp_hash = $5, otp_exp = $6, otp_attempts = 0
 		RETURNING id
 	`
 
@@ -73,7 +73,7 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int6
 func (store *PostgresVTokensStore) UpdateMagicLinkTokenFromId(ctx context.Context, verificationId int64, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error {
 	query := `
 		UPDATE verification_tokens
-		SET magic_link_token = $1, magic_link_token_exp = $2
+		SET magic_link_token_hash = $1, magic_link_token_exp = $2
 		WHERE id = $3
 	`
 
@@ -103,7 +103,7 @@ func (store *PostgresVTokensStore) UpdateMagicLinkTokenFromId(ctx context.Contex
 func (store *PostgresVTokensStore) UpdateOTPFromId(ctx context.Context, verificationId int64, otpHash []byte, otpExp time.Duration) error {
 	query := `
 		UPDATE verification_tokens
-		SET otp = $1, otp_exp = $2, otp_attempts = 0
+		SET otp_hash = $1, otp_exp = $2, otp_attempts = 0
 		WHERE id = $3
 	`
 
@@ -167,7 +167,7 @@ func (store *PostgresVTokensStore) UpdateOtpAttempts(ctx context.Context, verifi
 
 func (store *PostgresVTokensStore) GetOtpData(ctx context.Context, verificationId int64, verificationType auth.VerificationType) (*OTPPayload, error) {
 	query := `
-		SELECT user_id, otp, otp_attempts, otp_exp
+		SELECT user_id, otp_hash, otp_attempts, otp_exp
 		FROM verification_tokens
 		WHERE id = $1 AND verification_type = $2
 	`
@@ -207,7 +207,7 @@ func (store *PostgresVTokensStore) VerifyMagicLink(ctx context.Context, hashedTo
 	query := `
 		SELECT id, user_id
 		FROM verification_tokens
-		WHERE magic_link_token = $1 AND verification_type = $2 AND magic_link_token_exp > NOW()
+		WHERE magic_link_token_hash = $1 AND verification_type = $2 AND magic_link_token_exp > NOW()
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)

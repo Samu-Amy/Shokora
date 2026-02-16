@@ -5,10 +5,10 @@ CREATE TABLE IF NOT EXISTS verification_tokens(
   user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   verification_type smallint NOT NULL CHECK (verification_type BETWEEN 0 AND 2),
   
-  magic_link_token bytea UNIQUE,
+  magic_link_token_hash bytea UNIQUE,
   magic_link_token_exp timestamp(0) with time zone,
   
-  otp bytea NOT NULL,
+  otp_hash bytea NOT NULL,
   otp_exp timestamp(0) with time zone NOT NULL,
   otp_attempts smallint NOT NULL DEFAULT 0 CHECK (otp_attempts BETWEEN 0 AND 255),
   
@@ -19,9 +19,9 @@ CREATE TABLE IF NOT EXISTS verification_tokens(
 
   CONSTRAINT magic_link_consistency
   CHECK (
-    (magic_link_token IS NULL AND magic_link_token_exp IS NULL)
+    (magic_link_token_hash IS NULL AND magic_link_token_exp IS NULL)
     OR
-    (magic_link_token IS NOT NULL AND magic_link_token_exp IS NOT NULL)
+    (magic_link_token_hash IS NOT NULL AND magic_link_token_exp IS NOT NULL)
   )
 );
 

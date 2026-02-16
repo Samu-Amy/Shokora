@@ -161,7 +161,7 @@ func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Reque
 	token := chi.URLParam(r, verificationTokenParam)
 
 	// Hash token
-	hashedToken := app.tokenAuthenticator.HashMagicLinkToken(&token)
+	hashedToken := auth.HashToken(&token)
 
 	// Verify
 	if err := app.service.Auth.VerifyEmailWithToken(ctx, hashedToken); err != nil {
