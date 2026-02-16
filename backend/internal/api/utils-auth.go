@@ -29,7 +29,7 @@ func (app *App) setAuthCookies(w http.ResponseWriter, userId int64) error {
 	}
 
 	// TODO: va bene solo per creazione nuova sessione (register e login/2fa) ma nel caso di refresh?
-	// TODO: se login fare pulizia (eliminare token di sessioni scadute)?
+	// TODO: se login fare pulizia (eliminare token di sessioni scadute - attenzione agli expires aggiornati (vecchi token scaduti ma nuovi no -> sessione ancora valida), controlla per tutta la sessione)?
 	refreshToken, err := app.generateRefreshToken(userId)
 	if err != nil {
 		return err

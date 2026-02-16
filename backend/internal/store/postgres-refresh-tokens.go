@@ -28,7 +28,7 @@ func (store *PostgresRefreshTokensStore) CreateToken(ctx context.Context, refres
 	_, err := store.db.ExecContext(
 		queryCtx,
 		query,
-		// TODO: continua (usa now().Add(Exp) per expires_at)
+		// TODO: continua (usa now().Add(Exp) per expires_at), se replaces -> è rotazione, altrimenti è nuovo
 	)
 
 	if err != nil {
