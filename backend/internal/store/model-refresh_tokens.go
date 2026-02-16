@@ -25,9 +25,9 @@ type RefreshTokens struct {
 type RefreshTokensRepositoryI interface {
 	CreateToken(ctx context.Context, refreshToken auth.RefreshToken) error
 
-	// GetToken(ctx context.Context, hashedToken []byte) (..., error) // TODO: ritorna dati che servono (es. session_id, created_at (per revoked)) - usa in service (create e update/revoke in transaction?)
+	// GetToken(ctx context.Context, hashedToken []byte) (..., error) // TODO: ritorna dati che servono (es. session_id, created_at (per revoked)) - usa in service (fai tutto in transaction)
 
-	RevokeTokenById(ctx context.Context, tokenId int64)
+	RevokeTokenById(ctx context.Context, tokenId int64, revokedAt time.Time) error
 
 	// TODO: nel login fai anche delete di tutti i refresh token scaduti per quell'utente (?)
 
