@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (app *App) setAuthCookies(w http.ResponseWriter, userId int64) error {
+func (app *App) setAuthCookies(w http.ResponseWriter, userId int64, plainRefreshToken string, refreshTokenExp time.Time) error {
 
 	timeNow := time.Now()
 	accessTokenExp := timeNow.Add(app.config.Auth.Token.AccessTokenExp)
@@ -28,31 +29,29 @@ func (app *App) setAuthCookies(w http.ResponseWriter, userId int64) error {
 		return err
 	}
 
-	// TODO: va bene solo per creazione nuova sessione (register e login/2fa) ma nel caso di refresh?
-	// TODO: se login fare pulizia (eliminare token di sessioni scadute - attenzione agli expires aggiornati (vecchi token scaduti ma nuovi no -> sessione ancora valida), controlla per tutta la sessione)?
-	refreshToken, err := app.generateRefreshToken(userId)
-	if err != nil {
-		return err
-	}
-
-	// Create and set cookie
+	// Create and set cookies
 	accessCookie := http.Cookie{
 		Name:     "access_token",
 		Value:    accessToken,
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
-		MaxAge:   int(app.config.Auth.Token.AccessTokenExp.Seconds()),
+		MaxAge:   int(time.Until(accessTokenExp).Seconds()),
 		Path:     "/api",
+	}
+
+	refreshMaxAge := int(time.Until(refreshTokenExp).Seconds())
+	if refreshMaxAge < 0 {
+		refreshMaxAge = 0
 	}
 
 	refreshCookie := http.Cookie{
 		Name:     "refresh_token",
-		Value:    refreshToken, // Plain token
+		Value:    plainRefreshToken, // Plain token
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
-		MaxAge:   int(app.config.Auth.Token.RefreshTokenExp.Seconds()), // TODO: aggiornare quando si aumenta la durata (usa l'expiry settata sul db)
+		MaxAge:   refreshMaxAge,
 		Path:     "/api",
 	}
 
@@ -62,7 +61,7 @@ func (app *App) setAuthCookies(w http.ResponseWriter, userId int64) error {
 	return nil
 }
 
-func (app *App) generateRefreshToken(userId int64) (*string, error) {
+func (app *App) generateRefreshToken(ctx context.Context, userId int64) (*auth.RefreshTokenPayload, error) {
 	token, err := auth.GenerateToken(app.config.Auth.Token.RefreshTokenByteSize)
 	if err != nil {
 		return nil, err
@@ -79,13 +78,19 @@ func (app *App) generateRefreshToken(userId int64) (*string, error) {
 
 	refreshToken := auth.RefreshToken{
 		UserId:      userId,
-		SessionId:   *sessionId,
+		SessionId:   sessionId,
 		HashedToken: hashedToken,
 		Exp:         app.config.Auth.Token.RefreshTokenExp,
 	}
 
 	// Save token in
-	app.store.
+	tokenExpiresAt, err := app.store.RefreshTokens.CreateToken(ctx, refreshToken)
+	if err != nil {
+		return nil, err
+	}
 
-	return token, nil
+	return &auth.RefreshTokenPayload{
+		PlainToken: *token,
+		ExpiresAt:  tokenExpiresAt,
+	}, nil
 }

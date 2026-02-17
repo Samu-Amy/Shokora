@@ -14,6 +14,12 @@ type RefreshToken struct {
 	Replaces    *int64
 }
 
-func GenerateSessionId() (*uuid.UUID, error) {
-	return nil, nil
+type RefreshTokenPayload struct {
+	PlainToken string
+	ExpiresAt  time.Time
+}
+
+func GenerateSessionId() (uuid.UUID, error) {
+	id, err := uuid.NewRandom()
+	return id, err
 }

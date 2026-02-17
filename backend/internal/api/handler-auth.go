@@ -74,8 +74,6 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	resPayload.User = payloads.CreateUserResPayload(user) // Add user to payload
 
-	// TODO: genera token auth e setta i cookie (basta user.Id)
-
 	// Generate verificationTokens (Magic Link and OTP)
 	verificationTokens, err := app.tokenAuthenticator.CreateVerificationTokens(auth.EmailVerification)
 	if err != nil {
@@ -135,7 +133,15 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: ricordati di scrivere di controllare nello spam (aggiungere timer al tasto per reinviare la mail (?))
 
-	// TODO: setta cookie auth (prima di ogni return)
+	// TODO: metti parte cookies in tutti i posti in cui ritorna (dove mettere la generazione del token per non ripeterla tre volte?)
+	// Auth cookies
+
+	// Create Refresh Token
+	refreshToken, err := app.generateRefreshToken(ctx, user.Id)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 
 	//* Return user and verificationID
 	if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
@@ -147,9 +153,17 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 // ----- LOGIN -----
 
 func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	// TODO: gestisci casi user non verificato e user verificato ma con 2fa richiesta (se 2fa -> "verify-2fa[/{token}]" -> generate auth tokens ("tokens"), se no 2fa -> generate auth tokens ("tokens"))
 
 	// TODO: ritorna user (se non verificato ritorna RegisterUserResPayload?)
+
+	// TODO: se login fare pulizia (eliminare token di sessioni scadute - attenzione agli expires aggiornati (vecchi token scaduti ma nuovi no -> sessione ancora valida), controlla per tutta la sessione)?
+	// refreshToken, err := app.generateRefreshToken(ctx, user.Id)
+	// if err != nil {
+	// 	app.internalServerError(w, r, err)
+	// 	return
+	// }
 }
 
 // ----- EMAIL VERIFICATION -----

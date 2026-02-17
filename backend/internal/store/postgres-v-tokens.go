@@ -25,19 +25,19 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int6
 	// else create new row
 	query := `
 		INSERT INTO verification_tokens (user_id, verification_type, magic_link_token_hash, magic_link_token_exp, otp_hash, otp_exp)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		VALUES ($1, $2, $3, NOW() + $4, $5, NOW() + $6)
 		ON CONFLICT (user_id, verification_type)
-		DO UPDATE SET magic_link_token_hash = $3, magic_link_token_exp = $4, otp_hash = $5, otp_exp = $6, otp_attempts = 0
+		DO UPDATE SET magic_link_token_hash = $3, magic_link_token_exp = NOW() + $4, otp_hash = $5, otp_exp = NOW() + $6, otp_attempts = 0
 		RETURNING id
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	// Fix magic link exp
+	// Fix magic link exp (nil if no magic link)
 	var magicLinkExp any
 	if verificationTokens.HashedMagicLinkToken != nil {
-		magicLinkExp = time.Now().Add(verificationTokens.MagicLinkTokenExp)
+		magicLinkExp = verificationTokens.MagicLinkTokenExp // TODO: controlla che la scadenza sia giusta
 	}
 
 	// Create tokens
@@ -51,7 +51,7 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int6
 		verificationTokens.HashedMagicLinkToken,
 		magicLinkExp,
 		verificationTokens.HashedOTP,
-		time.Now().Add(verificationTokens.OTPExp),
+		verificationTokens.OTPExp,
 	).Scan(
 		&verificationId,
 	)
@@ -73,7 +73,7 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int6
 func (store *PostgresVTokensStore) UpdateMagicLinkTokenFromId(ctx context.Context, verificationId int64, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error {
 	query := `
 		UPDATE verification_tokens
-		SET magic_link_token_hash = $1, magic_link_token_exp = $2
+		SET magic_link_token_hash = $1, magic_link_token_exp = NOW() + $2
 		WHERE id = $3
 	`
 
@@ -84,7 +84,7 @@ func (store *PostgresVTokensStore) UpdateMagicLinkTokenFromId(ctx context.Contex
 		queryCtx,
 		query,
 		magicLinkTokenHash,
-		time.Now().Add(magicLinkTokenExp),
+		magicLinkTokenExp,
 		verificationId,
 	)
 
@@ -103,7 +103,7 @@ func (store *PostgresVTokensStore) UpdateMagicLinkTokenFromId(ctx context.Contex
 func (store *PostgresVTokensStore) UpdateOTPFromId(ctx context.Context, verificationId int64, otpHash []byte, otpExp time.Duration) error {
 	query := `
 		UPDATE verification_tokens
-		SET otp_hash = $1, otp_exp = $2, otp_attempts = 0
+		SET otp_hash = $1, otp_exp = NOW() + $2, otp_attempts = 0
 		WHERE id = $3
 	`
 
@@ -114,7 +114,7 @@ func (store *PostgresVTokensStore) UpdateOTPFromId(ctx context.Context, verifica
 		queryCtx,
 		query,
 		otpHash,
-		time.Now().Add(otpExp),
+		otpExp,
 		verificationId,
 	)
 
