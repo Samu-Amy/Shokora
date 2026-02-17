@@ -34,6 +34,16 @@ func withTransaction(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) er
 		}
 	}()
 
+	// TODO: usare questa versione?
+	// defer func() {
+	// 	if p := recover(); p != nil {
+	// 		_ = transaction.Rollback()
+	// 		panic(p)
+	// 	} else if err != nil {
+	// 		_ = transaction.Rollback()
+	// 	}
+	// }()
+
 	if err = fn(transaction); err != nil {
 		return err
 	}
@@ -44,7 +54,7 @@ func withTransaction(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) er
 // - Verification Tokens -
 
 func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64, hashedOTP []byte, maxAttempts uint8, verificationType auth.VerificationType) (*store.OTPPayload, error) {
-	// TODO: usare transaction per GetOtpData e UpdateOtpAttempts?
+	// TODO: usare transaction (ed usare FOR UPDATE nel get?) per GetOtpData e UpdateOtpAttempts?
 
 	// Get data
 	otpQueryData, err := service.vTokensRepo.GetOtpData(ctx, verificationId, verificationType)

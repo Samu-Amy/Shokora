@@ -61,7 +61,7 @@ func (app *App) setAuthCookies(w http.ResponseWriter, userId int64, plainRefresh
 	return nil
 }
 
-func (app *App) generateRefreshToken(ctx context.Context, userId int64) (*auth.RefreshTokenPayload, error) {
+func (app *App) generateNewRefreshToken(ctx context.Context, userId int64) (*auth.CreateRefreshTokenPayload, error) {
 	token, err := auth.GenerateToken(app.config.Auth.Token.RefreshTokenByteSize)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,6 @@ func (app *App) generateRefreshToken(ctx context.Context, userId int64) (*auth.R
 	// Hash token and create Session Id
 	hashedToken := auth.HashToken(token)
 
-	// TODO: crea uuid session
 	sessionId, err := auth.GenerateSessionId()
 	if err != nil {
 		return nil, err
@@ -84,13 +83,13 @@ func (app *App) generateRefreshToken(ctx context.Context, userId int64) (*auth.R
 	}
 
 	// Save token in
-	tokenExpiresAt, err := app.store.RefreshTokens.CreateToken(ctx, refreshToken)
+	tokenExpiresAt, err := app.store.RefreshTokens.CreateNewToken(ctx, refreshToken)
 	if err != nil {
 		return nil, err
 	}
 
-	return &auth.RefreshTokenPayload{
+	return &auth.CreateRefreshTokenPayload{
 		PlainToken: *token,
-		ExpiresAt:  tokenExpiresAt,
+		ExpiresAt:  *tokenExpiresAt,
 	}, nil
 }

@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
@@ -21,13 +22,20 @@ type RefreshTokens struct {
 
 // TODO: evita magic link per e 2fa (anche perché 2fa dopo deve generare i token di accesso, quindi dev'essere sul dispositivo su cui si vuole accedere)
 
+// queryer can be db (*sql.DB) or transaction (*sql.Tx)
+type Queryer interface {
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+}
+
 // Repository
 type RefreshTokensRepositoryI interface {
-	CreateToken(ctx context.Context, refreshToken auth.RefreshToken) (time.Time, error)
+	// Create a new token (or one that replaces an old one) and update the struct "refreshToken" with the ExpiresAt and CreatedAt
+	CreateToken(ctx context.Context, queryer Queryer, refreshToken *auth.RefreshToken) error
 
-	// GetToken(ctx context.Context, hashedToken []byte) (..., error) // TODO: ritorna dati che servono (es. session_id, created_at (per revoked)) - usa in service (fai tutto in transaction)
+	GetToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*RefreshTokens, error)
 
-	RevokeTokenById(ctx context.Context, tokenId int64, revokedAt time.Time) error
+	RevokeTokenById(ctx context.Context, transaction *sql.Tx, tokenId int64, revokedAt time.Time) error
 
 	// TODO: nel login fai anche delete di tutti i refresh token scaduti per quell'utente (?)
 

@@ -137,7 +137,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Auth cookies
 
 	// Create Refresh Token
-	refreshToken, err := app.generateRefreshToken(ctx, user.Id)
+	refreshToken, err := app.generateNewRefreshToken(ctx, user.Id)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return

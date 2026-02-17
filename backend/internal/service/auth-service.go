@@ -13,12 +13,13 @@ import (
 type AuthService struct {
 	userRepo           store.UserRepositoryI // TODO: serve (tolta creazione utente)?
 	vTokensRepo        store.VTokensRepositoryI
+	refreshTokensRepo  store.RefreshTokensRepositoryI
 	db                 *sql.DB
 	tokenAuthenticator *auth.TokenAuthenticator
 }
 
-func NewAuthService(userRepo store.UserRepositoryI, vTokensRepo store.VTokensRepositoryI, db *sql.DB, tokenAuthenticator *auth.TokenAuthenticator) *AuthService {
-	return &AuthService{userRepo, vTokensRepo, db, tokenAuthenticator}
+func NewAuthService(userRepo store.UserRepositoryI, vTokensRepo store.VTokensRepositoryI, refreshTokensRepo store.RefreshTokensRepositoryI, db *sql.DB, tokenAuthenticator *auth.TokenAuthenticator) *AuthService {
+	return &AuthService{userRepo, vTokensRepo, refreshTokensRepo, db, tokenAuthenticator}
 }
 
 // ----- CREATE TOKENS -----
@@ -136,3 +137,45 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verification
 // ----- RESET PASSWORD  -----
 
 // ----- TWO FACTOR AUTH  -----
+
+// ----- REFRESH TOKEN -----
+
+// Create
+func (service *AuthService) CreateRefreshToken(ctx context.Context, refreshToken *auth.RefreshToken) error {
+	return service.refreshTokensRepo.CreateToken(ctx, service.db, refreshToken)
+}
+
+// Rotate
+func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedToken []byte, newRefreshToken *auth.RefreshToken) error { // TODO: ritorna dati (es. expires_at per cookies)
+	err := withTransaction(service.db, ctx, func(tx *sql.Tx) error {
+
+		// Get token
+		oldRefreshToken, err := service.refreshTokensRepo.GetToken(ctx, tx, oldHashedToken)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// Validate token
+		// TODO: implementa (check that user_id and session_id are correct, token is not expired and it is not revoked)
+
+		// Create new token
+		// (create token using same session_id of the old one and using its id as replaces)
+		err = service.refreshTokensRepo.CreateToken(ctx, tx, newRefreshToken)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// Revoke (update) old token
+		err = service.refreshTokensRepo.RevokeTokenById(ctx, tx, oldRefreshToken.Id, *newRefreshToken.CreatedAt)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		return nil
+	})
+
+	return err
+}

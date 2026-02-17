@@ -6,15 +6,18 @@ import (
 	"github.com/google/uuid"
 )
 
-type RefreshToken struct {
+// Used to create a new token or a one that replaces another (in -> data into db, out -> data from the db)
+type RefreshToken struct { // TODO: sostituire con RefreshTokens (store)
 	UserId      int64
 	SessionId   uuid.UUID
 	HashedToken []byte
 	Exp         time.Duration
-	Replaces    *int64
+	Replaces    *int64     // in
+	ExpiresAt   *time.Time // out
+	CreatedAt   *time.Time // out
 }
 
-type RefreshTokenPayload struct {
+type CreateRefreshTokenPayload struct {
 	PlainToken string
 	ExpiresAt  time.Time
 }
