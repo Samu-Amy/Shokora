@@ -75,7 +75,7 @@ func (app *App) generateNewRefreshToken(ctx context.Context, userId int64) (*aut
 		return nil, err
 	}
 
-	refreshToken := auth.RefreshToken{
+	refreshToken := auth.RefreshToken{ // TODO: usare store.RefreshTokens inveche che questo (cambia solo il field Id)
 		UserId:      userId,
 		SessionId:   sessionId,
 		HashedToken: hashedToken,
@@ -83,13 +83,13 @@ func (app *App) generateNewRefreshToken(ctx context.Context, userId int64) (*aut
 	}
 
 	// Save token in
-	tokenExpiresAt, err := app.store.RefreshTokens.CreateNewToken(ctx, refreshToken)
+	err = app.service.Auth.CreateRefreshToken(ctx, &refreshToken)
 	if err != nil {
 		return nil, err
 	}
 
 	return &auth.CreateRefreshTokenPayload{
 		PlainToken: *token,
-		ExpiresAt:  *tokenExpiresAt,
+		ExpiresAt:  *refreshToken.ExpiresAt,
 	}, nil
 }
