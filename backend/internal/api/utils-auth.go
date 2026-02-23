@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (app *App) setAuthCookies(w http.ResponseWriter, userId int64, plainRefreshToken string, refreshTokenExp time.Time) error {
+func (app *App) setAuthCookies(w http.ResponseWriter, userId int64, plainRefreshToken string, refreshTokenExpiresAt time.Time) error {
 
 	timeNow := time.Now()
 	accessTokenExp := timeNow.Add(app.config.Auth.Token.AccessTokenExp)
@@ -40,7 +40,7 @@ func (app *App) setAuthCookies(w http.ResponseWriter, userId int64, plainRefresh
 		Path:     "/api",
 	}
 
-	refreshMaxAge := int(time.Until(refreshTokenExp).Seconds())
+	refreshMaxAge := int(time.Until(refreshTokenExpiresAt).Seconds())
 	if refreshMaxAge < 0 {
 		refreshMaxAge = 0
 	}
@@ -61,6 +61,7 @@ func (app *App) setAuthCookies(w http.ResponseWriter, userId int64, plainRefresh
 	return nil
 }
 
+// Create a new Refresh Token, saves it in db and return token and expiration date
 func (app *App) generateNewRefreshToken(ctx context.Context, userId int64) (*auth.CreateRefreshTokenPayload, error) {
 	token, err := auth.GenerateToken(app.config.Auth.Token.RefreshTokenByteSize)
 	if err != nil {
@@ -75,7 +76,7 @@ func (app *App) generateNewRefreshToken(ctx context.Context, userId int64) (*aut
 		return nil, err
 	}
 
-	refreshToken := auth.RefreshToken{ // TODO: usare store.RefreshTokens inveche che questo (cambia solo il field Id)
+	refreshToken := auth.RefreshToken{
 		UserId:      userId,
 		SessionId:   sessionId,
 		HashedToken: hashedToken,

@@ -7,14 +7,16 @@ import (
 )
 
 // Used to create a new token or a one that replaces another (in -> data into db, out -> data from the db)
-type RefreshToken struct { // TODO: sostituire con RefreshTokens (store)
+type RefreshToken struct {
+	Id          *int64
 	UserId      int64
 	SessionId   uuid.UUID
 	HashedToken []byte
-	Exp         time.Duration
-	Replaces    *int64     // in
-	ExpiresAt   *time.Time // out
-	CreatedAt   *time.Time // out
+	Exp         time.Duration // the expiration duration for the token (from config), used in db to set expires_at
+	Replaces    *int64        // in
+	RevokedAt   *time.Time    // out
+	ExpiresAt   *time.Time    // out (expiration date, correspond to the "expires_at" set in db (using "Exp"))
+	CreatedAt   *time.Time    // out
 }
 
 type CreateRefreshTokenPayload struct {

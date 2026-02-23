@@ -15,6 +15,8 @@ import (
 
 // ----- REGISTER -----
 
+// TODO: l'accesso con google (fai handler apposta) sostituisce solo la parte di autenticazione (login e register (in questo caso fornisce già la verifica della mail, settata a true)), poi la gestione di accesso e sessione è gestita dal mio sistema (?)
+
 /*
 Return
   - RegisterUserResPayload
@@ -74,12 +76,24 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	resPayload.User = payloads.CreateUserResPayload(user) // Add user to payload
 
+	// Create Refresh Token
+	refreshToken, err := app.generateNewRefreshToken(ctx, user.Id)
+	if err != nil {
+		resPayload.AuthError = true
+	}
+
+	// Auth cookies
+	err = app.setAuthCookies(w, user.Id, refreshToken.PlainToken, refreshToken.ExpiresAt)
+	if err != nil {
+		resPayload.AuthError = true
+	}
+
 	// Generate verificationTokens (Magic Link and OTP)
 	verificationTokens, err := app.tokenAuthenticator.CreateVerificationTokens(auth.EmailVerification)
 	if err != nil {
 		app.logger.Warnw("error generating verification tokens", "error", err)
 
-		resPayload.Error = errorcodes.ErrVerification.Error() // Add error to payload
+		resPayload.VerificationError = errorcodes.ErrVerification.Error() // Add error to payload
 
 		//* Return user, verificationID and error
 		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
@@ -93,7 +107,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.logger.Warnw("error creating email verification tokens in db", "error", err)
 
-		resPayload.Error = errorcodes.ErrVerification.Error() // Add error to payload
+		resPayload.VerificationError = errorcodes.ErrVerification.Error() // Add error to payload
 
 		//* Return user, verificationID and error
 		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
@@ -118,7 +132,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.logger.Warnw("error sending welcome email", "error", err)
 
-		resPayload.Error = errorcodes.ErrEmailNotSent.Error() // Add error to payload
+		resPayload.VerificationError = errorcodes.ErrEmailNotSent.Error() // Add error to payload
 
 		//* Return user, verificationID and error
 		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
@@ -132,16 +146,6 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	app.logger.Info("User and Tokens created, Email sent successfully")
 
 	// TODO: ricordati di scrivere di controllare nello spam (aggiungere timer al tasto per reinviare la mail (?))
-
-	// TODO: metti parte cookies in tutti i posti in cui ritorna (dove mettere la generazione del token per non ripeterla tre volte?)
-	// Auth cookies
-
-	// Create Refresh Token
-	refreshToken, err := app.generateNewRefreshToken(ctx, user.Id)
-	if err != nil {
-		app.internalServerError(w, r, err)
-		return
-	}
 
 	//* Return user and verificationID
 	if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {

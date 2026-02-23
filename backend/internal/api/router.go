@@ -78,6 +78,10 @@ func (app *App) initRouter() *chi.Mux {
 			r.Post("/login", app.loginUserHandler)
 			// r.Post("/logout", ...)
 
+			// Google
+			// r.Post("/google", app.googleRegisterUserHandler)
+			// r.Post("/login/google", app.googleLoginUserHandler)
+
 			r.Post("/tokens", app.createTokenHandler)
 			// r.Post("/refresh", ...)
 
@@ -95,6 +99,8 @@ func (app *App) initRouter() *chi.Mux {
 			r.Group(func(r chi.Router) {
 				// TODO: usare (o crearne uno simile) middleware auth per ottenere l'utente (?)
 				// r.Get("/me" app.getCurrentAuthUserHandler) // TODO: per ottenere i dati dell'utente se autenticato
+				// r.Get("/settings", ...)
+				// r.Patch("/settings", ...)
 			})
 		})
 

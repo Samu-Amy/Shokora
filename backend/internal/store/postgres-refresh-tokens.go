@@ -6,6 +6,9 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
+	"github.com/Samu-Amy/Shokora/internal/errorcodes"
+	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 type PostgresRefreshTokensStore struct {
@@ -42,6 +45,12 @@ func (store *PostgresRefreshTokensStore) CreateToken(ctx context.Context, querye
 	)
 
 	if err != nil {
+		// Reuse detection
+		if pgErr, ok := err.(*pq.Error); ok {
+			if pgErr.Code == "23505" && pgErr.Constraint == "refresh_tokens_replaces_unique" {
+				return errorcodes.InternalErrReusedToken
+			}
+		}
 		return err
 	}
 
@@ -50,7 +59,7 @@ func (store *PostgresRefreshTokensStore) CreateToken(ctx context.Context, querye
 
 // ----- GET -----
 
-func (store *PostgresRefreshTokensStore) GetToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*RefreshTokens, error) {
+func (store *PostgresRefreshTokensStore) GetToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*auth.RefreshToken, error) {
 	query := `
 		SELECT id, user_id, session_id, token_hash, expires_at, replaces, revoked_at, created_at
 		FROM refresh_tokens
@@ -61,7 +70,7 @@ func (store *PostgresRefreshTokensStore) GetToken(ctx context.Context, transacti
 	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	var refreshToken RefreshTokens
+	var refreshToken auth.RefreshToken
 
 	err := transaction.QueryRowContext(
 		queryCtx,
@@ -71,8 +80,8 @@ func (store *PostgresRefreshTokensStore) GetToken(ctx context.Context, transacti
 		&refreshToken.Id,
 		&refreshToken.UserId,
 		&refreshToken.SessionId,
-		&refreshToken.TokenHash,
-		&refreshToken.Exp,
+		&refreshToken.HashedToken,
+		&refreshToken.ExpiresAt,
 		&refreshToken.Replaces,
 		&refreshToken.RevokedAt,
 		&refreshToken.CreatedAt,
@@ -91,17 +100,51 @@ func (store *PostgresRefreshTokensStore) RevokeTokenById(ctx context.Context, tr
 	query := `
 		UPDATE refresh_tokens
 		SET revoked_at = $1
-		WHERE id = $2 AND revoked_at = NULL
+		WHERE id = $2 AND revoked_at IS NULL
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
 	defer cancel()
 
-	_, err := transaction.ExecContext(
+	res, err := transaction.ExecContext(
 		queryCtx,
 		query,
 		revokedAt,
 		tokenId,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return errorcodes.InternalErrTokenNotFoundOrAlreadyRevoked // Token already revoked or not found
+	}
+
+	return nil
+}
+
+// ----- DELETE -----
+
+func (store *PostgresRefreshTokensStore) DeleteSessionById(ctx context.Context, userId int64, sessionId uuid.UUID) error {
+	query := `
+		DELETE FROM refresh_tokens
+		WHERE user_id = $1 AND session_id = $2
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	defer cancel()
+
+	_, err := store.db.ExecContext(
+		queryCtx,
+		query,
+		userId,
+		sessionId,
 	)
 
 	if err != nil {

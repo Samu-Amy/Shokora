@@ -69,9 +69,10 @@ type UserResPayload struct {
 }
 
 type RegisterUserResPayload struct {
-	User           UserResPayload `json:"user"`
-	VerificationId *int64         `json:"verification_id,omitempty"`
-	Error          string         `json:"error,omitempty"`
+	User              UserResPayload `json:"user"`
+	VerificationId    *int64         `json:"verification_id,omitempty"`
+	VerificationError string         `json:"verification_error,omitempty"`
+	AuthError         bool           `json:"auth_error,omitempty"`
 }
 
 // TODO: fare validazione custom (tipo quella sotto)?

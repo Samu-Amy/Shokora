@@ -23,9 +23,11 @@ var (
 	ErrNotVerified  = errors.New("not_verified") // User must verify email
 
 	// - Low Level -
-	InternalErrExpired          = errors.New("expired")
-	InternalErrDuplicateToken   = errors.New("duplicate_token")
-	InternalErrInvalidEmailVars = errors.New("invalid_email_vars") // SendEmail called with wrong variables for the template
+	InternalErrExpired                       = errors.New("expired")
+	InternalErrDuplicateToken                = errors.New("duplicate_token")
+	InternalErrReusedToken                   = errors.New("reused_token")
+	InternalErrTokenNotFoundOrAlreadyRevoked = errors.New("token_not_found_or_already_revoked")
+	InternalErrInvalidEmailVars              = errors.New("invalid_email_vars") // SendEmail called with wrong variables for the template
 
 	// Old
 

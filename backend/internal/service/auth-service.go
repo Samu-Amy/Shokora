@@ -159,11 +159,14 @@ func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedTok
 		// Validate token
 		// TODO: implementa (check that user_id and session_id are correct, token is not expired and it is not revoked)
 
+		// TODO: implementa estensione expiry
+
 		// Create new token
 		// (create token using same session_id of the old one and using its id as replaces)
 		err = service.refreshTokensRepo.CreateToken(ctx, tx, newRefreshToken)
 		if err != nil {
 			tx.Rollback()
+			err = service.refreshTokensRepo.DeleteSessionById(ctx, newRefreshToken.UserId, newRefreshToken.SessionId) // Revoke session // TODO: sistemare (?)
 			return err
 		}
 
@@ -171,6 +174,7 @@ func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedTok
 		err = service.refreshTokensRepo.RevokeTokenById(ctx, tx, oldRefreshToken.Id, *newRefreshToken.CreatedAt)
 		if err != nil {
 			tx.Rollback()
+			// TODO: gestire token not found or already revoked (?)
 			return err
 		}
 
