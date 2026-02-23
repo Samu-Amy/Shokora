@@ -2,10 +2,12 @@ package api
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
+	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -86,6 +88,9 @@ func (app *App) generateNewRefreshToken(ctx context.Context, userId int64) (*aut
 	// Save token in
 	err = app.service.Auth.CreateRefreshToken(ctx, &refreshToken)
 	if err != nil {
+		if errors.Is(err, errorcodes.InternalErrReusedToken) {
+			app.logger.Warnw("Reused Detection Triggered", "user id", userId, "session id", sessionId)
+		}
 		return nil, err
 	}
 

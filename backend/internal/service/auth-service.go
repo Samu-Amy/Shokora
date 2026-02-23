@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/errorcodes"
@@ -152,12 +153,18 @@ func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedTok
 		// Get token
 		oldRefreshToken, err := service.refreshTokensRepo.GetToken(ctx, tx, oldHashedToken)
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 
-		// Validate token
-		// TODO: implementa (check that user_id and session_id are correct, token is not expired and it is not revoked)
+		// Validate token - Expired or revoked
+		if oldRefreshToken.ExpiresAt.Before(time.Now()) || oldRefreshToken.RevokedAt != nil {
+			return errorcodes.ErrInvalid
+		}
+
+		// Validate token - wrong RefreshToken, User or Session id
+		if oldRefreshToken.UserId != newRefreshToken.UserId || oldRefreshToken.SessionId != newRefreshToken.SessionId || oldRefreshToken.Id != newRefreshToken.Replaces {
+			return errorcodes.ErrInvalid
+		}
 
 		// TODO: implementa estensione expiry
 
@@ -165,21 +172,27 @@ func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedTok
 		// (create token using same session_id of the old one and using its id as replaces)
 		err = service.refreshTokensRepo.CreateToken(ctx, tx, newRefreshToken)
 		if err != nil {
-			tx.Rollback()
-			err = service.refreshTokensRepo.DeleteSessionById(ctx, newRefreshToken.UserId, newRefreshToken.SessionId) // Revoke session // TODO: sistemare (?)
 			return err
 		}
 
+		if oldRefreshToken.Id == nil || newRefreshToken.CreatedAt == nil {
+			return errorcodes.ErrInvalid
+		}
+
 		// Revoke (update) old token
-		err = service.refreshTokensRepo.RevokeTokenById(ctx, tx, oldRefreshToken.Id, *newRefreshToken.CreatedAt)
+		err = service.refreshTokensRepo.RevokeTokenById(ctx, tx, *oldRefreshToken.Id, *newRefreshToken.CreatedAt)
 		if err != nil {
-			tx.Rollback()
 			// TODO: gestire token not found or already revoked (?)
 			return err
 		}
 
 		return nil
 	})
+
+	// Revoke session (in case of Reuse Detection)
+	if errors.Is(err, errorcodes.InternalErrReusedToken) {
+		err = service.refreshTokensRepo.DeleteSessionById(ctx, newRefreshToken.UserId, newRefreshToken.SessionId)
+	}
 
 	return err
 }

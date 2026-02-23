@@ -20,7 +20,7 @@ const (
 // - Functions -
 
 // Transaction wrapper
-func withTransaction(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) error {
+func withTransaction(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) (err error) {
 	// Create transaction
 	transaction, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -29,20 +29,13 @@ func withTransaction(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) er
 
 	// Defer rollback (in caso di panic)
 	defer func() {
-		if err != nil {
-			_ = transaction.Rollback() // TODO: rollback error handling?
+		if p := recover(); p != nil {
+			_ = transaction.Rollback()
+			panic(p)
+		} else if err != nil {
+			_ = transaction.Rollback()
 		}
 	}()
-
-	// TODO: usare questa versione?
-	// defer func() {
-	// 	if p := recover(); p != nil {
-	// 		_ = transaction.Rollback()
-	// 		panic(p)
-	// 	} else if err != nil {
-	// 		_ = transaction.Rollback()
-	// 	}
-	// }()
 
 	if err = fn(transaction); err != nil {
 		return err

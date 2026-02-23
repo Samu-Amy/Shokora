@@ -33,7 +33,7 @@ type RefreshTokensRepositoryI interface {
 	// Create a new token (or one that replaces an old one) and update the struct "refreshToken" with the ExpiresAt and CreatedAt
 	CreateToken(ctx context.Context, queryer Queryer, refreshToken *auth.RefreshToken) error
 
-	GetToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*RefreshTokens, error)
+	GetToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*auth.RefreshToken, error)
 
 	RevokeTokenById(ctx context.Context, transaction *sql.Tx, tokenId int64, revokedAt time.Time) error
 
