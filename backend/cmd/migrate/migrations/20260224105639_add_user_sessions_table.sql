@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS user_sessions(
 
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW()
 );
+
+CREATE INDEX idx_user_sessions_user_id
+ON user_sessions(user_id);
 -- +goose StatementEnd
 
 -- +goose Down

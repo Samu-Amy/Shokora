@@ -53,7 +53,7 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64,
 	// TODO: usare transaction (ed usare FOR UPDATE nel get?) per GetOtpData e UpdateOtpAttempts?
 
 	// Get data
-	otpQueryData, err := service.vTokensRepo.GetOtpData(ctx, verificationId, verificationType)
+	otpQueryData, err := service.vTokenRepo.GetOtpData(ctx, verificationId, verificationType)
 	if err != nil {
 		switch {
 		case errors.Is(err, errorcodes.ErrNotFound): // Not valid (id does not exists or wrong verificationType)
@@ -78,7 +78,7 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64,
 	if !isOtpValid {
 
 		// Increment attempts and Handle errors
-		err = service.vTokensRepo.UpdateOtpAttempts(ctx, verificationId, maxAttempts)
+		err = service.vTokenRepo.UpdateOtpAttempts(ctx, verificationId, maxAttempts)
 
 		// Attempts updated successfully but OTP not valid
 		if err == nil {

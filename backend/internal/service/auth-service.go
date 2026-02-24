@@ -13,14 +13,15 @@ import (
 
 type AuthService struct {
 	userRepo           store.UserRepositoryI // TODO: serve (tolta creazione utente)?
-	vTokensRepo        store.VTokensRepositoryI
-	refreshTokensRepo  store.RefreshTokenRepositoryI
+	vTokenRepo         store.VTokenRepositoryI
+	refreshTokenRepo   store.RefreshTokenRepositoryI
+	userSessionRepo    store.UserSessionI
 	db                 *sql.DB
 	tokenAuthenticator *auth.TokenAuthenticator
 }
 
-func NewAuthService(userRepo store.UserRepositoryI, vTokensRepo store.VTokensRepositoryI, refreshTokensRepo store.RefreshTokenRepositoryI, db *sql.DB, tokenAuthenticator *auth.TokenAuthenticator) *AuthService {
-	return &AuthService{userRepo, vTokensRepo, refreshTokensRepo, db, tokenAuthenticator}
+func NewAuthService(userRepo store.UserRepositoryI, vTokensRepo store.VTokenRepositoryI, refreshTokensRepo store.RefreshTokenRepositoryI, userSessionRepo store.UserSessionI, db *sql.DB, tokenAuthenticator *auth.TokenAuthenticator) *AuthService {
+	return &AuthService{userRepo, vTokensRepo, refreshTokensRepo, userSessionRepo, db, tokenAuthenticator}
 }
 
 // ----- CREATE TOKENS -----
@@ -31,7 +32,7 @@ func (service *AuthService) CreateVerificationTokensWithRetries(ctx context.Cont
 	defer cancel()
 
 	// Create Tokens in db
-	verificationId, err := service.vTokensRepo.CreateTokens(ctxWithTimeout, user.Id, verificationTokens)
+	verificationId, err := service.vTokenRepo.CreateTokens(ctxWithTimeout, user.Id, verificationTokens)
 	if err == nil {
 		return verificationId, nil // OK, return no error
 
@@ -59,7 +60,7 @@ func (service *AuthService) CreateVerificationTokensWithRetries(ctx context.Cont
 				continue // skip iteration
 			}
 
-			verificationId, err = service.vTokensRepo.CreateTokens(ctx, user.Id, verificationTokens)
+			verificationId, err = service.vTokenRepo.CreateTokens(ctx, user.Id, verificationTokens)
 			if err == nil {
 				return verificationId, nil // OK, return no error
 			}
@@ -82,7 +83,7 @@ Errors
 func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToken []byte) error {
 
 	// Verify and Get data
-	magicLinkTokenQueryData, err := service.vTokensRepo.VerifyMagicLink(ctx, hashedToken, auth.EmailVerification)
+	magicLinkTokenQueryData, err := service.vTokenRepo.VerifyMagicLink(ctx, hashedToken, auth.EmailVerification)
 	if err != nil {
 		// log.Printf("Verify OTP Error: %v", err)
 		switch {
@@ -101,7 +102,7 @@ func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToke
 	}
 
 	// Delete token
-	_ = service.vTokensRepo.Delete(ctx, magicLinkTokenQueryData.VerificationId) // If it fails to delete there are no problems
+	_ = service.vTokenRepo.Delete(ctx, magicLinkTokenQueryData.VerificationId) // If it fails to delete there are no problems
 
 	return nil
 }
@@ -130,7 +131,7 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verification
 	}
 
 	// Delete token
-	_ = service.vTokensRepo.Delete(ctx, verificationId) // If it fails to delete there are no problems
+	_ = service.vTokenRepo.Delete(ctx, verificationId) // If it fails to delete there are no problems
 
 	return nil
 }
@@ -142,17 +143,27 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verification
 // ----- REFRESH TOKEN -----
 
 // Create
-func (service *AuthService) CreateRefreshToken(ctx context.Context, refreshToken *auth.RefreshToken) error {
+func (service *AuthService) CreateRefreshToken(ctx context.Context, refreshToken *store.RefreshToken, sessionExp, tokenExp time.Duration) error {
 	// TODO: fai transaction per creare sia sessione che refresh token
-	return service.refreshTokensRepo.CreateToken(ctx, service.db, refreshToken)
+
+	return withTransaction(service.db, ctx, func(tx *sql.Tx) error {
+		// Create session
+		return service.
+
+		// Create token
+		return service.refreshTokenRepo.CreateToken(ctx, service.db, refreshToken, tokenExp)
+
+		return nil
+	})
+
 }
 
 // Rotate
-func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedToken []byte, newRefreshToken *auth.RefreshToken) error { // TODO: ritorna dati (es. expires_at per cookies)
+func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedToken []byte, newRefreshToken *store.RefreshToken) error { // TODO: ritorna dati (es. expires_at per cookies)
 	err := withTransaction(service.db, ctx, func(tx *sql.Tx) error {
 
 		// Get token
-		oldRefreshToken, err := service.refreshTokensRepo.GetToken(ctx, tx, oldHashedToken)
+		oldRefreshToken, err := service.refreshTokenRepo.GetToken(ctx, tx, oldHashedToken)
 		if err != nil {
 			return err
 		}
@@ -171,7 +182,7 @@ func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedTok
 
 		// Create new token
 		// (create token using same session_id of the old one and using its id as replaces)
-		err = service.refreshTokensRepo.CreateToken(ctx, tx, newRefreshToken)
+		err = service.refreshTokenRepo.CreateToken(ctx, tx, newRefreshToken)
 		if err != nil {
 			return err
 		}
@@ -181,7 +192,7 @@ func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedTok
 		}
 
 		// Revoke (update) old token
-		err = service.refreshTokensRepo.RevokeTokenById(ctx, tx, *oldRefreshToken.Id, *newRefreshToken.CreatedAt)
+		err = service.refreshTokenRepo.RevokeTokenById(ctx, tx, *oldRefreshToken.Id, *newRefreshToken.CreatedAt)
 		if err != nil {
 			// TODO: gestire token not found or already revoked (?)
 			return err
@@ -192,7 +203,7 @@ func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedTok
 
 	// Revoke session (in case of Reuse Detection)
 	if errors.Is(err, errorcodes.InternalErrReusedToken) {
-		err = service.refreshTokensRepo.DeleteSessionById(ctx, newRefreshToken.UserId, newRefreshToken.SessionId)
+		err = service.refreshTokenRepo.DeleteSessionById(ctx, newRefreshToken.UserId, newRefreshToken.SessionId)
 	}
 
 	return err

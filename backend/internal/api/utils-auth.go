@@ -8,6 +8,7 @@ import (
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/errorcodes"
+	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -73,7 +74,7 @@ func (app *App) generateNewRefreshToken(ctx context.Context, userId int64) (*aut
 	// Hash token and create Session Id
 	hashedToken := auth.HashToken(token)
 
-	refreshToken := auth.RefreshToken{
+	refreshToken := store.RefreshToken{
 		UserId: userId,
 		// SessionId:   sessionId,
 		HashedToken: hashedToken,

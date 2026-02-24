@@ -6,13 +6,20 @@ CREATE TABLE IF NOT EXISTS products(
   name varchar(150) NOT NULL, -- TODO: ottimizzare name e description per text search (text GIN (to_tsvector('italian', name) (?))
   description text NOT NULL,
   image_url text NOT NULL,
-  price numeric(10, 2) NOT NULL CHECK (price > 0),
-  discount numeric(4, 3) NOT NULL DEFAULT 0 CHECK (discount >= 0 AND discount <= 1),
+  price numeric(10, 2) NOT NULL,
+  discount numeric(4, 3) NOT NULL DEFAULT 0,
 
   version INT NOT NULL DEFAULT 0,
 
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
-  updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW()
+  updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
+ 
+  
+  -- CONSTRAINTS --
+
+  CONSTRAINT products_price_range_check CHECK (price > 0),
+
+  CONSTRAINT products_discount_range_check CHECK (discount BETWEEN 0 AND 1)
 );
 
 CREATE TRIGGER update_products_updated_at

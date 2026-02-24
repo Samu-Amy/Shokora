@@ -5,10 +5,8 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 )
 
 type PostgresRefreshTokenStore struct {
@@ -21,10 +19,10 @@ func NewPostgresRefreshTokenStore(db *sql.DB) *PostgresRefreshTokenStore {
 
 // ----- CREATE -----
 
-func (store *PostgresRefreshTokenStore) CreateToken(ctx context.Context, queryer Queryer, refreshToken *auth.RefreshToken) error {
+func (store *PostgresRefreshTokenStore) CreateToken(ctx context.Context, queryer Queryer, refreshToken *RefreshToken, tokenExp time.Duration) error {
 	query := `
-		INSERT INTO refresh_tokens (user_id, session_id, token_hash, expires_at, session_exp, replaces)
-		VALUES ($1, $2, $3, NOW() + $4, NOW() + $5, $6)
+		INSERT INTO refresh_tokens (session_id, token_hash, expires_at, session_exp, replaces)
+		VALUES ($1, $2, NOW() + $3, NOW() + $4, $5)
 		RETURNING expires_at, created_at
 	`
 
@@ -34,33 +32,26 @@ func (store *PostgresRefreshTokenStore) CreateToken(ctx context.Context, queryer
 	err := queryer.QueryRowContext(
 		queryCtx,
 		query,
-		refreshToken.UserId,
 		refreshToken.SessionId,
-		refreshToken.HashedToken,
-		refreshToken.Exp,
-		refreshToken.SessionExp, // TODO: questo deve essere di quanto aumenta la sessione (es. 7 giorni) e si aggiunge a NOW (se non supera la durata massima della sessione)
+		refreshToken.TokenHash,
+		tokenExp, // TODO: questo deve essere di quanto aumenta la sessione (es. 7 giorni) e si aggiunge a NOW (anche se forse così non la si sta aumentando molto, se scade tra 7 giorni ed aggiungo 7 giorni da ora, scade comunque tra 7 giorni) (se non supera la durata massima della sessione)
 		refreshToken.Replaces,
 	).Scan(
 		&refreshToken.ExpiresAt,
 		&refreshToken.CreatedAt,
 	)
 
-	if err != nil {
-		// Reuse detection
-		if pgErr, ok := err.(*pq.Error); ok {
-			if pgErr.Code == "23505" && pgErr.Constraint == "refresh_tokens_replaces_unique" {
-				return errorcodes.InternalErrReusedToken
-			}
-		}
-		return err
+	// Reuse detection
+	if isPostgresErrorConstraint(err, "refresh_tokens_replaces_unique") {
+		return errorcodes.InternalErrReusedToken
 	}
 
-	return nil
+	return err
 }
 
 // ----- GET -----
 
-func (store *PostgresRefreshTokenStore) GetToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*auth.RefreshToken, error) {
+func (store *PostgresRefreshTokenStore) GetToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*RefreshToken, error) {
 	query := `
 		SELECT id, user_id, session_id, token_hash, expires_at, replaces, revoked_at, created_at
 		FROM refresh_tokens
@@ -71,7 +62,7 @@ func (store *PostgresRefreshTokenStore) GetToken(ctx context.Context, transactio
 	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	var refreshToken auth.RefreshToken
+	var refreshToken RefreshToken
 
 	err := transaction.QueryRowContext(
 		queryCtx,

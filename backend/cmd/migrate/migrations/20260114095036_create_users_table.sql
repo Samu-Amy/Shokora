@@ -5,17 +5,24 @@ CREATE TABLE IF NOT EXISTS users(
 
   first_name varchar(125) NOT NULL,
   last_name varchar(125) NOT NULL,
-  email citext UNIQUE NOT NULL,
+  email citext NOT NULL,
   password bytea NOT NULL,
   image_url text,
   birth_date date,
 
   is_verified boolean NOT NULL DEFAULT FALSE,
   is_active boolean NOT NULL DEFAULT TRUE,
-  user_role smallint NOT NULL DEFAULT 0 CHECK (user_role BETWEEN 0 AND 3),
+  user_role smallint NOT NULL DEFAULT 0,
   
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
-  updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW() -- TODO: aggiungere campo per 2FA?
+  updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW(), -- TODO: aggiungere campo per 2FA?
+  
+
+  -- CONSTRAINTS --
+
+  CONSTRAINT users_email_unique UNIQUE (email),
+
+  CONSTRAINT users_user_role_range_check CHECK (user_role BETWEEN 0 AND 3)
 );
 
 CREATE TRIGGER update_users_updated_at

@@ -5,16 +5,21 @@ CREATE TABLE IF NOT EXISTS refresh_tokens(
 
   session_id bigint NOT NULL REFERENCES user_sessions(id) ON DELETE CASCADE,
   
-  token_hash bytea NOT NULL UNIQUE,
+  token_hash bytea NOT NULL,
   expires_at timestamp(0) with time zone NOT NULL,
   
   replaces bigint REFERENCES refresh_tokens(id) ON DELETE RESTRICT,
   revoked_at timestamp(0) with time zone,
 
-  created_at timestamp(0) with time zone NOT NULL DEFAULT NOW()
+  created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
+ 
+  
+  -- CONSTRAINTS --
+
+  CONSTRAINT refresh_tokens_token_hash_unique UNIQUE (token_hash)
 );
 
--- Avoid replaces same id multiple times
+-- Avoid replaces same id multiple times with partial unique
 CREATE UNIQUE INDEX refresh_tokens_replaces_unique
 ON refresh_tokens(replaces)
 WHERE replaces IS NOT NULL;

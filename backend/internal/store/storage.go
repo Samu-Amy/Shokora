@@ -5,17 +5,19 @@ import (
 )
 
 type Storage struct {
-	User          UserRepositoryI
-	Product       ProductRepositoryI
-	VTokens       VTokensRepositoryI
-	RefreshTokens RefreshTokenRepositoryI
+	User         UserRepositoryI
+	Product      ProductRepositoryI
+	VToken       VTokenRepositoryI
+	UserSession  UserSessionI
+	RefreshToken RefreshTokenRepositoryI
 }
 
 func NewPostgresStorage(db *sql.DB) *Storage {
 	return &Storage{
-		User:          NewPostgresUserStore(db),
-		Product:       NewPostgresProductStore(db),
-		VTokens:       NewPostgresVTokenStore(db),
-		RefreshTokens: NewPostgresRefreshTokenStore(db),
+		User:         NewPostgresUserStore(db),
+		Product:      NewPostgresProductStore(db),
+		VToken:       NewPostgresVTokenStore(db),
+		UserSession:  NewPostgresUserSessionStore(db),
+		RefreshToken: NewPostgresRefreshTokenStore(db),
 	}
 }

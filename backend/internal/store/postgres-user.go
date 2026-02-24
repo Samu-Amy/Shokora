@@ -45,17 +45,13 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 		&user.UpdatedAt,
 	)
 
-	if err != nil {
-		// TODO: sistema (?)
-		switch {
-		case isPostgresErrorCode(err, UNIQUE_VIOLATION_ERROR):
-			return errorcodes.ErrDuplicateEmail
-		default:
-			return err
-		}
+	if isPostgresErrorCode(err, UNIQUE_VIOLATION_ERROR) {
+		return errorcodes.ErrDuplicateEmail
 	}
 
-	return nil
+	// TODO: sistema (?)
+
+	return err
 }
 
 // ----- GET -----
@@ -133,7 +129,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, errorcodes.ErrUnauthorized // TODO: gestisci (nel caso esista ma non verificato non dovrebbe essere "not found" -> controllare dopo is_verified (?))
+			return nil, errorcodes.ErrUnauthorized // TODO: gestisci (nel caso esista ma non verificato non dovrebbe essere "not found" -> controllare dopo (nel service) is_verified (?))
 		default:
 			return nil, err
 		}
@@ -155,20 +151,16 @@ func (store *PostgresUserStore) Verify(ctx context.Context, userId int64) error 
 	defer cancel()
 
 	_, err := store.db.ExecContext(queryCtx, query, userId)
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return errorcodes.ErrNotFound
-		default:
-			return err
-		}
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return errorcodes.ErrNotFound
 	}
-	return nil
+
+	return err
 }
 
 // ----- DELETE -----
 
-// TODO: come gestire l'id che rimane referenziato?
 func (store *PostgresUserStore) Delete(ctx context.Context, transaction *sql.Tx, userId int64) error {
 	query := `DELETE FROM users WHERE id = $1`
 
@@ -176,9 +168,8 @@ func (store *PostgresUserStore) Delete(ctx context.Context, transaction *sql.Tx,
 	defer cancel()
 
 	_, err := transaction.ExecContext(queryCtx, query, userId)
-	if err != nil { // TODO: gestire id non trovato (?)
-		return err
-	}
 
-	return nil
+	// TODO: gestire id non trovato (?)
+
+	return err
 }
