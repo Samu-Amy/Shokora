@@ -24,7 +24,15 @@ func NewAuthService(userRepo store.UserRepositoryI, vTokensRepo store.VTokenRepo
 	return &AuthService{userRepo, vTokensRepo, refreshTokensRepo, userSessionRepo, db, tokenAuthenticator}
 }
 
-// ----- CREATE TOKENS -----
+// ------ CREATE USER -----
+
+func (service *AuthService) CreateUser(ctx context.Context, user *store.User) error {
+	// TODO: fare transaction per creazione user, stats and settings (oppure crearle nell'update se non esistono)?
+
+	return app.store.User.Create(ctx, user)
+}
+
+// ----- CREATE VERIFICATION TOKENS -----
 
 func (service *AuthService) CreateVerificationTokensWithRetries(ctx context.Context, user *store.User, verificationTokens *auth.VerificationTokens) (*int64, error) {
 
@@ -140,7 +148,7 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verification
 
 // ----- TWO FACTOR AUTH  -----
 
-// ----- REFRESH TOKEN -----
+// ----- CREATE AND ROTATE REFRESH TOKENS -----
 
 // Create
 func (service *AuthService) CreateRefreshToken(ctx context.Context, refreshToken *store.RefreshToken, sessionExp, tokenExp time.Duration) error {

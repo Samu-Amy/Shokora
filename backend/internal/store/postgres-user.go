@@ -3,9 +3,6 @@ package store
 import (
 	"context"
 	"database/sql"
-	"errors"
-
-	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 )
 
 type PostgresUserStore struct {
@@ -45,13 +42,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 		&user.UpdatedAt,
 	)
 
-	if isPostgresErrorCode(err, UNIQUE_VIOLATION_ERROR) {
-		return errorcodes.ErrDuplicateEmail
-	}
-
-	// TODO: sistema (?)
-
-	return err
+	return parseDbError(err)
 }
 
 // ----- GET -----
@@ -85,16 +76,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 		&user.UpdatedAt,
 	)
 
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return nil, errorcodes.ErrNotFound
-		default:
-			return nil, err
-		}
-	}
-
-	return &user, nil
+	return &user, parseDbError(err)
 }
 
 func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
@@ -126,16 +108,16 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 		&user.UpdatedAt,
 	)
 
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return nil, errorcodes.ErrUnauthorized // TODO: gestisci (nel caso esista ma non verificato non dovrebbe essere "not found" -> controllare dopo (nel service) is_verified (?))
-		default:
-			return nil, err
-		}
-	}
+	// if err != nil {
+	// 	switch {
+	// 	case errors.Is(err, sql.ErrNoRows):
+	// 		return nil, errorcodes.ErrUnauthorized // TODO: gestisci (nel caso esista ma non verificato non dovrebbe essere "not found" -> controllare dopo (nel service) is_verified (?))
+	// 	default:
+	// 		return nil, err
+	// 	}
+	// }
 
-	return &user, nil
+	return &user, parseDbError(err)
 }
 
 // ----- UPDATE -----
@@ -152,11 +134,7 @@ func (store *PostgresUserStore) Verify(ctx context.Context, userId int64) error 
 
 	_, err := store.db.ExecContext(queryCtx, query, userId)
 
-	if errors.Is(err, sql.ErrNoRows) {
-		return errorcodes.ErrNotFound
-	}
-
-	return err
+	return parseDbError(err)
 }
 
 // ----- DELETE -----
@@ -171,5 +149,5 @@ func (store *PostgresUserStore) Delete(ctx context.Context, transaction *sql.Tx,
 
 	// TODO: gestire id non trovato (?)
 
-	return err
+	return parseDbError(err)
 }

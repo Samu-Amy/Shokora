@@ -44,7 +44,7 @@ func (store *PostgresUserSessionStore) Create(ctx context.Context, transaction *
 
 func (store *PostgresUserSessionStore) Delete(ctx context.Context, transaction *sql.Tx, sessionId int64) error {
 	query := `
-
+		
 	`
 
 	return nil

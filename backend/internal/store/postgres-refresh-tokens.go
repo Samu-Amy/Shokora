@@ -42,7 +42,7 @@ func (store *PostgresRefreshTokenStore) CreateToken(ctx context.Context, queryer
 	)
 
 	// Reuse detection
-	if isPostgresErrorConstraint(err, "refresh_tokens_replaces_unique") {
+	if isPostgresError(err, "refresh_tokens_replaces_unique") {
 		return errorcodes.InternalErrReusedToken
 	}
 

@@ -1,11 +1,14 @@
 package store
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 	"github.com/lib/pq"
 )
 
@@ -40,11 +43,30 @@ const (
 )
 
 // Check postgres error constraint
-func isPostgresErrorConstraint(err error, errorCode pq.ErrorCode, constraint string) bool {
+func isPostgresError(err error, errorCode pq.ErrorCode, constraint string) bool {
 	if pgErr, ok := err.(*pq.Error); ok {
 		return pgErr.Code == errorCode && pgErr.Constraint == constraint
 	}
 	return false
+}
+
+// Parse db errors into custom errorcodes when necessary or return the err
+func parseDbError(err error) error {
+	switch {
+	// Generic
+	case errors.Is(err, sql.ErrNoRows):
+		return errorcodes.ErrNotFound
+
+	// Users
+	case isPostgresError(err, UNIQUE_VIOLATION_ERROR, USERS_USER_EMAIL_UNIQUE):
+		return errorcodes.ErrDuplicateEmail
+
+	case isPostgresError(err, UNIQUE_VIOLATION_ERROR, VTOKENS_MAGIC_LINK_TOKEN_UNIQUE):
+		return errorcodes.InternalErrDuplicateToken
+
+	default:
+		return err
+	}
 }
 
 // - Timeouts -

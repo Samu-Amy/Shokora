@@ -56,16 +56,7 @@ func (store *PostgresVTokenStore) CreateTokens(ctx context.Context, userId int64
 		&verificationId,
 	)
 
-	if err != nil {
-		switch {
-		case isPostgresErrorCode(err, UNIQUE_VIOLATION_ERROR):
-			return nil, errorcodes.InternalErrDuplicateToken
-		default:
-			return nil, err
-		}
-	}
-
-	return &verificationId, nil
+	return &verificationId, parseDbError(err)
 }
 
 // ----- UPDATE -----
@@ -90,7 +81,7 @@ func (store *PostgresVTokenStore) UpdateMagicLinkTokenFromId(ctx context.Context
 
 	if err != nil {
 		switch {
-		case isPostgresErrorCode(err, UNIQUE_VIOLATION_ERROR):
+		case isPostgresError(err, UNIQUE_VIOLATION_ERROR, VTOKENS_MAGIC_LINK_TOKEN_UNIQUE):
 			return errorcodes.InternalErrDuplicateToken
 		default:
 			return err

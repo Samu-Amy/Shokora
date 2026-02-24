@@ -69,7 +69,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	resPayload := payloads.RegisterUserResPayload{}
 
 	// Create user in db
-	if err := app.store.User.Create(ctx, user); err != nil { // TODO: fare transaction per creazione user, stats and settings (oppure crearle nell'update se non esistono)
+	if err := app.service.Auth.CreateUser(ctx, user); err != nil {
 		app.parseError(w, r, err)
 		return
 	}
