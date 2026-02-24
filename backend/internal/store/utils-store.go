@@ -69,6 +69,24 @@ func parseDbError(err error) error {
 	}
 }
 
+// Wrap ExecContext to obtain the parsed error
+func handleExecContextResult(res sql.Result, err error) error {
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return errorcodes.InternalErrNoRowsAffected
+	}
+
+	return nil
+}
+
 // - Timeouts -
 
 const (

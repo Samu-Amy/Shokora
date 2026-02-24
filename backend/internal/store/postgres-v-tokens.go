@@ -3,11 +3,9 @@ package store
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
-	"github.com/Samu-Amy/Shokora/internal/errorcodes"
 )
 
 type PostgresVTokenStore struct {
@@ -71,24 +69,13 @@ func (store *PostgresVTokenStore) UpdateMagicLinkTokenFromId(ctx context.Context
 	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	_, err := store.db.ExecContext(
+	return handleExecContextResult(store.db.ExecContext(
 		queryCtx,
 		query,
 		magicLinkTokenHash,
 		magicLinkTokenExp,
 		verificationId,
-	)
-
-	if err != nil {
-		switch {
-		case isPostgresError(err, UNIQUE_VIOLATION_ERROR, VTOKENS_MAGIC_LINK_TOKEN_UNIQUE):
-			return errorcodes.InternalErrDuplicateToken
-		default:
-			return err
-		}
-	}
-
-	return nil
+	))
 }
 
 func (store *PostgresVTokenStore) UpdateOTPFromId(ctx context.Context, verificationId int64, otpHash []byte, otpExp time.Duration) error {
@@ -101,19 +88,13 @@ func (store *PostgresVTokenStore) UpdateOTPFromId(ctx context.Context, verificat
 	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	_, err := store.db.ExecContext(
+	return handleExecContextResult(store.db.ExecContext(
 		queryCtx,
 		query,
 		otpHash,
 		otpExp,
 		verificationId,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	))
 }
 
 func (store *PostgresVTokenStore) UpdateOtpAttempts(ctx context.Context, verificationId int64, maxOTPAttempts uint8) error {
@@ -126,32 +107,12 @@ func (store *PostgresVTokenStore) UpdateOtpAttempts(ctx context.Context, verific
 	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	res, err := store.db.ExecContext(
+	return handleExecContextResult(store.db.ExecContext(
 		queryCtx,
 		query,
 		verificationId,
 		maxOTPAttempts,
-	)
-
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return errorcodes.ErrInvalid // VerificationId is not valid
-		default:
-			return err
-		}
-	}
-
-	rows, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rows == 0 {
-		return errorcodes.ErrMaxAttemptsExceeded // No errors (verificationId is correct), but no rows modified -> max attempts exceeded
-	}
-
-	return nil
+	))
 }
 
 // ----- GET -----
@@ -180,16 +141,7 @@ func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, verificationId
 		&otpPayload.Exp,
 	)
 
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return nil, errorcodes.ErrNotFound
-		default:
-			return nil, err
-		}
-	}
-
-	return &otpPayload, nil
+	return &otpPayload, parseDbError(err)
 }
 
 // ----- VERIFY -----
@@ -216,16 +168,7 @@ func (store *PostgresVTokenStore) VerifyMagicLink(ctx context.Context, hashedTok
 		&magicLinkTokenPayload.UserId,
 	)
 
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return nil, errorcodes.ErrNotFound
-		default:
-			return nil, err
-		}
-	}
-
-	return &magicLinkTokenPayload, nil
+	return &magicLinkTokenPayload, parseDbError(err)
 }
 
 // ----- DELETE -----
@@ -237,15 +180,9 @@ func (store *PostgresVTokenStore) Delete(ctx context.Context, verificationId int
 	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	_, err := store.db.ExecContext(
+	return handleExecContextResult(store.db.ExecContext(
 		queryCtx,
 		query,
 		verificationId,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	))
 }

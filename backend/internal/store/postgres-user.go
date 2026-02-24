@@ -132,9 +132,7 @@ func (store *PostgresUserStore) Verify(ctx context.Context, userId int64) error 
 	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	_, err := store.db.ExecContext(queryCtx, query, userId)
-
-	return parseDbError(err)
+	return handleExecContextResult(store.db.ExecContext(queryCtx, query, userId))
 }
 
 // ----- DELETE -----
@@ -145,9 +143,5 @@ func (store *PostgresUserStore) Delete(ctx context.Context, transaction *sql.Tx,
 	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	_, err := transaction.ExecContext(queryCtx, query, userId)
-
-	// TODO: gestire id non trovato (?)
-
-	return parseDbError(err)
+	return handleExecContextResult(transaction.ExecContext(queryCtx, query, userId))
 }

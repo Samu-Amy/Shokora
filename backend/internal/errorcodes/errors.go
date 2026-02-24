@@ -23,6 +23,7 @@ var (
 	ErrNotVerified  = errors.New("not_verified") // User must verify email
 
 	// - Low Level -
+	InternalErrNoRowsAffected                = errors.New("i_no_rows_affected")
 	InternalErrExpired                       = errors.New("i_expired")
 	InternalErrDuplicateToken                = errors.New("i_duplicate_token")
 	InternalErrReusedToken                   = errors.New("i_reused_token")

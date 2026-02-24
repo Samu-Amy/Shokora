@@ -151,17 +151,18 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verification
 // ----- CREATE AND ROTATE REFRESH TOKENS -----
 
 // Create
-func (service *AuthService) CreateRefreshToken(ctx context.Context, refreshToken *store.RefreshToken, sessionExp, tokenExp time.Duration) error {
+func (service *AuthService) CreateRefreshToken(ctx context.Context, session *store.UserSession, refreshToken *store.RefreshToken, sessionExp, tokenExp time.Duration) error {
 	// TODO: fai transaction per creare sia sessione che refresh token
 
 	return withTransaction(service.db, ctx, func(tx *sql.Tx) error {
 		// Create session
-		return service.
+		err := service.userSessionRepo.Create(ctx, tx, session, sessionExp)
+		if err != nil {
+			return err
+		}
 
 		// Create token
-		return service.refreshTokenRepo.CreateToken(ctx, service.db, refreshToken, tokenExp)
-
-		return nil
+		return service.refreshTokenRepo.CreateToken(ctx, tx, refreshToken, tokenExp)
 	})
 
 }
@@ -203,7 +204,12 @@ func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedTok
 		err = service.refreshTokenRepo.RevokeTokenById(ctx, tx, *oldRefreshToken.Id, *newRefreshToken.CreatedAt)
 		if err != nil {
 			// TODO: gestire token not found or already revoked (?)
-			return err
+			switch {
+			case errors.Is(err, errorcodes.InternalErrNoRowsAffected):
+				return errorcodes.InternalErrTokenNotFoundOrAlreadyRevoked
+			default:
+				return err
+			}
 		}
 
 		return nil

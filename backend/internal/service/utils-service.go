@@ -82,7 +82,14 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64,
 
 		// Attempts updated successfully but OTP not valid
 		if err == nil {
-			err = errorcodes.ErrInvalid
+			switch {
+			case errors.Is(err, errorcodes.ErrNotFound):
+				err = errorcodes.ErrInvalid // VerificationId is not valid
+			case errors.Is(err, errorcodes.InternalErrNoRowsAffected): // Max attempts exceeded
+				err = errorcodes.ErrMaxAttemptsExceeded
+			default:
+				err = errorcodes.ErrInvalid
+			}
 		}
 
 		return nil, err

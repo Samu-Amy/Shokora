@@ -17,6 +17,6 @@ type Service struct {
 
 func NewService(db *sql.DB, store *store.Storage, tokenAuthenticator *auth.TokenAuthenticator) *Service {
 	return &Service{
-		Auth: NewAuthService(store.User, store.VToken, store.RefreshToken, db, tokenAuthenticator),
+		Auth: NewAuthService(store.User, store.VToken, store.RefreshToken, store.UserSession, db, tokenAuthenticator),
 	}
 }

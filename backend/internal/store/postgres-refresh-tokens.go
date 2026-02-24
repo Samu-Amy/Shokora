@@ -19,7 +19,7 @@ func NewPostgresRefreshTokenStore(db *sql.DB) *PostgresRefreshTokenStore {
 
 // ----- CREATE -----
 
-func (store *PostgresRefreshTokenStore) CreateToken(ctx context.Context, queryer Queryer, refreshToken *RefreshToken, tokenExp time.Duration) error {
+func (store *PostgresRefreshTokenStore) CreateToken(ctx context.Context, transaction *sql.Tx, refreshToken *RefreshToken, tokenExp time.Duration) error {
 	query := `
 		INSERT INTO refresh_tokens (session_id, token_hash, expires_at, session_exp, replaces)
 		VALUES ($1, $2, NOW() + $3, NOW() + $4, $5)
@@ -29,7 +29,7 @@ func (store *PostgresRefreshTokenStore) CreateToken(ctx context.Context, queryer
 	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	err := queryer.QueryRowContext(
+	err := transaction.QueryRowContext(
 		queryCtx,
 		query,
 		refreshToken.SessionId,
@@ -98,27 +98,12 @@ func (store *PostgresRefreshTokenStore) RevokeTokenById(ctx context.Context, tra
 	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	res, err := transaction.ExecContext(
+	return handleExecContextResult(transaction.ExecContext(
 		queryCtx,
 		query,
 		revokedAt,
 		tokenId,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	rows, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rows == 0 {
-		return errorcodes.InternalErrTokenNotFoundOrAlreadyRevoked // Token already revoked or not found
-	}
-
-	return nil
+	))
 }
 
 // ----- DELETE -----
@@ -132,16 +117,10 @@ func (store *PostgresRefreshTokenStore) DeleteSessionById(ctx context.Context, u
 	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	_, err := store.db.ExecContext(
+	return handleExecContextResult(store.db.ExecContext(
 		queryCtx,
 		query,
 		userId,
 		sessionId,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	))
 }
