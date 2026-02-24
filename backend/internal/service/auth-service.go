@@ -14,12 +14,12 @@ import (
 type AuthService struct {
 	userRepo           store.UserRepositoryI // TODO: serve (tolta creazione utente)?
 	vTokensRepo        store.VTokensRepositoryI
-	refreshTokensRepo  store.RefreshTokensRepositoryI
+	refreshTokensRepo  store.RefreshTokenRepositoryI
 	db                 *sql.DB
 	tokenAuthenticator *auth.TokenAuthenticator
 }
 
-func NewAuthService(userRepo store.UserRepositoryI, vTokensRepo store.VTokensRepositoryI, refreshTokensRepo store.RefreshTokensRepositoryI, db *sql.DB, tokenAuthenticator *auth.TokenAuthenticator) *AuthService {
+func NewAuthService(userRepo store.UserRepositoryI, vTokensRepo store.VTokensRepositoryI, refreshTokensRepo store.RefreshTokenRepositoryI, db *sql.DB, tokenAuthenticator *auth.TokenAuthenticator) *AuthService {
 	return &AuthService{userRepo, vTokensRepo, refreshTokensRepo, db, tokenAuthenticator}
 }
 
@@ -27,7 +27,7 @@ func NewAuthService(userRepo store.UserRepositoryI, vTokensRepo store.VTokensRep
 
 func (service *AuthService) CreateVerificationTokensWithRetries(ctx context.Context, user *store.User, verificationTokens *auth.VerificationTokens) (*int64, error) {
 
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, regenerate_token_timeout)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, REGENERATE_TOKEN_TIMEOUT)
 	defer cancel()
 
 	// Create Tokens in db
@@ -143,6 +143,7 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verification
 
 // Create
 func (service *AuthService) CreateRefreshToken(ctx context.Context, refreshToken *auth.RefreshToken) error {
+	// TODO: fai transaction per creare sia sessione che refresh token
 	return service.refreshTokensRepo.CreateToken(ctx, service.db, refreshToken)
 }
 
@@ -166,7 +167,7 @@ func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedTok
 			return errorcodes.ErrInvalid
 		}
 
-		// TODO: implementa estensione expiry
+		// TODO: implementa estensione expiry - usando costanti "SESSION_EXTENSION_<...>" (e nel token nuovo usa il conto di estensioni da quello vecchio (più eventualmente quella appena fatta))
 
 		// Create new token
 		// (create token using same session_id of the old one and using its id as replaces)

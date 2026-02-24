@@ -12,7 +12,7 @@ import (
 // - Errors -
 
 const (
-	UniqueViolationErr = pq.ErrorCode("23505")
+	UNIQUE_VIOLATION_ERROR = pq.ErrorCode("23505")
 )
 
 func isPostgresErrorCode(err error, errcode pq.ErrorCode) bool {
@@ -25,8 +25,8 @@ func isPostgresErrorCode(err error, errcode pq.ErrorCode) bool {
 // - Timeouts -
 
 const (
-	medium_query_timeout = 8 * time.Second
-	long_query_timeout   = 12 * time.Second
+	MEDIUM_QUERY_TIMEOUT = 8 * time.Second
+	LONG_QUERY_TIMEOUT   = 12 * time.Second
 )
 
 // - Pagination -

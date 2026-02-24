@@ -2,6 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS verification_tokens(
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  
   user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   verification_type smallint NOT NULL CHECK (verification_type BETWEEN 0 AND 2),
   

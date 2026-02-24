@@ -8,7 +8,7 @@ type Storage struct {
 	User          UserRepositoryI
 	Product       ProductRepositoryI
 	VTokens       VTokensRepositoryI
-	RefreshTokens RefreshTokensRepositoryI
+	RefreshTokens RefreshTokenRepositoryI
 }
 
 func NewPostgresStorage(db *sql.DB) *Storage {

@@ -11,24 +11,24 @@ import (
 	"github.com/lib/pq"
 )
 
-type PostgresRefreshTokensStore struct {
+type PostgresRefreshTokenStore struct {
 	db *sql.DB
 }
 
-func NewPostgresRefreshTokenStore(db *sql.DB) *PostgresRefreshTokensStore {
-	return &PostgresRefreshTokensStore{db: db}
+func NewPostgresRefreshTokenStore(db *sql.DB) *PostgresRefreshTokenStore {
+	return &PostgresRefreshTokenStore{db: db}
 }
 
 // ----- CREATE -----
 
-func (store *PostgresRefreshTokensStore) CreateToken(ctx context.Context, queryer Queryer, refreshToken *auth.RefreshToken) error {
+func (store *PostgresRefreshTokenStore) CreateToken(ctx context.Context, queryer Queryer, refreshToken *auth.RefreshToken) error {
 	query := `
-		INSERT INTO refresh_tokens (user_id, session_id, token_hash, expires_at, replaces)
-		VALUES ($1, $2, $3, NOW() + $4, $5)
+		INSERT INTO refresh_tokens (user_id, session_id, token_hash, expires_at, session_exp, replaces)
+		VALUES ($1, $2, $3, NOW() + $4, NOW() + $5, $6)
 		RETURNING expires_at, created_at
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	err := queryer.QueryRowContext(
@@ -38,6 +38,7 @@ func (store *PostgresRefreshTokensStore) CreateToken(ctx context.Context, querye
 		refreshToken.SessionId,
 		refreshToken.HashedToken,
 		refreshToken.Exp,
+		refreshToken.SessionExp, // TODO: questo deve essere di quanto aumenta la sessione (es. 7 giorni) e si aggiunge a NOW (se non supera la durata massima della sessione)
 		refreshToken.Replaces,
 	).Scan(
 		&refreshToken.ExpiresAt,
@@ -59,7 +60,7 @@ func (store *PostgresRefreshTokensStore) CreateToken(ctx context.Context, querye
 
 // ----- GET -----
 
-func (store *PostgresRefreshTokensStore) GetToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*auth.RefreshToken, error) {
+func (store *PostgresRefreshTokenStore) GetToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*auth.RefreshToken, error) {
 	query := `
 		SELECT id, user_id, session_id, token_hash, expires_at, replaces, revoked_at, created_at
 		FROM refresh_tokens
@@ -67,7 +68,7 @@ func (store *PostgresRefreshTokensStore) GetToken(ctx context.Context, transacti
 		FOR UPDATE;
 	` //? FOR UPDATE blocca la riga fino a fine transaction (commit o rollback) - solitamente usato per get e poi update
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	var refreshToken auth.RefreshToken
@@ -96,14 +97,14 @@ func (store *PostgresRefreshTokensStore) GetToken(ctx context.Context, transacti
 
 // ----- UPDATE -----
 
-func (store *PostgresRefreshTokensStore) RevokeTokenById(ctx context.Context, transaction *sql.Tx, tokenId int64, revokedAt time.Time) error {
+func (store *PostgresRefreshTokenStore) RevokeTokenById(ctx context.Context, transaction *sql.Tx, tokenId int64, revokedAt time.Time) error {
 	query := `
 		UPDATE refresh_tokens
 		SET revoked_at = $1
 		WHERE id = $2 AND revoked_at IS NULL
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	res, err := transaction.ExecContext(
@@ -131,13 +132,13 @@ func (store *PostgresRefreshTokensStore) RevokeTokenById(ctx context.Context, tr
 
 // ----- DELETE -----
 
-func (store *PostgresRefreshTokensStore) DeleteSessionById(ctx context.Context, userId int64, sessionId uuid.UUID) error {
+func (store *PostgresRefreshTokenStore) DeleteSessionById(ctx context.Context, userId int64, sessionId uuid.UUID) error {
 	query := `
 		DELETE FROM refresh_tokens
 		WHERE user_id = $1 AND session_id = $2
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	_, err := store.db.ExecContext(

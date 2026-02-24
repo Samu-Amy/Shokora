@@ -2,12 +2,15 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS products(
   id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
   name varchar(150) NOT NULL, -- TODO: ottimizzare name e description per text search (text GIN (to_tsvector('italian', name) (?))
   description text NOT NULL,
   image_url text NOT NULL,
   price numeric(10, 2) NOT NULL CHECK (price > 0),
   discount numeric(4, 3) NOT NULL DEFAULT 0 CHECK (discount >= 0 AND discount <= 1),
+
   version INT NOT NULL DEFAULT 0,
+
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW()
 );

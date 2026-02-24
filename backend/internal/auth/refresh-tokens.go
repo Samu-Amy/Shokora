@@ -13,6 +13,7 @@ type RefreshToken struct {
 	SessionId   uuid.UUID
 	HashedToken []byte
 	Exp         time.Duration // the expiration duration for the token (from config), used in db to set expires_at
+	SessionExp  time.Duration // the expiration date of the session
 	Replaces    *int64        // in
 	RevokedAt   *time.Time    // out
 	ExpiresAt   *time.Time    // out (expiration date, correspond to the "expires_at" set in db (using "Exp"))

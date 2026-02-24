@@ -27,7 +27,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 		RETURNING id, created_at, updated_at
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	err := store.db.QueryRowContext(
@@ -48,7 +48,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 	if err != nil {
 		// TODO: sistema (?)
 		switch {
-		case isPostgresErrorCode(err, UniqueViolationErr):
+		case isPostgresErrorCode(err, UNIQUE_VIOLATION_ERROR):
 			return errorcodes.ErrDuplicateEmail
 		default:
 			return err
@@ -67,7 +67,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 		WHERE id = $1
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	var user User
@@ -108,7 +108,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 		WHERE email = $1 AND is_verified = true
 	` // TODO: gestione verified (per chi non lo è ma accede per farsi re-inviare la mail o eliminare l'account)
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	var user User
@@ -151,7 +151,7 @@ func (store *PostgresUserStore) Verify(ctx context.Context, userId int64) error 
 		WHERE id = $1
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	_, err := store.db.ExecContext(queryCtx, query, userId)
@@ -172,7 +172,7 @@ func (store *PostgresUserStore) Verify(ctx context.Context, userId int64) error 
 func (store *PostgresUserStore) Delete(ctx context.Context, transaction *sql.Tx, userId int64) error {
 	query := `DELETE FROM users WHERE id = $1`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	_, err := transaction.ExecContext(queryCtx, query, userId)

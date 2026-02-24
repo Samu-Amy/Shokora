@@ -9,12 +9,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type RefreshTokens struct {
+// TODO: modifica (ora anche tabella sessione)
+type RefreshToken struct {
 	Id        int64      `json:"id"` // Generated
-	UserId    int64      `json:"user_id"`
-	SessionId uuid.UUID  `json:"session_id"`
+	SessionId int64      `json:"session_id"`
 	TokenHash []byte     `json:"-"`
-	Exp       time.Time  `json:"expires_at"`
+	ExpiresAt time.Time  `json:"expires_at"`
 	Replaces  *int64     `json:"replaces,omitempty"`
 	RevokedAt *time.Time `json:"revoked_at,omitempty"`
 	CreatedAt time.Time  `json:"created_at"` // Default now()
@@ -29,7 +29,7 @@ type Queryer interface {
 }
 
 // Repository
-type RefreshTokensRepositoryI interface {
+type RefreshTokenRepositoryI interface {
 	// Create a new token (or one that replaces an old one) and update the struct "refreshToken" with the ExpiresAt and CreatedAt
 	CreateToken(ctx context.Context, queryer Queryer, refreshToken *auth.RefreshToken) error
 

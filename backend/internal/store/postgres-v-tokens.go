@@ -31,7 +31,7 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int6
 		RETURNING id
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	// Fix magic link exp (nil if no magic link)
@@ -58,7 +58,7 @@ func (store *PostgresVTokensStore) CreateTokens(ctx context.Context, userId int6
 
 	if err != nil {
 		switch {
-		case isPostgresErrorCode(err, UniqueViolationErr):
+		case isPostgresErrorCode(err, UNIQUE_VIOLATION_ERROR):
 			return nil, errorcodes.InternalErrDuplicateToken
 		default:
 			return nil, err
@@ -77,7 +77,7 @@ func (store *PostgresVTokensStore) UpdateMagicLinkTokenFromId(ctx context.Contex
 		WHERE id = $3
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	_, err := store.db.ExecContext(
@@ -90,7 +90,7 @@ func (store *PostgresVTokensStore) UpdateMagicLinkTokenFromId(ctx context.Contex
 
 	if err != nil {
 		switch {
-		case isPostgresErrorCode(err, UniqueViolationErr):
+		case isPostgresErrorCode(err, UNIQUE_VIOLATION_ERROR):
 			return errorcodes.InternalErrDuplicateToken
 		default:
 			return err
@@ -107,7 +107,7 @@ func (store *PostgresVTokensStore) UpdateOTPFromId(ctx context.Context, verifica
 		WHERE id = $3
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	_, err := store.db.ExecContext(
@@ -132,7 +132,7 @@ func (store *PostgresVTokensStore) UpdateOtpAttempts(ctx context.Context, verifi
 		WHERE id = $1 AND otp_attempts < $2
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	res, err := store.db.ExecContext(
@@ -172,7 +172,7 @@ func (store *PostgresVTokensStore) GetOtpData(ctx context.Context, verificationI
 		WHERE id = $1 AND verification_type = $2
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	var otpPayload OTPPayload
@@ -210,7 +210,7 @@ func (store *PostgresVTokensStore) VerifyMagicLink(ctx context.Context, hashedTo
 		WHERE magic_link_token_hash = $1 AND verification_type = $2 AND magic_link_token_exp > NOW()
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	var magicLinkTokenPayload MagicLinkTokenPayload
@@ -243,7 +243,7 @@ func (store *PostgresVTokensStore) Delete(ctx context.Context, verificationId in
 	DELETE from verification_tokens WHERE id = $1
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, medium_query_timeout)
+	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	_, err := store.db.ExecContext(

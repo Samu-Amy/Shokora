@@ -71,7 +71,7 @@ func (app *App) generateNewRefreshToken(ctx context.Context, userId int64) (*aut
 	}
 
 	// Hash token and create Session Id
-	hashedToken := auth.HashToken(token)
+	// hashedToken := auth.HashToken(token)
 
 	sessionId, err := auth.GenerateSessionId()
 	if err != nil {
