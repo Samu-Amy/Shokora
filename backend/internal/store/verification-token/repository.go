@@ -1,4 +1,4 @@
-package store
+package v_token
 
 import (
 	"context"
@@ -7,23 +7,8 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/auth"
 )
 
-// Verification Tokens (Magic Link and OTP)
-type VToken struct {
-	Id                 int64                 `json:"id"` // Generated
-	UserId             int64                 `json:"user_id"`
-	VerificationType   auth.VerificationType `json:"verification_type"`
-	MagicLinkTokenHash []byte                `json:"-"`
-	MagicLinkTokenExp  time.Time             `json:"magic_link_token_exp"`
-	OTPHash            []byte                `json:"-"`
-	OTPExp             time.Time             `json:"otp_exp"`
-	OTPAttempts        uint8                 `json:"otp_attempts"` // Default 0 (otp attempts for (user_id, verificationType))
-	CreatedAt          time.Time             `json:"created_at"`   // Default now()
-	UpdatedAt          time.Time             `json:"updated_at"`   // Default now()
-}
-
 // TODO: evita magic link per e 2fa (anche perché 2fa dopo deve generare i token di accesso, quindi dev'essere sul dispositivo su cui si vuole accedere)
 
-// Repository
 type VTokenRepositoryI interface {
 	// Create (or update, if already exist) magic link token and otp for email verification | password reset | 2FA
 	CreateTokens(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) (*int64, error)

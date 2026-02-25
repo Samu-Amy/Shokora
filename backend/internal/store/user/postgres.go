@@ -1,15 +1,17 @@
-package store
+package user
 
 import (
 	"context"
 	"database/sql"
+
+	"github.com/Samu-Amy/Shokora/internal/db"
 )
 
 type PostgresUserStore struct {
 	db *sql.DB
 }
 
-func NewPostgresUserStore(db *sql.DB) *PostgresUserStore {
+func NewPostgresStore(db *sql.DB) *PostgresUserStore {
 	return &PostgresUserStore{db: db}
 }
 
@@ -24,7 +26,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 		RETURNING id, created_at, updated_at
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	err := store.db.QueryRowContext(
@@ -42,7 +44,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 		&user.UpdatedAt,
 	)
 
-	return parseDbError(err)
+	return db.ParseDbError(err)
 }
 
 // ----- GET -----
@@ -54,7 +56,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 		WHERE id = $1
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	var user User
@@ -76,7 +78,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 		&user.UpdatedAt,
 	)
 
-	return &user, parseDbError(err)
+	return &user, db.ParseDbError(err)
 }
 
 func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
@@ -86,7 +88,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 		WHERE email = $1 AND is_verified = true
 	` // TODO: gestione verified (per chi non lo è ma accede per farsi re-inviare la mail o eliminare l'account)
 
-	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	var user User
@@ -117,7 +119,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 	// 	}
 	// }
 
-	return &user, parseDbError(err)
+	return &user, db.ParseDbError(err)
 }
 
 // ----- UPDATE -----
@@ -129,10 +131,10 @@ func (store *PostgresUserStore) Verify(ctx context.Context, userId int64) error 
 		WHERE id = $1
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	return handleExecContextResult(store.db.ExecContext(queryCtx, query, userId))
+	return db.HandleExecContextResult(store.db.ExecContext(queryCtx, query, userId))
 }
 
 // ----- DELETE -----
@@ -140,8 +142,8 @@ func (store *PostgresUserStore) Verify(ctx context.Context, userId int64) error 
 func (store *PostgresUserStore) Delete(ctx context.Context, transaction *sql.Tx, userId int64) error {
 	query := `DELETE FROM users WHERE id = $1`
 
-	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	return handleExecContextResult(transaction.ExecContext(queryCtx, query, userId))
+	return db.HandleExecContextResult(transaction.ExecContext(queryCtx, query, userId))
 }

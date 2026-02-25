@@ -2,21 +2,24 @@ package store
 
 import (
 	"database/sql"
+
+	"github.com/Samu-Amy/Shokora/internal/store/user"
+	v_token "github.com/Samu-Amy/Shokora/internal/store/verification-token"
 )
 
 type Storage struct {
-	User         UserRepositoryI
+	User         user.UserRepositoryI
 	Product      ProductRepositoryI
-	VToken       VTokenRepositoryI
+	VToken       v_token.VTokenRepositoryI
 	UserSession  UserSessionI
 	RefreshToken RefreshTokenRepositoryI
 }
 
 func NewPostgresStorage(db *sql.DB) *Storage {
 	return &Storage{
-		User:         NewPostgresUserStore(db),
+		User:         user.NewPostgresStore(db),
 		Product:      NewPostgresProductStore(db),
-		VToken:       NewPostgresVTokenStore(db),
+		VToken:       v_token.NewPostgresStore(db),
 		UserSession:  NewPostgresUserSessionStore(db),
 		RefreshToken: NewPostgresRefreshTokenStore(db),
 	}

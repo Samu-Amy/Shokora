@@ -1,0 +1,20 @@
+package user
+
+import (
+	"context"
+	"database/sql"
+)
+
+// TODO: sistema (qua solo metodi "strettamente legati" a users (tabella) che fanno le query, poi quelli "composti" o con logica (es. retry) li si crea nel service usando questi)
+
+type UserRepositoryI interface {
+	// Auth
+	Verify(ctx context.Context, userId int64) error // Set is_verified to true
+	// SetIsActive(ctx context.Context, userId int64, isActive bool) error // TODO: implementa (per bloccare/sbloccare users)
+
+	// Users
+	Create(ctx context.Context, user *User) error
+	GetById(ctx context.Context, userId int64) (*User, error)
+	GetByEmail(ctx context.Context, email string) (*User, error)
+	Delete(ctx context.Context, transaction *sql.Tx, userId int64) error
+}

@@ -27,8 +27,7 @@ type ShopProduct struct {
 type ProductRepositoryI interface {
 	Create(ctx context.Context, product *Product) error
 	GetById(ctx context.Context, productId int64) (*Product, error)
-	GetProducts(ctx context.Context, queryPaginationOptions QueryPaginationOptions, productsFilters ProductsFilters) ([]Product, error) // TODO: (anche per GetMenuProducts e GetShopProducts) modifica struct ritornata (aggiungendo anche badges ed altro)
-	GetMenuProducts(ctx context.Context, queryPaginationOptions QueryPaginationOptions, menuFilters MenuFilters) ([]Product, error)
+	GetProducts(ctx context.Context, queryPaginationOptions QueryPaginationOptions, productsFilters ProductsFilters) ([]Product, error) // TODO: adatta per funzionare sia per Menu e Shop, modifica struct ritornata (aggiungendo anche badges ed altro)
 	Update(ctx context.Context, product *Product) error
 	Delete(ctx context.Context, productId int64) error
 }

@@ -1,12 +1,11 @@
-package store
+package r_token
 
 import (
 	"context"
 	"database/sql"
 	"time"
 
-	"github.com/Samu-Amy/Shokora/internal/errorcodes"
-	"github.com/google/uuid"
+	"github.com/Samu-Amy/Shokora/internal/db"
 )
 
 type PostgresRefreshTokenStore struct {
@@ -26,7 +25,7 @@ func (store *PostgresRefreshTokenStore) CreateToken(ctx context.Context, transac
 		RETURNING expires_at, created_at
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	err := transaction.QueryRowContext(
@@ -41,12 +40,7 @@ func (store *PostgresRefreshTokenStore) CreateToken(ctx context.Context, transac
 		&refreshToken.CreatedAt,
 	)
 
-	// Reuse detection
-	if isPostgresError(err, "refresh_tokens_replaces_unique") {
-		return errorcodes.InternalErrReusedToken
-	}
-
-	return err
+	return db.ParseDbError(err)
 }
 
 // ----- GET -----
@@ -59,7 +53,7 @@ func (store *PostgresRefreshTokenStore) GetToken(ctx context.Context, transactio
 		FOR UPDATE;
 	` //? FOR UPDATE blocca la riga fino a fine transaction (commit o rollback) - solitamente usato per get e poi update
 
-	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	var refreshToken RefreshToken
@@ -95,10 +89,10 @@ func (store *PostgresRefreshTokenStore) RevokeTokenById(ctx context.Context, tra
 		WHERE id = $2 AND revoked_at IS NULL
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	return handleExecContextResult(transaction.ExecContext(
+	return db.HandleExecContextResult(transaction.ExecContext(
 		queryCtx,
 		query,
 		revokedAt,
@@ -108,19 +102,19 @@ func (store *PostgresRefreshTokenStore) RevokeTokenById(ctx context.Context, tra
 
 // ----- DELETE -----
 
-func (store *PostgresRefreshTokenStore) DeleteSessionById(ctx context.Context, userId int64, sessionId uuid.UUID) error {
-	query := `
-		DELETE FROM refresh_tokens
-		WHERE user_id = $1 AND session_id = $2
-	`
+// func (store *PostgresRefreshTokenStore) DeleteSessionById(ctx context.Context, userId int64, sessionId uuid.UUID) error {
+// 	query := `
+// 		DELETE FROM refresh_tokens
+// 		WHERE user_id = $1 AND session_id = $2
+// 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
-	defer cancel()
+// 	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
+// 	defer cancel()
 
-	return handleExecContextResult(store.db.ExecContext(
-		queryCtx,
-		query,
-		userId,
-		sessionId,
-	))
-}
+// 	return db.HandleExecContextResult(store.db.ExecContext(
+// 		queryCtx,
+// 		query,
+// 		userId,
+// 		sessionId,
+// 	))
+// }

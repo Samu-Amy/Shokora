@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Samu-Amy/Shokora/internal/store"
+	"github.com/Samu-Amy/Shokora/internal/store/user"
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -19,8 +19,8 @@ const (
 )
 
 // Functions
-func getUserFromContext(r *http.Request) (*store.User, bool) {
-	user, ok := r.Context().Value(userCtx).(*store.User)
+func getUserFromContext(r *http.Request) (*user.User, bool) {
+	user, ok := r.Context().Value(userCtx).(*user.User)
 	return user, ok
 }
 
