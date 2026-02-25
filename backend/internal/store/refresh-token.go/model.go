@@ -1,4 +1,4 @@
-package r_token
+package rtoken
 
 import (
 	"time"

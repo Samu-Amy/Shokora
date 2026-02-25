@@ -8,7 +8,8 @@ import (
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/errorcodes"
-	"github.com/Samu-Amy/Shokora/internal/store"
+	rtoken "github.com/Samu-Amy/Shokora/internal/store/refresh-token.go"
+	session "github.com/Samu-Amy/Shokora/internal/store/user-session"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -74,24 +75,26 @@ func (app *App) generateNewRefreshToken(ctx context.Context, userId int64) (*aut
 	// Hash token and create Session Id
 	hashedToken := auth.HashToken(token)
 
-	refreshToken := store.RefreshToken{
+	session := session.UserSession{
 		UserId: userId,
+	}
+
+	refreshToken := rtoken.RefreshToken{
 		// SessionId:   sessionId,
-		HashedToken: hashedToken,
-		Exp:         app.config.Auth.Token.RefreshTokenExp,
+		TokenHash: hashedToken,
 	}
 
 	// Save token in
-	err = app.service.Auth.CreateRefreshToken(ctx, &refreshToken)
+	err = app.service.Auth.CreateRefreshToken(ctx, &session, &refreshToken, app.config.Auth.Token.SessionMaxExp, app.config.Auth.Token.RefreshTokenExp)
 	if err != nil {
 		if errors.Is(err, errorcodes.InternalErrReusedToken) {
-			app.logger.Warnw("Reused Detection Triggered", "user id", userId, "session id", sessionId)
+			app.logger.Warnw("Reused Detection Triggered", "user id", userId, "token", hashedToken)
 		}
 		return nil, err
 	}
 
 	return &auth.CreateRefreshTokenPayload{
 		PlainToken: *token,
-		ExpiresAt:  *refreshToken.ExpiresAt,
+		// ExpiresAt:  *refreshToken.ExpiresAt,
 	}, nil
 }

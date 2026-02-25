@@ -7,7 +7,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/errorcodes"
-	"github.com/Samu-Amy/Shokora/internal/store"
+	"github.com/Samu-Amy/Shokora/internal/store/user"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -56,7 +56,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create user from payload data
-	user := &store.User{
+	user := &user.User{
 		FirstName:    payload.FirstName,
 		LastName:     payload.LastName,
 		Email:        payload.Email,
@@ -157,7 +157,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 // ----- LOGIN -----
 
 func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	// ctx := r.Context()
 	// TODO: gestisci casi user non verificato e user verificato ma con 2fa richiesta (se 2fa -> "verify-2fa[/{token}]" -> generate auth tokens ("tokens"), se no 2fa -> generate auth tokens ("tokens"))
 
 	// TODO: ritorna user (se non verificato ritorna RegisterUserResPayload?)

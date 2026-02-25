@@ -1,4 +1,4 @@
-package r_token
+package rtoken
 
 import (
 	"context"
@@ -12,7 +12,7 @@ type PostgresRefreshTokenStore struct {
 	db *sql.DB
 }
 
-func NewPostgresRefreshTokenStore(db *sql.DB) *PostgresRefreshTokenStore {
+func NewPostgresStore(db *sql.DB) *PostgresRefreshTokenStore {
 	return &PostgresRefreshTokenStore{db: db}
 }
 
@@ -47,7 +47,7 @@ func (store *PostgresRefreshTokenStore) CreateToken(ctx context.Context, transac
 
 func (store *PostgresRefreshTokenStore) GetToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*RefreshToken, error) {
 	query := `
-		SELECT id, user_id, session_id, token_hash, expires_at, replaces, revoked_at, created_at
+		SELECT id, session_id, token_hash, expires_at, replaces, revoked_at, created_at
 		FROM refresh_tokens
 		WHERE token_hash = $1
 		FOR UPDATE;
@@ -64,9 +64,8 @@ func (store *PostgresRefreshTokenStore) GetToken(ctx context.Context, transactio
 		hashedToken,
 	).Scan(
 		&refreshToken.Id,
-		&refreshToken.UserId,
 		&refreshToken.SessionId,
-		&refreshToken.HashedToken,
+		&refreshToken.TokenHash,
 		&refreshToken.ExpiresAt,
 		&refreshToken.Replaces,
 		&refreshToken.RevokedAt,

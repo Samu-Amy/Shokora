@@ -53,13 +53,13 @@ func parseTime(strTime string) string {
 	return t.Format(time.DateTime)
 }
 
-// type MenuFilters struct {
-// 	Search string   `json:"search" validate:"max=100"`
-// 	Badges []string `json:"badges"` // TODO: usare enum e come fare validate (?)
-// }
+type MenuFilters struct {
+	Search string   `json:"search" validate:"max=100"`
+	Badges []string `json:"badges"` // TODO: usare enum e come fare validate (?)
+}
 
-// func (menuFilters MenuFilters) Parse(r *http.Request) (MenuFilters, error) {
-// 	queryString := r.URL.Query()
+func (menuFilters MenuFilters) Parse(r *http.Request) (MenuFilters, error) {
+	queryString := r.URL.Query()
 
 // 	// Search
 // 	search := queryString.Get("search")

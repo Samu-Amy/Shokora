@@ -63,7 +63,7 @@ func main() {
 				AccessTokenExp:       15 * time.Minute, // 15 min (suggested: 15-60 min) //TODO: alza a 30 (?)
 				RefreshTokenByteSize: 32,
 				RefreshTokenExp:      30 * 24 * time.Hour, // 30 days (suggested: 7-30 days)
-				RefreshTokenMaxExp:   90 * 24 * time.Hour, // 90 days (suggested: max 90 days)
+				SessionMaxExp:        90 * 24 * time.Hour, // 90 days (suggested: max 90 days)
 			},
 			MagicLink: auth.MagicLinkConfig{
 				ByteSize: 32,

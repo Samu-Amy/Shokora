@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/Samu-Amy/Shokora/internal/errorcodes"
-	"github.com/Samu-Amy/Shokora/internal/store"
+	user_repo "github.com/Samu-Amy/Shokora/internal/store/user"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -155,7 +155,7 @@ func (app *App) employeeMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Check User Role
-		if !user.IsRoleValid(store.RoleEmployee) {
+		if !user.IsRoleValid(user_repo.RoleEmployee) {
 			app.forbiddenError(w, r, errorcodes.ErrUnauthorized)
 			return
 		}
@@ -179,7 +179,7 @@ func (app *App) adminMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Check User Role
-		if !user.IsRoleValid(store.RoleAdmin) {
+		if !user.IsRoleValid(user_repo.RoleAdmin) {
 			app.forbiddenError(w, r, errorcodes.ErrUnauthorized)
 			return
 		}
@@ -201,7 +201,7 @@ func (app *App) devMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Check User Role
-		if !user.IsRoleValid(store.RoleDev) {
+		if !user.IsRoleValid(user_repo.RoleDev) {
 			app.forbiddenError(w, r, errorcodes.ErrUnauthorized)
 			return
 		}

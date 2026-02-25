@@ -6,14 +6,14 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/db"
-	"github.com/Samu-Amy/Shokora/internal/store"
-	r_token "github.com/Samu-Amy/Shokora/internal/store/refresh-token.go"
+	rtoken "github.com/Samu-Amy/Shokora/internal/store/refresh-token.go"
+	session "github.com/Samu-Amy/Shokora/internal/store/user-session"
 )
 
 // ----- CREATE AND ROTATE REFRESH TOKENS -----
 
 // Create
-func (service *AuthService) CreateRefreshToken(ctx context.Context, session *store.UserSession, refreshToken *r_token.RefreshToken, sessionExp, tokenExp time.Duration) error {
+func (service *AuthService) CreateRefreshToken(ctx context.Context, session *session.UserSession, refreshToken *rtoken.RefreshToken, sessionExp, tokenExp time.Duration) error {
 	// TODO: fai transaction per creare sia sessione che refresh token
 
 	return db.WithTransaction(service.db, ctx, func(tx *sql.Tx) error {
@@ -30,7 +30,7 @@ func (service *AuthService) CreateRefreshToken(ctx context.Context, session *sto
 }
 
 // Rotate // TODO: aggiorna a session + refresh token
-// func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedToken []byte, newRefreshToken *r_token.RefreshToken) error { // TODO: ritorna dati (es. expires_at per cookies)
+// func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedToken []byte, newRefreshToken *rtoken.RefreshToken) error { // TODO: ritorna dati (es. expires_at per cookies)
 // 	err := db.WithTransaction(service.db, ctx, func(tx *sql.Tx) error {
 
 // 		// Get token

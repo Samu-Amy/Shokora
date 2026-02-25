@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Samu-Amy/Shokora/internal/store"
+	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
 // TODO: poter modificare dati utente (soprattutto moter mettere nome/cognome dopo la registrazione con google per poter fixarli nel caso non fossero giusti nell'account google)
@@ -48,8 +48,8 @@ func (app *App) updateUserDataHandler(w http.ResponseWriter, r *http.Request) {
 
 // ----- UTILS -----
 
-func (app *App) getUserById(ctx context.Context, userId int64) (*store.User, error) {
-	user, err := app.store.User.GetById(ctx, userId)
+func (app *App) getUserById(ctx context.Context, userId int64) (*user.User, error) {
+	user, err := app.store.User.GetById(ctx, userId) // TODO: usa service
 	if err != nil {
 		return nil, err
 	}

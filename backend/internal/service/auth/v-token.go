@@ -7,8 +7,8 @@ import (
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/errorcodes"
-	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
+	vtoken "github.com/Samu-Amy/Shokora/internal/store/verification-token"
 )
 
 // ----- CREATE VERIFICATION TOKENS -----
@@ -129,7 +129,7 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verification
 
 // - Verification Tokens -
 
-func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64, hashedOTP []byte, maxAttempts uint8, verificationType auth.VerificationType) (*store.OTPPayload, error) {
+func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64, hashedOTP []byte, maxAttempts uint8, verificationType auth.VerificationType) (*vtoken.OTPPayload, error) {
 	// TODO: usare transaction (ed usare FOR UPDATE nel get?) per GetOtpData e UpdateOtpAttempts?
 
 	// Get data

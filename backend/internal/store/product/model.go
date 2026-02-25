@@ -1,8 +1,4 @@
-package store
-
-import (
-	"context"
-)
+package product
 
 type Product struct {
 	Id          int64   `json:"id"` // Generated
@@ -21,13 +17,4 @@ type ShopProduct struct {
 	Product
 	// Price float64 (magari tolto da Product normale e messo nelle "versioni" menu/shop ?)
 	// Discount float64 (magari tolto da Product normale e messo nelle "versioni" menu/shop ?)
-}
-
-// TODO: aggiungi nomi parametri/argomenti nei metodi di tutte le interfacce
-type ProductRepositoryI interface {
-	Create(ctx context.Context, product *Product) error
-	GetById(ctx context.Context, productId int64) (*Product, error)
-	GetProducts(ctx context.Context, queryPaginationOptions QueryPaginationOptions, productsFilters ProductsFilters) ([]Product, error) // TODO: adatta per funzionare sia per Menu e Shop, modifica struct ritornata (aggiungendo anche badges ed altro)
-	Update(ctx context.Context, product *Product) error
-	Delete(ctx context.Context, productId int64) error
 }

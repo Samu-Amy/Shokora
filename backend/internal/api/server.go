@@ -75,7 +75,7 @@ type TokenConfig struct {
 	AccessTokenExp       time.Duration
 	RefreshTokenByteSize int
 	RefreshTokenExp      time.Duration
-	RefreshTokenMaxExp   time.Duration // How long the expiration can be extended for
+	SessionMaxExp        time.Duration // How long the expiration can be extended for
 }
 
 // - Functions/Methods -

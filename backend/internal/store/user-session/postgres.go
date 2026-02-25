@@ -1,16 +1,18 @@
-package store
+package session
 
 import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/Samu-Amy/Shokora/internal/db"
 )
 
 type PostgresUserSessionStore struct {
 	db *sql.DB
 }
 
-func NewPostgresUserSessionStore(db *sql.DB) *PostgresUserSessionStore {
+func NewPostgresStore(db *sql.DB) *PostgresUserSessionStore {
 	return &PostgresUserSessionStore{db: db}
 }
 
@@ -23,7 +25,7 @@ func (store *PostgresUserSessionStore) Create(ctx context.Context, transaction *
 		RETURNING id, expires_at, created_at
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	err := transaction.QueryRowContext(
@@ -45,8 +47,8 @@ func (store *PostgresUserSessionStore) Create(ctx context.Context, transaction *
 func (store *PostgresUserSessionStore) Delete(ctx context.Context, transaction *sql.Tx, sessionId int64) error {
 	query := `DELETE FROM user_sessions WHERE id = $1`
 
-	queryCtx, cancel := context.WithTimeout(ctx, MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	return handleExecContextResult(transaction.ExecContext(queryCtx, query, sessionId))
+	return db.HandleExecContextResult(transaction.ExecContext(queryCtx, query, sessionId))
 }

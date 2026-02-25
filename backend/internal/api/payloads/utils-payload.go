@@ -1,8 +1,8 @@
 package payloads
 
-import "github.com/Samu-Amy/Shokora/internal/store"
+import "github.com/Samu-Amy/Shokora/internal/store/user"
 
-func CreateUserResPayload(user *store.User) UserResPayload {
+func CreateUserResPayload(user *user.User) UserResPayload {
 	return UserResPayload{
 		Id:         user.Id,
 		FirstName:  user.FirstName,
