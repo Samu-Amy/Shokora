@@ -49,7 +49,7 @@ func (app *App) updateUserDataHandler(w http.ResponseWriter, r *http.Request) {
 // ----- UTILS -----
 
 func (app *App) getUserById(ctx context.Context, userId int64) (*user.User, error) {
-	user, err := app.store.User.GetById(ctx, userId) // TODO: usa service
+	user, err := app.service.User.GetById(ctx, userId)
 	if err != nil {
 		return nil, err
 	}

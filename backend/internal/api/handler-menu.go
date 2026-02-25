@@ -55,7 +55,7 @@ func (app *App) getMenuProductsHandler(w http.ResponseWriter, r *http.Request) {
 	// - Query -
 
 	// Get menu products
-	// products, err := app.store.Product.GetProducts(ctx, queryPaginationOptions, menuFilters) // TODO: usa service
+	// products, err := app.Service.Product.GetProducts(ctx, queryPaginationOptions, menuFilters)
 	// if err != nil {
 	// 	app.parseError(w, r, err)
 	// 	return

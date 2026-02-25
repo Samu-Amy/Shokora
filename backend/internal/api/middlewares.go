@@ -66,7 +66,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Get user
-		user, err := app.store.User.GetById(ctx, userId)
+		user, err := app.service.User.GetById(ctx, userId)
 		if err != nil {
 			app.unauthorizedError(w, r, err)
 			return
