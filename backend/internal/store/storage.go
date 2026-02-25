@@ -11,11 +11,11 @@ import (
 )
 
 type Storage struct {
-	User         user.UserRepositoryI
-	Product      product.ProductRepositoryI
-	VToken       vtoken.VTokenRepositoryI
-	UserSession  session.UserSessionI
-	RefreshToken refreshtoken.RefreshTokenRepositoryI
+	User         user.IUserRepository
+	Product      product.IProductRepository
+	VToken       vtoken.IVTokenRepository
+	UserSession  session.IUserSessionRepository
+	RefreshToken refreshtoken.IRefreshTokenRepository
 }
 
 func NewPostgresStorage(db *sql.DB) *Storage {

@@ -11,14 +11,14 @@ import (
 )
 
 type AuthService struct {
-	userRepo           user.UserRepositoryI
-	vTokenRepo         v_token.VTokenRepositoryI
-	refreshTokenRepo   rtoken.RefreshTokenRepositoryI
-	userSessionRepo    session.UserSessionI
+	userRepo           user.IUserRepository
+	vTokenRepo         v_token.IVTokenRepository
+	refreshTokenRepo   rtoken.IRefreshTokenRepository
+	userSessionRepo    session.IUserSessionRepository
 	db                 *sql.DB
 	tokenAuthenticator *auth.TokenAuthenticator
 }
 
-func NewService(userRepo user.UserRepositoryI, vTokensRepo v_token.VTokenRepositoryI, refreshTokensRepo rtoken.RefreshTokenRepositoryI, userSessionRepo session.UserSessionI, db *sql.DB, tokenAuthenticator *auth.TokenAuthenticator) *AuthService {
+func NewService(userRepo user.IUserRepository, vTokensRepo v_token.IVTokenRepository, refreshTokensRepo rtoken.IRefreshTokenRepository, userSessionRepo session.IUserSessionRepository, db *sql.DB, tokenAuthenticator *auth.TokenAuthenticator) *AuthService {
 	return &AuthService{userRepo, vTokensRepo, refreshTokensRepo, userSessionRepo, db, tokenAuthenticator}
 }

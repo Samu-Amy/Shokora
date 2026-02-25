@@ -8,7 +8,7 @@ import (
 
 // TODO: are evita magic link per e 2fa (anche perché 2fa dopo deve generi token di accesso, quindi dev'essere sul dispositivo su cui si vuole accedere)
 
-type RefreshTokenRepositoryI interface {
+type IRefreshTokenRepository interface {
 	// Create a new token (or one that replaces an old one) and update the struct "refreshToken" with the ExpiresAt and CreatedAt
 	CreateToken(ctx context.Context, transaction *sql.Tx, refreshToken *RefreshToken, tokenExp time.Duration) error
 	GetToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*RefreshToken, error)
