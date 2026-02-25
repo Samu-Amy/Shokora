@@ -14,8 +14,6 @@ import (
 
 // Create
 func (service *AuthService) CreateRefreshToken(ctx context.Context, session *session.UserSession, refreshToken *rtoken.RefreshToken, sessionExp, tokenExp time.Duration) error {
-	// TODO: fai transaction per creare sia sessione che refresh token
-
 	return db.WithTransaction(service.db, ctx, func(tx *sql.Tx) error {
 		// Create session
 		err := service.userSessionRepo.Create(ctx, tx, session, sessionExp)
@@ -26,7 +24,6 @@ func (service *AuthService) CreateRefreshToken(ctx context.Context, session *ses
 		// Create token
 		return service.refreshTokenRepo.CreateToken(ctx, tx, refreshToken, tokenExp)
 	})
-
 }
 
 // Rotate // TODO: aggiorna a session + refresh token
@@ -79,7 +76,7 @@ func (service *AuthService) CreateRefreshToken(ctx context.Context, session *ses
 
 // 	// Revoke session (in case of Reuse Detection)
 // 	if errors.Is(err, errorcodes.InternalErrReusedToken) {
-// 		err = service.refreshTokenRepo.DeleteSessionById(ctx, newRefreshToken.UserId, newRefreshToken.SessionId)
+// 		err = service.userSessionRepo.DeleteSessionById(ctx, newRefreshToken.UserId, newRefreshToken.SessionId)
 // 	}
 
 // 	return err

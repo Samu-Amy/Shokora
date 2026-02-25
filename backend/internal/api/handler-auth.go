@@ -69,7 +69,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	resPayload := payloads.RegisterUserResPayload{}
 
 	// Create user in db
-	if err := app.service.Auth.CreateUser(ctx, user); err != nil {
+	if err := app.service.User.Create(ctx, user); err != nil {
 		app.parseError(w, r, err)
 		return
 	}
@@ -251,7 +251,7 @@ func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch the user (check if the user exist)
-	user, err := app.store.User.GetByEmail(ctx, payload.Email)
+	user, err := app.service.User.GetByEmail(ctx, payload.Email)
 	if err != nil {
 		app.parseError(w, r, err) // TODO: FRONTEND - non dire se l'email esiste o meno
 		return

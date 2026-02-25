@@ -25,6 +25,7 @@ func WithTransaction(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) (e
 		}
 	}()
 
+	// Use transaction
 	if err = fn(transaction); err != nil {
 		return err
 	}

@@ -11,7 +11,7 @@ import (
 )
 
 type AuthService struct {
-	userRepo           user.UserRepositoryI // TODO: serve (tolta creazione utente)?
+	userRepo           user.UserRepositoryI
 	vTokenRepo         v_token.VTokenRepositoryI
 	refreshTokenRepo   rtoken.RefreshTokenRepositoryI
 	userSessionRepo    session.UserSessionI

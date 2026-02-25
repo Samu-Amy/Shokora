@@ -139,11 +139,11 @@ func (store *PostgresUserStore) Verify(ctx context.Context, userId int64) error 
 
 // ----- DELETE -----
 
-func (store *PostgresUserStore) Delete(ctx context.Context, transaction *sql.Tx, userId int64) error {
+func (store *PostgresUserStore) Delete(ctx context.Context, userId int64) error {
 	query := `DELETE FROM users WHERE id = $1`
 
 	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	return db.HandleExecContextResult(transaction.ExecContext(queryCtx, query, userId))
+	return db.HandleExecContextResult(store.db.ExecContext(queryCtx, query, userId))
 }

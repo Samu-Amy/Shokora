@@ -61,40 +61,40 @@ type MenuFilters struct {
 func (menuFilters MenuFilters) Parse(r *http.Request) (MenuFilters, error) {
 	queryString := r.URL.Query()
 
-// 	// Search
-// 	search := queryString.Get("search")
-// 	if search != "" {
-// 		menuFilters.Search = search
-// 	}
+	// Search
+	search := queryString.Get("search")
+	if search != "" {
+		menuFilters.Search = search
+	}
 
-// 	// Badges
-// 	badges := queryString.Get("badges")
-// 	if badges != "" {
-// 		menuFilters.Badges = strings.Split(badges, ",")
-// 	}
+	// Badges
+	badges := queryString.Get("badges")
+	if badges != "" {
+		menuFilters.Badges = strings.Split(badges, ",")
+	}
 
-// 	return menuFilters, nil
-// }
+	return menuFilters, nil
+}
 
-// type ShopFilters struct {
-// 	Search string   `json:"search" validate:"max=100"`
-// 	Badges []string `json:"badges"` // TODO: usare enum e come fare validate (?)
-// }
+type ShopFilters struct {
+	Search string   `json:"search" validate:"max=100"`
+	Badges []string `json:"badges"` // TODO: usare enum e come fare validate (?)
+}
 
-// func (shopFilters ShopFilters) Parse(r *http.Request) (ShopFilters, error) {
-// 	queryString := r.URL.Query()
+func (shopFilters ShopFilters) Parse(r *http.Request) (ShopFilters, error) {
+	queryString := r.URL.Query()
 
-// 	// Search
-// 	search := queryString.Get("search")
-// 	if search != "" {
-// 		shopFilters.Search = search
-// 	}
+	// Search
+	search := queryString.Get("search")
+	if search != "" {
+		shopFilters.Search = search
+	}
 
-// 	// Badges
-// 	badges := queryString.Get("badges")
-// 	if badges != "" {
-// 		shopFilters.Badges = strings.Split(badges, ",")
-// 	}
+	// Badges
+	badges := queryString.Get("badges")
+	if badges != "" {
+		shopFilters.Badges = strings.Split(badges, ",")
+	}
 
-// 	return shopFilters, nil
-// }
+	return shopFilters, nil
+}
