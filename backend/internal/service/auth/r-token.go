@@ -85,12 +85,11 @@ func (service *AuthService) createRefreshToken(ctx context.Context, session *ses
 // 	return err
 // }
 
-// Create a new Refresh Token, saves it in db and return token and expiration date
-// TODO: sposta in service
+// Create a new Refresh Token
 func (service *AuthService) generateRefreshToken(ctx context.Context, userId int64) error {
 	token, err := auth.GenerateBase64Token(service.config.Token.RefreshTokenByteSize)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Hash token and create Session Id

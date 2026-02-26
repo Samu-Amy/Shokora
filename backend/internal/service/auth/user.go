@@ -32,16 +32,18 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		BirthDate:    payload.BirthDate,
 	}
 
-	// Create Response Payload
-	resPayload := &payloads.RegisterUserResPayload{}
-
 	// Create user in db
 	if err := service.createUser(ctx, user); err != nil {
 		service.logger.Warnw("Error creating user", "error", err)
 		return nil, err
 	}
 
-	resPayload.User = *user // Add user to payload
+	// Create Response Payload with user
+	resPayload := &payloads.RegisterUserResPayload{
+		User: *user,
+	}
+
+	// TODO: continua
 
 	// Create Refresh Token
 	refreshToken, err := service.generateNewRefreshToken(ctx, user.Id)
