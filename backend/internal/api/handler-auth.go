@@ -6,7 +6,7 @@ import (
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
-	"github.com/Samu-Amy/Shokora/internal/errorcodes"
+	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -47,14 +47,22 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: sposta creazione utente (hash password, creazione user, gestione verification tokens, gestione refresh token, invio email) in service
-
 	// Register user
-	user, err := app.service.Auth.RegisterUser(ctx, payload)
+	registerUserPayload, err := app.service.Auth.RegisterUser(ctx, payload)
 	if err != nil {
 		app.parseError(w, r, err)
 		return
 	}
+
+	// Set cookies
+
+	//* Return user and verificationID
+	if err := app.jsonResponse(w, http.StatusCreated, registerUserPayload); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	// TODO: sposta gestione verification tokens, gestione refresh token e invio email in service
 
 	// Auth cookies
 	err = app.setAuthCookies(w, user.Id, refreshToken.PlainToken, refreshToken.ExpiresAt)
@@ -67,7 +75,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.logger.Warnw("error generating verification tokens", "error", err)
 
-		resPayload.VerificationError = errorcodes.ErrVerification.Error() // Add error to payload
+		resPayload.VerificationError = domerrors.ErrVerification.Error() // Add error to payload
 
 		//* Return user, verificationID and error
 		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
@@ -81,7 +89,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.logger.Warnw("error creating email verification tokens in db", "error", err)
 
-		resPayload.VerificationError = errorcodes.ErrVerification.Error() // Add error to payload
+		resPayload.VerificationError = domerrors.ErrVerification.Error() // Add error to payload
 
 		//* Return user, verificationID and error
 		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
@@ -106,7 +114,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.logger.Warnw("error sending welcome email", "error", err)
 
-		resPayload.VerificationError = errorcodes.ErrEmailNotSent.Error() // Add error to payload
+		resPayload.VerificationError = domerrors.ErrEmailNotSent.Error() // Add error to payload
 
 		//* Return user, verificationID and error
 		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
@@ -185,7 +193,7 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	if len(payload.OTP) != int(app.config.Auth.OTP.Length) {
-		app.badRequestError(w, r, errorcodes.ErrInvalid) // Invalid token
+		app.badRequestError(w, r, domerrors.ErrInvalid) // Invalid token
 		return
 	}
 

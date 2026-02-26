@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
-	"github.com/Samu-Amy/Shokora/internal/errorcodes"
+	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 )
 
 // ----- VERIFY EMAIL  -----
@@ -22,8 +22,8 @@ func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToke
 	if err != nil {
 		// log.Printf("Verify OTP Error: %v", err)
 		switch {
-		case errors.Is(err, errorcodes.ErrNotFound): // Token not valid
-			return errorcodes.ErrInvalid
+		case errors.Is(err, domerrors.ErrNotFound): // Token not valid // TODO: si dovrebbero ottenere solo interrors
+			return domerrors.ErrInvalid
 		default:
 			return err
 		}

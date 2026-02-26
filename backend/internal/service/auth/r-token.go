@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/Samu-Amy/Shokora/internal/auth"
 	rtoken "github.com/Samu-Amy/Shokora/internal/store/refresh-token.go"
 	session "github.com/Samu-Amy/Shokora/internal/store/user-session"
 )
@@ -12,7 +13,7 @@ import (
 // ----- CREATE AND ROTATE REFRESH TOKENS -----
 
 // Create
-func (service *AuthService) CreateRefreshToken(ctx context.Context, session *session.UserSession, refreshToken *rtoken.RefreshToken, sessionExp, tokenExp time.Duration) error {
+func (service *AuthService) createRefreshToken(ctx context.Context, session *session.UserSession, refreshToken *rtoken.RefreshToken, sessionExp, tokenExp time.Duration) error {
 	return service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 		// Create session
 		err := service.userSessionRepo.Create(ctx, tx, session, sessionExp)
@@ -29,7 +30,7 @@ func (service *AuthService) CreateRefreshToken(ctx context.Context, session *ses
 // TODO: aggiorna a session + refresh token
 
 // Rotate
-// func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedToken []byte, newRefreshToken *rtoken.RefreshToken) error {
+// func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedToken []byte, newRefreshToken *rtoken.RefreshToken) error {
 // 	err := db.WithTransaction(service.db, ctx, func(tx *sql.Tx) error {
 
 // 		// Get token
@@ -83,3 +84,39 @@ func (service *AuthService) CreateRefreshToken(ctx context.Context, session *ses
 
 // 	return err
 // }
+
+// Create a new Refresh Token, saves it in db and return token and expiration date
+// TODO: sposta in service
+func (service *AuthService) generateRefreshToken(ctx context.Context, userId int64) error {
+	token, err := auth.GenerateBase64Token(service.config.Token.RefreshTokenByteSize)
+	if err != nil {
+		return nil, err
+	}
+
+	// Hash token and create Session Id
+	hashedToken := auth.HashBase64Token(token)
+
+	session := session.UserSession{
+		UserId: userId,
+	}
+
+	refreshToken := rtoken.RefreshToken{
+		// SessionId:   sessionId,
+		TokenHash: hashedToken,
+	}
+
+	// Save token in
+	// err = service.createRefreshToken(ctx, &session, &refreshToken, service.config.Token.SessionMaxExp, service.config.Token.RefreshTokenExp)
+	// if err != nil {
+	// 	if errors.Is(err, interrors.IErrReusedToken) {
+	// 		service.logger.Warnw("Reused Detection Triggered", "user id", userId, "token", hashedToken)
+	// 	}
+	// 	return nil, err
+	// }
+
+	// 	return &auth.CreateRefreshTokenPayload{
+	// 		PlainToken: *token,
+	// 		// ExpiresAt:  *refreshToken.ExpiresAt,
+	// 	}, nil
+	return nil
+}

@@ -8,11 +8,18 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
-func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.RegisterUserReqPayload) (*payloads.RegisterUserResPayload, error) {
+/*
+Executes the user registration:
+  - create new user in db
+    -
+*/
+func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.RegisterUserReqPayload) (*payloads.RegisterUserResPayload, error) { // TODO: ritorna anche i dati per i cookies
+
 	// Hash password
 	hashedPassword, err := service.hashPassword(payload.Password)
 	if err != nil {
-		return nil, err
+		service.logger.Warnw("Error hashing password", "error", err)
+		return nil, err // TODO: log errori (?)
 	}
 
 	// Create user from payload data
@@ -30,14 +37,16 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	// Create user in db
 	if err := service.createUser(ctx, user); err != nil {
+		service.logger.Warnw("Error creating user", "error", err)
 		return nil, err
 	}
 
-	resPayload.User = payloads.CreateUserResPayload(user) // Add user to payload
+	resPayload.User = *user // Add user to payload
 
 	// Create Refresh Token
-	refreshToken, err := app.generateNewRefreshToken(ctx, user.Id)
+	refreshToken, err := service.generateNewRefreshToken(ctx, user.Id)
 	if err != nil {
+		service.logger.Warnw("Error generating refresh token", "error", err)
 		resPayload.AuthError = true
 	}
 

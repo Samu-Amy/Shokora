@@ -1,6 +1,7 @@
 package authservice
 
 import (
+	"github.com/Samu-Amy/Shokora/internal/api"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/database"
 	"github.com/Samu-Amy/Shokora/internal/mailer"
@@ -31,6 +32,7 @@ func NewService(txManager database.ITransactionManager, userRepo user.IUserRepos
 // - Config -
 type AuthServiceConfig struct {
 	PasswordHashingCost int
+	Token               api.TokenConfig
 	Mail                MailConfig
 }
 

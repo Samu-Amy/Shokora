@@ -131,6 +131,7 @@ func main() {
 	// - Service -
 	authServiceConfig := authservice.AuthServiceConfig{
 		PasswordHashingCost: config.Auth.PasswordHashingCost,
+		Token:               config.Auth.Token,
 		Mail: authservice.MailConfig{
 			IsSandboxEnv: config.Mail.IsSandboxEnv,
 			FrontEndURL:  config.FrontEndURL,

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Samu-Amy/Shokora/internal/errorcodes"
+	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 	user_repo "github.com/Samu-Amy/Shokora/internal/store/user"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -37,14 +37,14 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 		// Get Auth header
 		authHeader := r.Header.Get(AUTH_HEADER)
 		if authHeader == "" {
-			app.unauthorizedError(w, r, errorcodes.ErrInvalid)
+			app.unauthorizedError(w, r, domerrors.ErrInvalid)
 			return
 		}
 
 		// Parse Auth header ("authorization: Bearer <token>")
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != BEARER {
-			app.unauthorizedError(w, r, errorcodes.ErrInvalid)
+			app.unauthorizedError(w, r, domerrors.ErrInvalid)
 			return
 		}
 
@@ -52,7 +52,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 
 		jwtToken, err := app.jwtAuthenticator.ValidateJWTToken(token) // TODO: usa service (gestione sia di Access che di Refresh tokens)
 		if err != nil {
-			app.unauthorizedError(w, r, errorcodes.InternalErrExpired)
+			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 			return
 		}
 
@@ -126,13 +126,13 @@ func (app *App) userVerifiedMiddleware(next http.Handler) http.Handler {
 		// Get User from context (auth middleware)
 		user, ok := getUserFromContext(r)
 		if !ok || user == nil {
-			app.unauthorizedError(w, r, errorcodes.ErrNotFound)
+			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 			return
 		}
 
 		// Check if User is verified
 		if !user.IsVerified {
-			app.unauthorizedError(w, r, errorcodes.ErrNotVerified) // TODO: in forntend chiedi verifica
+			app.unauthorizedError(w, r, domerrors.ErrUnauthorized) // TODO: in forntend chiedi verifica
 			return
 		}
 
@@ -150,13 +150,13 @@ func (app *App) employeeMiddleware(next http.Handler) http.Handler {
 		// Get User
 		user, ok := getUserFromContext(r)
 		if !ok || user == nil {
-			app.unauthorizedError(w, r, errorcodes.ErrNotFound)
+			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 			return
 		}
 
 		// Check User Role
 		if !user.IsRoleValid(user_repo.RoleEmployee) {
-			app.forbiddenError(w, r, errorcodes.ErrUnauthorized)
+			app.forbiddenError(w, r, domerrors.ErrForbidden)
 			return
 		}
 
@@ -174,13 +174,13 @@ func (app *App) adminMiddleware(next http.Handler) http.Handler {
 		// Get User
 		user, ok := getUserFromContext(r)
 		if !ok || user == nil {
-			app.unauthorizedError(w, r, errorcodes.ErrNotFound)
+			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 			return
 		}
 
 		// Check User Role
 		if !user.IsRoleValid(user_repo.RoleAdmin) {
-			app.forbiddenError(w, r, errorcodes.ErrUnauthorized)
+			app.forbiddenError(w, r, domerrors.ErrForbidden)
 			return
 		}
 
@@ -196,13 +196,13 @@ func (app *App) devMiddleware(next http.Handler) http.Handler {
 		// Get User
 		user, ok := getUserFromContext(r)
 		if !ok || user == nil {
-			app.unauthorizedError(w, r, errorcodes.ErrNotFound)
+			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 			return
 		}
 
 		// Check User Role
 		if !user.IsRoleValid(user_repo.RoleDev) {
-			app.forbiddenError(w, r, errorcodes.ErrUnauthorized)
+			app.forbiddenError(w, r, domerrors.ErrForbidden)
 			return
 		}
 

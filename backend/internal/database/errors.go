@@ -45,12 +45,12 @@ func isPostgresError(err error, errorCode pq.ErrorCode, constraint string) bool 
 	return false
 }
 
-// Parse db errors into custom errorcodes when necessary or return the err
+// Parse db errors into custom interrors when necessary or return the err
 func ParseDbError(err error) error {
 	switch {
 	// Generic
 	case errors.Is(err, sql.ErrNoRows):
-		return domerrors.ErrNotFound
+		return domerrors.ErrNotFound // TODO: ritorna solo interrors
 
 	// Users
 	case isPostgresError(err, UNIQUE_VIOLATION_ERROR, USERS_USER_EMAIL_UNIQUE):

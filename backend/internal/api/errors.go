@@ -10,7 +10,10 @@ import (
 
 // TODO: qua devono esserci solo domerrors (il service deve gestire gli interrors e tradurli in domerrors) - evita comunque di inviare interrors se dovessero esserci per sbaglio (controlla manualmente gli errori com'è già adesso)
 
+// ----- SEND ERROR -----
+
 // - Internal Errors (fixed message) -
+
 func (app *App) internalServerError(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Errorw("internal server error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
@@ -44,12 +47,7 @@ func (app *App) badRequestError(w http.ResponseWriter, r *http.Request, err erro
 
 	errorMessage := "bad_request"
 
-	// Frontend receives "ErrInvalid"
-	// if errors.Is(err, domerrors.InternalErrExpired) {
-	// 	err = domerrors.ErrInvalid
-	// }
-
-	if errors.Is(err, domerrors.ErrDuplicateEmail) || errors.Is(err, domerrors.ErrInvalid) {
+	if domerrors.IsDomainErr(err) {
 		errorMessage = err.Error()
 	}
 
@@ -73,16 +71,15 @@ func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error
 
 	errorMessage := "forbidden"
 
-	if errors.Is(err, domerrors.ErrMaxAttemptsExceeded) {
+	if domerrors.IsDomainErr(err) {
 		errorMessage = err.Error()
 	}
 
 	writeJSONError(w, http.StatusForbidden, errorMessage)
 }
 
-// TODO: attenzione agli errori che passano al frontend (bisogna usare solo quelli di errorcodes per evitare leaks di informazioni)
+// ----- PARSE ERROR -----
 
-// - Parse error -
 func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, context.DeadlineExceeded):

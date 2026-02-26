@@ -7,7 +7,7 @@ import (
 	"html/template"
 	"time"
 
-	"github.com/Samu-Amy/Shokora/internal/errorcodes"
+	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	"github.com/google/uuid"
 	"github.com/resend/resend-go/v2"
 )
@@ -96,5 +96,5 @@ func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile Template
 
 	// TODO: fai controllo errore per errori di invio duplicato della stessa email (ma comunque ricevuta)
 
-	return errorcodes.ErrMaxRetriesExceeded
+	return interrors.IErrMaxRetriesExceeded
 }

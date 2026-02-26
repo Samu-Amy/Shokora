@@ -1,14 +1,19 @@
 package interrors
 
-import "errors"
-
 // - Internal Errors -
 
+type internalErr string
+
+func (err internalErr) Error() string {
+	return string(err)
+}
+
 var (
-	IErrNoRowsAffected                = errors.New("i_no_rows_affected")
-	IErrExpired                       = errors.New("i_expired")
-	IErrDuplicateToken                = errors.New("i_duplicate_token")
-	IErrReusedToken                   = errors.New("i_reused_token")
-	IErrTokenNotFoundOrAlreadyRevoked = errors.New("i_token_not_found_or_already_revoked")
-	IErrInvalidEmailVars              = errors.New("i_invalid_email_vars") // SendEmail called with wrong variables for the template
+	IErrNoRowsAffected                = internalErr("i_no_rows_affected")
+	IErrExpired                       = internalErr("i_expired")
+	IErrDuplicateToken                = internalErr("i_duplicate_token")
+	IErrReusedToken                   = internalErr("i_reused_token")
+	IErrTokenNotFoundOrAlreadyRevoked = internalErr("i_token_not_found_or_already_revoked")
+	IErrInvalidEmailVars              = internalErr("i_invalid_email_vars") // SendEmail called with wrong variables for the template
+	IErrMaxRetriesExceeded            = internalErr("i_max_retries")        // SendEmail called with wrong variables for the template
 )
