@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/Samu-Amy/Shokora/internal/db"
+	"github.com/Samu-Amy/Shokora/internal/database"
 )
 
 func (app *App) getMenuProductsHandler(w http.ResponseWriter, r *http.Request) {
@@ -12,7 +12,7 @@ func (app *App) getMenuProductsHandler(w http.ResponseWriter, r *http.Request) {
 	// - Pagination, filters and sorting -
 
 	// Define default values
-	queryPaginationOptions := db.QueryPaginationOptions{
+	queryPaginationOptions := database.QueryPaginationOptions{
 		Limit:  10,
 		Offset: 0,
 		Sort:   "desc",
@@ -34,7 +34,7 @@ func (app *App) getMenuProductsHandler(w http.ResponseWriter, r *http.Request) {
 	// - Filters -
 
 	// Define default values
-	menuFilters := db.MenuFilters{
+	menuFilters := database.MenuFilters{
 		Search: "",
 		Badges: make([]string, 0),
 	}

@@ -17,7 +17,7 @@ type VerificationEmailData struct {
 	OTPExp        string
 }
 
-// TODO: fai creazione ed invio email in un metodo utils (con opzione per tipo di verifica -> generazione url e scelta template adatti)
+// TODO: fai creazione ed invio email in un service (con opzione per tipo di verifica -> generazione url e scelta template adatti)
 // TODO: sistema le vars (anche OTP e scadenze (?)) - fai utils apposta per email verification, password reset e 2FA
 
 /*

@@ -3,10 +3,8 @@ package product
 import (
 	"context"
 	"database/sql"
-	"errors"
 
-	"github.com/Samu-Amy/Shokora/internal/db"
-	"github.com/Samu-Amy/Shokora/internal/errorcodes"
+	"github.com/Samu-Amy/Shokora/internal/database"
 )
 
 type PostgresProductStore struct {
@@ -26,7 +24,7 @@ func (store *PostgresProductStore) Create(ctx context.Context, product *Product)
 		RETURNING id, created_at, updated_at
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	err := store.db.QueryRowContext(
@@ -43,11 +41,7 @@ func (store *PostgresProductStore) Create(ctx context.Context, product *Product)
 		&product.UpdatedAt,
 	)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return database.ParseDbError(err)
 }
 
 // ----- GET -----
@@ -60,7 +54,7 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 		WHERE id = $1
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	var product Product
@@ -81,19 +75,10 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 		&product.UpdatedAt,
 	)
 
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return nil, errorcodes.ErrNotFound
-		default:
-			return nil, err
-		}
-	}
-
-	return &product, nil
+	return &product, database.ParseDbError(err)
 }
 
-func (store *PostgresProductStore) GetProducts(ctx context.Context, queryPaginationOptions db.QueryPaginationOptions, productsFilters db.ProductsFilters) ([]Product, error) {
+func (store *PostgresProductStore) GetProducts(ctx context.Context, queryPaginationOptions database.QueryPaginationOptions, productsFilters database.ProductsFilters) ([]Product, error) {
 	// TODO: sistema implementazione (come GetMenuProducts -> guarda i TODO lì)
 
 	// For added safety I don't use the sort parameter directly (even if there's validation)
@@ -110,7 +95,7 @@ func (store *PostgresProductStore) GetProducts(ctx context.Context, queryPaginat
 		LIMIT $2 OFFSET $3
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, db.LONG_QUERY_TIMEOUT) //TODO: va bene?
+	queryCtx, cancel := context.WithTimeout(ctx, database.LONG_QUERY_TIMEOUT) //TODO: va bene?
 	defer cancel()
 
 	rows, err := store.db.QueryContext(
@@ -144,7 +129,7 @@ func (store *PostgresProductStore) GetProducts(ctx context.Context, queryPaginat
 		)
 
 		if err != nil {
-			return nil, err
+			return nil, database.ParseDbError(err)
 		}
 
 		products = append(products, product)
@@ -163,7 +148,7 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *Product)
 		RETURNING version
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	// TODO: modifica e rendi "modulare" per aggiornare solo ciò che serve (e magari fai un controllo più accurato sulle modifiche fatte e non solo sulla versione)
@@ -181,22 +166,14 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *Product)
 	).Scan(
 		&product.Version,
 	)
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			// TODO: fai check di esistenza del prodotto per distinguere tra not found e conflict (version)
-			// sia in caso di prodotto (id) non trovato, sia in caso di versione vecchia
 
-			// ...check if product exists...
-			// return ErrVersionConlflict
+	// TODO: fai check di esistenza del prodotto per distinguere tra not found e conflict (version)
+	// sia in caso di prodotto (id) non trovato, sia in caso di versione vecchia
 
-			return errorcodes.ErrNotFound
-		default:
-			return err
-		}
-	}
+	// ...check if product exists...
+	// return ErrVersionConlflict
 
-	return nil
+	return database.ParseDbError(err)
 }
 
 // ----- DELETE -----
@@ -204,25 +181,10 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *Product)
 func (store *PostgresProductStore) Delete(ctx context.Context, productId int64) error {
 	query := `DELETE FROM products WHERE id = $1`
 
-	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	res, err := store.db.ExecContext(queryCtx, query, productId)
-	if err != nil {
-		return err
-	}
-
-	rows, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	// Nothing deleted
-	if rows == 0 {
-		return errorcodes.ErrNotFound
-	}
-
-	return nil
+	return database.HandleExecContextResult(store.db.ExecContext(queryCtx, query, productId))
 }
 
 // TODO: guarda immagine cheatsheet sql

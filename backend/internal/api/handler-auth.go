@@ -48,7 +48,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: sposta il più possibile in service layer (e togli authenticators da app, mettili solo nel service)
+	// TODO: sposta creazione utente (hash password, creazione user, gestione verification tokens, gestione refresh token, invio email) in service
 
 	// Hash password
 	hashedPassword, err := app.hashPassword(payload.Password)

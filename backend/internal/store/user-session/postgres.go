@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/Samu-Amy/Shokora/internal/db"
+	"github.com/Samu-Amy/Shokora/internal/database"
 )
 
 type PostgresUserSessionStore struct {
@@ -25,7 +25,7 @@ func (store *PostgresUserSessionStore) Create(ctx context.Context, transaction *
 		RETURNING id, expires_at, created_at
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	err := transaction.QueryRowContext(
@@ -47,8 +47,8 @@ func (store *PostgresUserSessionStore) Create(ctx context.Context, transaction *
 func (store *PostgresUserSessionStore) Delete(ctx context.Context, transaction *sql.Tx, sessionId int64) error {
 	query := `DELETE FROM user_sessions WHERE id = $1`
 
-	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	return db.HandleExecContextResult(transaction.ExecContext(queryCtx, query, sessionId))
+	return database.HandleExecContextResult(transaction.ExecContext(queryCtx, query, sessionId))
 }

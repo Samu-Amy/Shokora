@@ -1,9 +1,8 @@
 package service
 
 import (
-	"database/sql"
-
 	"github.com/Samu-Amy/Shokora/internal/auth"
+	"github.com/Samu-Amy/Shokora/internal/database"
 	"github.com/Samu-Amy/Shokora/internal/mailer"
 	authservice "github.com/Samu-Amy/Shokora/internal/service/auth"
 	userservice "github.com/Samu-Amy/Shokora/internal/service/user"
@@ -18,9 +17,9 @@ type Service struct {
 	// Orders
 }
 
-func NewService(db *sql.DB, mailer mailer.IClient, store *store.Storage, jwtAuthenticator *auth.JWTAuthenticator, tokenAuthenticator *auth.TokenAuthenticator, authServiceConfig authservice.AuthServiceConfig) *Service {
+func NewService(txManager database.ITransactionManager, store *store.Storage, mailer mailer.IClient, jwtAuthenticator *auth.JWTAuthenticator, tokenAuthenticator *auth.TokenAuthenticator, authServiceConfig authservice.AuthServiceConfig) *Service {
 	return &Service{
-		Auth: authservice.NewService(db, mailer, store.User, store.VToken, store.RefreshToken, store.UserSession, jwtAuthenticator, tokenAuthenticator, authServiceConfig),
-		User: userservice.NewService(db, store.User),
+		Auth: authservice.NewService(txManager, store.User, store.VToken, store.RefreshToken, store.UserSession, mailer, jwtAuthenticator, tokenAuthenticator, authServiceConfig),
+		User: userservice.NewService(txManager, store.User),
 	}
 }

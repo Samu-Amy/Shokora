@@ -9,7 +9,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api"
 	"github.com/Samu-Amy/Shokora/internal/api/ratelimiter"
 	"github.com/Samu-Amy/Shokora/internal/auth"
-	"github.com/Samu-Amy/Shokora/internal/db"
+	"github.com/Samu-Amy/Shokora/internal/database"
 	"github.com/Samu-Amy/Shokora/internal/env"
 	"github.com/Samu-Amy/Shokora/internal/mailer"
 	"github.com/Samu-Amy/Shokora/internal/service"
@@ -95,7 +95,7 @@ func main() {
 	// - Authenticators -
 	jwtAuthenticator := auth.NewJWTAuthenticator(
 		config.Auth.Token.Secret,
-		config.Auth.Token.Issuer,
+		config.Auth.Token.Audience,
 		config.Auth.Token.Issuer,
 	)
 
@@ -107,7 +107,7 @@ func main() {
 	)
 
 	// - DB Connection -
-	db, err := db.New(
+	db, err := database.New(
 		config.Db.Addr,
 		config.Db.MaxOpenConns,
 		config.Db.MaxIdleConns,
@@ -122,6 +122,9 @@ func main() {
 	defer db.Close()
 	logger.Info("DB Connected")
 
+	// - Transaction Manager -
+	txManager := database.NewSQLTransactionManager(db)
+
 	// - Store -
 	store := store.NewPostgresStorage(db)
 
@@ -129,7 +132,7 @@ func main() {
 	authServiceConfig := authservice.AuthServiceConfig{
 		PasswordHashingCost: config.Auth.PasswordHashingCost,
 	}
-	service := service.NewService(db, mailer, store, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
+	service := service.NewService(txManager, store, mailer, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
 
 	// - Rate Limiter -
 	rateLimiter := ratelimiter.NewFixedWindowLimiter(

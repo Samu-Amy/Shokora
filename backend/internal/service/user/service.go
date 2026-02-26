@@ -1,16 +1,15 @@
 package userservice
 
 import (
-	"database/sql"
-
+	"github.com/Samu-Amy/Shokora/internal/database"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
 type UserService struct {
-	userRepo user.IUserRepository
-	db       *sql.DB
+	txManager database.ITransactionManager
+	userRepo  user.IUserRepository
 }
 
-func NewService(db *sql.DB, userRepo user.IUserRepository) *UserService {
-	return &UserService{userRepo, db}
+func NewService(txManager database.ITransactionManager, userRepo user.IUserRepository) *UserService {
+	return &UserService{txManager, userRepo}
 }

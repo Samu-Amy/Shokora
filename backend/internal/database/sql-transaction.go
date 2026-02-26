@@ -1,16 +1,21 @@
-package db
+package database
 
 import (
 	"context"
 	"database/sql"
 )
 
-// - Functions -
+type SQLTransactionManager struct {
+	db *sql.DB
+}
 
-// Transaction wrapper
-func WithTransaction(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) (err error) {
+func NewSQLTransactionManager(db *sql.DB) *SQLTransactionManager {
+	return &SQLTransactionManager{db: db}
+}
+
+func (txManager *SQLTransactionManager) WithTx(ctx context.Context, fn func(*sql.Tx) error) (err error) {
 	// Create transaction
-	transaction, err := db.BeginTx(ctx, nil)
+	transaction, err := txManager.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}

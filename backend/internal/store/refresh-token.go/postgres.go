@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/Samu-Amy/Shokora/internal/db"
+	"github.com/Samu-Amy/Shokora/internal/database"
 )
 
 type PostgresRefreshTokenStore struct {
@@ -25,7 +25,7 @@ func (store *PostgresRefreshTokenStore) CreateToken(ctx context.Context, transac
 		RETURNING expires_at, created_at
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	err := transaction.QueryRowContext(
@@ -40,7 +40,7 @@ func (store *PostgresRefreshTokenStore) CreateToken(ctx context.Context, transac
 		&refreshToken.CreatedAt,
 	)
 
-	return db.ParseDbError(err)
+	return database.ParseDbError(err)
 }
 
 // ----- GET -----
@@ -53,7 +53,7 @@ func (store *PostgresRefreshTokenStore) GetToken(ctx context.Context, transactio
 		FOR UPDATE;
 	` //? FOR UPDATE blocca la riga fino a fine transaction (commit o rollback) - solitamente usato per get e poi update
 
-	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
 	var refreshToken RefreshToken
@@ -88,10 +88,10 @@ func (store *PostgresRefreshTokenStore) RevokeTokenById(ctx context.Context, tra
 		WHERE id = $2 AND revoked_at IS NULL
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, db.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	return db.HandleExecContextResult(transaction.ExecContext(
+	return database.HandleExecContextResult(transaction.ExecContext(
 		queryCtx,
 		query,
 		revokedAt,

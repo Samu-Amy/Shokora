@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/Samu-Amy/Shokora/internal/db"
 	rtoken "github.com/Samu-Amy/Shokora/internal/store/refresh-token.go"
 	session "github.com/Samu-Amy/Shokora/internal/store/user-session"
 )
@@ -14,7 +13,7 @@ import (
 
 // Create
 func (service *AuthService) CreateRefreshToken(ctx context.Context, session *session.UserSession, refreshToken *rtoken.RefreshToken, sessionExp, tokenExp time.Duration) error {
-	return db.WithTransaction(service.db, ctx, func(tx *sql.Tx) error {
+	return service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 		// Create session
 		err := service.userSessionRepo.Create(ctx, tx, session, sessionExp)
 		if err != nil {
