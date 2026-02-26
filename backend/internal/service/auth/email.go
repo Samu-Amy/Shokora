@@ -1,4 +1,4 @@
-package api
+package authservice
 
 import (
 	"context"
@@ -31,9 +31,9 @@ verificationType: enum in auth package (TokenEmailVerification, TokenPasswordRes
 
 return: error (from SendEmail method in mailer Client)
 */
-func (app *App) SendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, user_name, email string, plainMagicLinkToken *string, plainOTP string, magicLinkTokenExp, otpExp time.Duration) error {
+func (service *AuthService) SendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, user_name, email string, plainMagicLinkToken *string, plainOTP string, magicLinkTokenExp, otpExp time.Duration) error {
 
-	isSandbox := app.config.Mail.SandboxEnv
+	isSandbox := service.config.Mail.IsSandboxEnv
 
 	// 2FA (only OTP)
 	if verificationType == auth.TwoFactorAuth {
@@ -45,17 +45,17 @@ func (app *App) SendVerificationEmail(ctx context.Context, verificationType auth
 			OTPToken: plainOTP,
 		}
 
-		return app.mailer.SendEmail(ctx, mailer.TwoFactorAuthTemplate, user_name, email, vars, isSandbox)
+		return service.mailer.SendEmail(ctx, mailer.TwoFactorAuthTemplate, user_name, email, vars, isSandbox)
 	}
 
 	// Email Verification and Password Reset (magic link + OTP)
 	if plainMagicLinkToken == nil {
-		app.logger.Warnf("plainMagicLinkToken required for verification type: %v", verificationType)
+		service.logger.Warnf("plainMagicLinkToken required for verification type: %v", verificationType)
 		return errorcodes.InternalErrInvalidEmailVars
 	}
 
 	var templateFile mailer.TemplateFile
-	activationURL := app.config.FrontEndURL
+	activationURL := service.config.Mail.FrontEndURL
 
 	switch verificationType {
 	case auth.EmailVerification:
@@ -79,5 +79,5 @@ func (app *App) SendVerificationEmail(ctx context.Context, verificationType auth
 		OTPToken:      plainOTP,
 	}
 
-	return app.mailer.SendEmail(ctx, templateFile, user_name, email, vars, isSandbox)
+	return service.mailer.SendEmail(ctx, templateFile, user_name, email, vars, isSandbox)
 }

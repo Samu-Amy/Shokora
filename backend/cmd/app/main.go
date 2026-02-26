@@ -52,8 +52,8 @@ func main() {
 			Resend: api.ResendConfig{
 				ApiKey: env.GetString("RESEND_API_KEY", ""),
 			},
-			FromEmail:  env.GetString("FROM_EMAIL", ""),
-			SandboxEnv: env.GetBool("SANDBOX", false),
+			FromEmail:    env.GetString("FROM_EMAIL", ""),
+			IsSandboxEnv: env.GetBool("SANDBOX", false),
 		},
 		Auth: api.AuthConfig{
 			PasswordHashingCost: 12, // bcrypt.DefaultCost = 10
@@ -131,8 +131,12 @@ func main() {
 	// - Service -
 	authServiceConfig := authservice.AuthServiceConfig{
 		PasswordHashingCost: config.Auth.PasswordHashingCost,
+		Mail: authservice.MailConfig{
+			IsSandboxEnv: config.Mail.IsSandboxEnv,
+			FrontEndURL:  config.FrontEndURL,
+		},
 	}
-	service := service.NewService(txManager, store, mailer, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
+	service := service.NewService(txManager, store, mailer, logger, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
 
 	// - Rate Limiter -
 	rateLimiter := ratelimiter.NewFixedWindowLimiter(

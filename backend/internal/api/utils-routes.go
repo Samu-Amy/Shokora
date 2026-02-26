@@ -6,10 +6,15 @@ import (
 
 	"github.com/Samu-Amy/Shokora/internal/store/user"
 	"github.com/go-chi/chi/v5"
-	"golang.org/x/crypto/bcrypt"
 )
 
-// - Context -
+// ----- HEADERS -----
+const (
+	AUTH_HEADER string = "Authorization"
+	BEARER      string = "Bearer"
+)
+
+// ----- CONTEXT -----
 
 // Keys
 type contextKey uint8
@@ -24,7 +29,7 @@ func getUserFromContext(r *http.Request) (*user.User, bool) {
 	return user, ok
 }
 
-// - Params -
+// ----- PARAMS -----
 
 // Constants
 const userIdParam = "userId"
@@ -42,25 +47,3 @@ func (app *App) getInt64FromParam(r *http.Request, idParamName string) (int64, e
 
 	return resourceId, nil
 }
-
-// - Auth -
-func (app *App) hashPassword(plainPassword string) ([]byte, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(plainPassword), app.config.Auth.PasswordHashingCost)
-	if err != nil {
-		return nil, err
-	}
-
-	return hash, nil
-}
-
-// func (app *App) setAuthCookie(w http.ResponseWriter, token string) {
-// 	http.SetCookie(w, &http.Cookie{
-// 		Name:     "auth_token",
-// 		Value:    token,
-// 		Path:     "/",
-// 		MaxAge:   int(app.config.Auth.Token.Exp.Seconds()),
-// 		HttpOnly: true,
-// 		Secure:   app.config.Env == "production", // true in prod
-// 		SameSite: http.SameSiteStrictMode,
-// 	})
-// }

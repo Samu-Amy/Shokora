@@ -35,7 +35,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 
 		// Get Auth header
-		authHeader := r.Header.Get("Authorization") // TODO: fai functions utils (?)
+		authHeader := r.Header.Get(AUTH_HEADER)
 		if authHeader == "" {
 			app.unauthorizedError(w, r, errorcodes.ErrInvalid)
 			return
@@ -43,14 +43,14 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 
 		// Parse Auth header ("authorization: Bearer <token>")
 		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
+		if len(parts) != 2 || parts[0] != BEARER {
 			app.unauthorizedError(w, r, errorcodes.ErrInvalid)
 			return
 		}
 
 		token := parts[1]
 
-		jwtToken, err := app.jwtAuthenticator.ValidateJWTToken(token) // TODO: usa service
+		jwtToken, err := app.jwtAuthenticator.ValidateJWTToken(token) // TODO: usa service (gestione sia di Access che di Refresh tokens)
 		if err != nil {
 			app.unauthorizedError(w, r, errorcodes.InternalErrExpired)
 			return

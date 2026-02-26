@@ -7,6 +7,7 @@ import (
 	authservice "github.com/Samu-Amy/Shokora/internal/service/auth"
 	userservice "github.com/Samu-Amy/Shokora/internal/service/user"
 	"github.com/Samu-Amy/Shokora/internal/store"
+	"go.uber.org/zap"
 )
 
 type Service struct {
@@ -17,9 +18,9 @@ type Service struct {
 	// Orders
 }
 
-func NewService(txManager database.ITransactionManager, store *store.Storage, mailer mailer.IClient, jwtAuthenticator *auth.JWTAuthenticator, tokenAuthenticator *auth.TokenAuthenticator, authServiceConfig authservice.AuthServiceConfig) *Service {
+func NewService(txManager database.ITransactionManager, store *store.Storage, mailer mailer.IClient, logger *zap.SugaredLogger, jwtAuthenticator *auth.JWTAuthenticator, tokenAuthenticator *auth.TokenAuthenticator, authServiceConfig authservice.AuthServiceConfig) *Service {
 	return &Service{
-		Auth: authservice.NewService(txManager, store.User, store.VToken, store.RefreshToken, store.UserSession, mailer, jwtAuthenticator, tokenAuthenticator, authServiceConfig),
-		User: userservice.NewService(txManager, store.User),
+		Auth: authservice.NewService(txManager, store.User, store.VToken, store.RefreshToken, store.UserSession, mailer, logger, jwtAuthenticator, tokenAuthenticator, authServiceConfig),
+		User: userservice.NewService(txManager, store.User, logger),
 	}
 }

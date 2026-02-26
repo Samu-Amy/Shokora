@@ -44,9 +44,9 @@ type DbConfig struct {
 }
 
 type MailConfig struct {
-	Resend     ResendConfig
-	FromEmail  string
-	SandboxEnv bool
+	Resend       ResendConfig
+	FromEmail    string
+	IsSandboxEnv bool
 }
 
 type ResendConfig struct {
