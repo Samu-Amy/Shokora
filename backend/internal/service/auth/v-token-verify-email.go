@@ -18,7 +18,7 @@ Errors
 func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToken []byte) error {
 
 	// Verify and Get data
-	magicLinkTokenQueryData, err := service.vTokenRepo.VerifyMagicLink(ctx, hashedToken, auth.EmailVerification)
+	magicLinkTokenQueryData, err := service.vTokenRepo.GetValidMagicLinkData(ctx, hashedToken, auth.EmailVerification)
 	if err != nil {
 		// log.Printf("Verify OTP Error: %v", err)
 		switch {

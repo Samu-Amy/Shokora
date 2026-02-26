@@ -16,7 +16,6 @@ type IRefreshTokenRepository interface {
 	// DeleteSessionById(ctx context.Context, userId int64, sessionId uuid.UUID) error
 }
 
-// TODO: nel login fai anche delete di tutti i refresh token scaduti per quell'utente (o in generale?) - ottenere un l'ultimo token creato per ogni session_id (join con order by) e se è scaduto -> sessione scaduta (?)
 // DeleteExpired[User]Sessions(ctx context.Context, ...) error
 
 /*

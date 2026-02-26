@@ -32,7 +32,7 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64,
 	}
 
 	// Verify expiry
-	if otpQueryData.Exp.Before(time.Now()) {
+	if otpQueryData.ExpiresAt.Before(time.Now()) {
 		return nil, errorcodes.InternalErrExpired
 	}
 

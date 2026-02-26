@@ -6,7 +6,6 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/db"
 )
 
-// TODO: aggiungi nomi parametri/argomenti nei metodi di tutte le interfacce
 type IProductRepository interface {
 	Create(ctx context.Context, product *Product) error
 	GetById(ctx context.Context, productId int64) (*Product, error)

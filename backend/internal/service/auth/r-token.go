@@ -26,8 +26,11 @@ func (service *AuthService) CreateRefreshToken(ctx context.Context, session *ses
 	})
 }
 
-// Rotate // TODO: aggiorna a session + refresh token
-// func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedToken []byte, newRefreshToken *rtoken.RefreshToken) error { // TODO: ritorna dati (es. expires_at per cookies)
+// TODO: nel login fai anche delete di tutti i refresh token scaduti per quell'utente (o in generale?) - ottenere un l'ultimo token creato per ogni session_id (join con order by) e se è scaduto -> sessione scaduta (?)
+// TODO: aggiorna a session + refresh token
+
+// Rotate
+// func (service *AuthService) RotateRefreshToken(ctx context.Context, oldHashedToken []byte, newRefreshToken *rtoken.RefreshToken) error {
 // 	err := db.WithTransaction(service.db, ctx, func(tx *sql.Tx) error {
 
 // 		// Get token

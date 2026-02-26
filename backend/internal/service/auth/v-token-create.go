@@ -17,7 +17,7 @@ func (service *AuthService) CreateVerificationTokensWithRetries(ctx context.Cont
 	defer cancel()
 
 	// Create Tokens in db
-	verificationId, err := service.vTokenRepo.CreateTokens(ctxWithTimeout, user.Id, verificationTokens)
+	verificationId, err := service.vTokenRepo.CreateTokens(ctxWithTimeout, user.Id, verificationTokens) // TODO: controlla che le scadenze siano giuste
 	if err == nil {
 		return verificationId, nil // OK, return no error
 

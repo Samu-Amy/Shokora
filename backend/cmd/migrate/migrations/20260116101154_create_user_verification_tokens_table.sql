@@ -7,10 +7,10 @@ CREATE TABLE IF NOT EXISTS verification_tokens(
   verification_type smallint NOT NULL,
   
   magic_link_token_hash bytea,
-  magic_link_token_exp timestamp(0) with time zone,
+  magic_link_token_expires_at timestamp(0) with time zone,
   
   otp_hash bytea NOT NULL,
-  otp_exp timestamp(0) with time zone NOT NULL,
+  otp_expires_at timestamp(0) with time zone NOT NULL,
   otp_attempts smallint NOT NULL DEFAULT 0,
   
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
@@ -26,9 +26,9 @@ CREATE TABLE IF NOT EXISTS verification_tokens(
   CONSTRAINT v_tokens_otp_attempts_range_check CHECK (otp_attempts BETWEEN 0 AND 255),
 
   CONSTRAINT v_tokens_magic_link_token_hash_check CHECK (
-    (magic_link_token_hash IS NULL AND magic_link_token_exp IS NULL)
+    (magic_link_token_hash IS NULL AND magic_link_token_expires_at IS NULL)
     OR
-    (magic_link_token_hash IS NOT NULL AND magic_link_token_exp IS NOT NULL)
+    (magic_link_token_hash IS NOT NULL AND magic_link_token_expires_at IS NOT NULL)
   )
 );
 
