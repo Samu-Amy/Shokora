@@ -45,7 +45,7 @@ func (app *App) getInt64FromParam(r *http.Request, idParamName string) (int64, e
 
 // - Auth -
 func (app *App) hashPassword(plainPassword string) ([]byte, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(plainPassword), app.config.Auth.HashingCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(plainPassword), app.config.Auth.PasswordHashingCost)
 	if err != nil {
 		return nil, err
 	}

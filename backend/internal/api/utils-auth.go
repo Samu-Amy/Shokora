@@ -67,13 +67,13 @@ func (app *App) setAuthCookies(w http.ResponseWriter, userId int64, plainRefresh
 
 // Create a new Refresh Token, saves it in db and return token and expiration date
 func (app *App) generateNewRefreshToken(ctx context.Context, userId int64) (*auth.CreateRefreshTokenPayload, error) {
-	token, err := auth.GenerateToken(app.config.Auth.Token.RefreshTokenByteSize)
+	token, err := auth.GenerateBase64Token(app.config.Auth.Token.RefreshTokenByteSize)
 	if err != nil {
 		return nil, err
 	}
 
 	// Hash token and create Session Id
-	hashedToken := auth.HashToken(token)
+	hashedToken := auth.HashBase64Token(token)
 
 	session := session.UserSession{
 		UserId: userId,

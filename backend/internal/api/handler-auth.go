@@ -48,6 +48,8 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: sposta il più possibile in service layer (e togli authenticators da app, mettili solo nel service)
+
 	// Hash password
 	hashedPassword, err := app.hashPassword(payload.Password)
 	if err != nil {
@@ -179,7 +181,7 @@ func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Reque
 	token := chi.URLParam(r, verificationTokenParam)
 
 	// Hash token
-	hashedToken := auth.HashToken(&token)
+	hashedToken := auth.HashBase64Token(&token)
 
 	// Verify
 	if err := app.service.Auth.VerifyEmailWithToken(ctx, hashedToken); err != nil {

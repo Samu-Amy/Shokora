@@ -7,7 +7,7 @@ import (
 )
 
 // Generate Magic Link and Refresh Tokens
-func GenerateToken(size int) (*string, error) {
+func GenerateBase64Token(size int) (*string, error) {
 	buffer := make([]byte, size)
 
 	if _, err := rand.Read(buffer); err != nil {
@@ -19,7 +19,7 @@ func GenerateToken(size int) (*string, error) {
 }
 
 // Hash Magic Link and Refresh Tokens
-func HashToken(plainMagicLinkToken *string) []byte {
+func HashBase64Token(plainMagicLinkToken *string) []byte {
 	if plainMagicLinkToken == nil {
 		return nil
 	}

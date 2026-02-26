@@ -11,24 +11,18 @@ import (
 
 	"github.com/Samu-Amy/Shokora/internal/api/ratelimiter"
 	"github.com/Samu-Amy/Shokora/internal/auth"
-	"github.com/Samu-Amy/Shokora/internal/mailer"
 	"github.com/Samu-Amy/Shokora/internal/service"
-	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
 // - Structs -
 type App struct {
-	config             Config
-	router             *chi.Mux
-	jwtAuthenticator   *auth.JWTAuthenticator
-	tokenAuthenticator *auth.TokenAuthenticator
-	mailer             mailer.ClientI
-	store              *store.Storage
-	service            *service.Service
-	logger             *zap.SugaredLogger
-	rateLimiter        ratelimiter.RateLimiterI
+	config      Config
+	router      *chi.Mux
+	service     *service.Service
+	logger      *zap.SugaredLogger
+	rateLimiter ratelimiter.RateLimiterI
 }
 
 type Config struct {
@@ -60,7 +54,7 @@ type ResendConfig struct {
 }
 
 type AuthConfig struct {
-	HashingCost                 int
+	PasswordHashingCost         int
 	Token                       TokenConfig
 	MagicLink                   auth.MagicLinkConfig
 	OTP                         auth.OTPConfig
@@ -81,23 +75,15 @@ type TokenConfig struct {
 // - Functions/Methods -
 func NewApp(
 	config Config,
-	jwtAuthenticator *auth.JWTAuthenticator,
-	tokenAuthenticator *auth.TokenAuthenticator,
-	mailer mailer.ClientI,
-	store *store.Storage,
 	service *service.Service,
 	logger *zap.SugaredLogger,
 	rateLimiter ratelimiter.RateLimiterI,
 ) *App {
 	app := &App{
-		config:             config,
-		jwtAuthenticator:   jwtAuthenticator,
-		tokenAuthenticator: tokenAuthenticator,
-		mailer:             mailer,
-		store:              store,
-		service:            service,
-		logger:             logger,
-		rateLimiter:        rateLimiter,
+		config:      config,
+		service:     service,
+		logger:      logger,
+		rateLimiter: rateLimiter,
 	}
 	app.router = app.initRouter()
 

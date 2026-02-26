@@ -68,12 +68,12 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificat
 	var err error
 
 	if verificationType != TwoFactorAuth {
-		plainMagicLinkToken, err = GenerateToken(tokenAuthenticator.MagicLink.ByteSize)
+		plainMagicLinkToken, err = GenerateBase64Token(tokenAuthenticator.MagicLink.ByteSize)
 		if err != nil {
 			return nil, err
 		}
 
-		hashedMagicLinkToken = HashToken(plainMagicLinkToken)
+		hashedMagicLinkToken = HashBase64Token(plainMagicLinkToken)
 	}
 
 	// Generate and hash OTP
@@ -103,13 +103,13 @@ func (tokenAuthenticator *TokenAuthenticator) HashOTP(plainOTP string, verificat
 
 // Regenerate
 func (tokenAuthenticator *TokenAuthenticator) RegenerateMagicLinkToken(verificationTokens *VerificationTokens) error {
-	newMagicLinkToken, err := GenerateToken(tokenAuthenticator.MagicLink.ByteSize)
+	newMagicLinkToken, err := GenerateBase64Token(tokenAuthenticator.MagicLink.ByteSize)
 	if err != nil {
 		return err
 	}
 
 	verificationTokens.PlainMagicLinkToken = newMagicLinkToken
-	verificationTokens.HashedMagicLinkToken = HashToken(newMagicLinkToken)
+	verificationTokens.HashedMagicLinkToken = HashBase64Token(newMagicLinkToken)
 
 	return nil
 }

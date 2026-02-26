@@ -13,6 +13,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/env"
 	"github.com/Samu-Amy/Shokora/internal/mailer"
 	"github.com/Samu-Amy/Shokora/internal/service"
+	authservice "github.com/Samu-Amy/Shokora/internal/service/auth"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"go.uber.org/zap"
 )
@@ -55,9 +56,9 @@ func main() {
 			SandboxEnv: env.GetBool("SANDBOX", false),
 		},
 		Auth: api.AuthConfig{
-			HashingCost: 12, // bcrypt.DefaultCost = 10
+			PasswordHashingCost: 12, // bcrypt.DefaultCost = 10
 			Token: api.TokenConfig{
-				Secret:               env.GetString("AUTH_TOKEN_SECRET", "4a4c345b5064c9a85fff749313ff25310085a606a47232c94e9d898470c6e854"), // TODO: usa "openssl rand -hex 32" per generare token
+				Secret:               env.GetString("AUTH_TOKEN_SECRET", "4a4c345b5064c9a85fff749313ff25310085a606a47232c94e9d898470c6e854"), // TODO: cambia quello di default (oppure dai errore se non lo trova dall'env) e usa "openssl rand -hex 32" per generare token
 				Audience:             "shokora",
 				Issuer:               "shokora",
 				AccessTokenExp:       15 * time.Minute, // 15 min (suggested: 15-60 min) //TODO: alza a 30 (?)
@@ -125,7 +126,10 @@ func main() {
 	store := store.NewPostgresStorage(db)
 
 	// - Service -
-	service := service.NewService(db, store, tokenAuthenricator)
+	authServiceConfig := authservice.AuthServiceConfig{
+		PasswordHashingCost: config.Auth.PasswordHashingCost,
+	}
+	service := service.NewService(db, mailer, store, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
 
 	// - Rate Limiter -
 	rateLimiter := ratelimiter.NewFixedWindowLimiter(
@@ -150,10 +154,6 @@ func main() {
 	// - App -
 	app := api.NewApp(
 		config,
-		jwtAuthenticator,
-		tokenAuthenricator,
-		mailer,
-		store,
 		service,
 		logger,
 		rateLimiter,
