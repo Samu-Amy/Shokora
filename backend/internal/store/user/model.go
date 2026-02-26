@@ -5,18 +5,18 @@ import (
 )
 
 type User struct {
-	Id           int64     `json:"id"` // Generated
-	FirstName    string    `json:"first_name"`
-	LastName     string    `json:"last_name"`
-	Email        string    `json:"email"`
-	PasswordHash []byte    `json:"-"`
-	ImageUrl     string    `json:"image_url"`
-	BirthDate    time.Time `json:"birth_date"`
-	IsVerified   bool      `json:"is_verified"` // Default false
-	IsActive     bool      `json:"is_active"`   // Default true
-	Role         Role      `json:"role"`        // Default 0
-	CreatedAt    time.Time `json:"created_at"`  // Default now()
-	UpdatedAt    time.Time `json:"updated_at"`  // Default now()
+	Id           int64
+	FirstName    string
+	LastName     string
+	Email        string
+	PasswordHash []byte
+	ImageUrl     string
+	BirthDate    time.Time
+	IsVerified   bool
+	IsActive     bool
+	Role         Role
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 // - Role -

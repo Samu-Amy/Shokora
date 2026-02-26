@@ -13,7 +13,7 @@ Executes the user registration:
   - create new user in db
     -
 */
-func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.RegisterUserReqPayload) (*payloads.RegisterUserResPayload, error) { // TODO: ritorna anche i dati per i cookies
+func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.RegisterUserReq) (*payloads.RegisterUserRes, error) { // TODO: ritorna anche i dati per i cookies
 
 	// Hash password
 	hashedPassword, err := service.hashPassword(payload.Password)
@@ -38,9 +38,11 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		return nil, err
 	}
 
+	userRes := payloads.ToUserRes(*user)
+
 	// Create Response Payload with user
-	resPayload := &payloads.RegisterUserResPayload{
-		User: *user,
+	registerUserRes := &payloads.RegisterUserRes{
+		User: userRes,
 	}
 
 	// TODO: continua

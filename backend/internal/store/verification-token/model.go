@@ -8,16 +8,16 @@ import (
 
 // Verification Tokens (Magic Link and OTP)
 type VToken struct {
-	Id                      int64                 `json:"id"` // Generated
-	UserId                  int64                 `json:"user_id"`
-	VerificationType        auth.VerificationType `json:"verification_type"`
-	MagicLinkTokenHash      []byte                `json:"-"`
-	MagicLinkTokenExpiresAt time.Time             `json:"magic_link_token_expires_at"`
-	OTPHash                 []byte                `json:"-"`
-	OTPExpiresAt            time.Time             `json:"otp_expires_at"`
-	OTPAttempts             uint8                 `json:"otp_attempts"` // Default 0 (otp attempts for (user_id, verificationType))
-	CreatedAt               time.Time             `json:"created_at"`   // Default now()
-	UpdatedAt               time.Time             `json:"updated_at"`   // Default now()
+	Id                      int64
+	UserId                  int64
+	VerificationType        auth.VerificationType
+	MagicLinkTokenHash      []byte
+	MagicLinkTokenExpiresAt time.Time
+	OTPHash                 []byte
+	OTPExpiresAt            time.Time
+	OTPAttempts             uint8
+	CreatedAt               time.Time
+	UpdatedAt               time.Time
 }
 
 // - Payloads -

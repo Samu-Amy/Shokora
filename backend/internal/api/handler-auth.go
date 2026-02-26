@@ -34,7 +34,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payloads.RegisterUserReqPayload
+	var payload payloads.RegisterUserReq
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
@@ -179,7 +179,7 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payloads.OTPVerificationReqPayload // TODO: nel FRONTEND ricorda di inviare l'otp come stringa
+	var payload payloads.OTPVerificationReq // TODO: nel FRONTEND ricorda di inviare l'otp come stringa
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
@@ -219,7 +219,7 @@ func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payloads.LoginUserReqPayload
+	var payload payloads.LoginUserReq
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
