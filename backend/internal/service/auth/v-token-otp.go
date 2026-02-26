@@ -13,7 +13,7 @@ import (
 
 // ----- VERIFY OTP -----
 
-func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64, hashedOTP []byte, maxAttempts uint8, verificationType auth.VerificationType) (*vtoken.OTPPayload, error) {
+func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64, hashedOTP []byte, maxAttempts uint8, verificationType auth.VerificationType) (*vtoken.OTPVerificationData, error) {
 	// TODO: usare transaction (ed usare FOR UPDATE nel get?) per GetOtpData e UpdateOtpAttempts?
 
 	// Get data

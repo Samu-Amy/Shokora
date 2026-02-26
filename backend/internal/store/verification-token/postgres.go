@@ -118,7 +118,7 @@ func (store *PostgresVTokenStore) UpdateOtpAttempts(ctx context.Context, verific
 
 // ----- GET -----
 
-func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, verificationId int64, verificationType auth.VerificationType) (*OTPPayload, error) {
+func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, verificationId int64, verificationType auth.VerificationType) (*OTPVerificationData, error) {
 	query := `
 		SELECT user_id, otp_hash, otp_attempts, otp_expires_at
 		FROM verification_tokens
@@ -128,7 +128,7 @@ func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, verificationId
 	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	var otpPayload OTPPayload
+	var otpPayload OTPVerificationData
 
 	err := store.db.QueryRowContext(
 		queryCtx,
@@ -147,7 +147,7 @@ func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, verificationId
 
 // ----- VERIFY -----
 
-func (store *PostgresVTokenStore) GetValidMagicLinkData(ctx context.Context, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkTokenPayload, error) {
+func (store *PostgresVTokenStore) GetValidMagicLinkData(ctx context.Context, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkVerificationData, error) {
 	query := `
 		SELECT id, user_id
 		FROM verification_tokens
@@ -157,7 +157,7 @@ func (store *PostgresVTokenStore) GetValidMagicLinkData(ctx context.Context, has
 	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
 	defer cancel()
 
-	var magicLinkTokenPayload MagicLinkTokenPayload
+	var magicLinkTokenPayload MagicLinkVerificationData
 
 	err := store.db.QueryRowContext(
 		queryCtx,

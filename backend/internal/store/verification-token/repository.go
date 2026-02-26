@@ -20,10 +20,10 @@ type IVTokenRepository interface {
 
 	UpdateOtpAttempts(ctx context.Context, verificationId int64, maxOTPAttempts uint8) error
 
-	GetOtpData(ctx context.Context, verificationId int64, verificationType auth.VerificationType) (*OTPPayload, error)
+	GetOtpData(ctx context.Context, verificationId int64, verificationType auth.VerificationType) (*OTPVerificationData, error)
 
 	// Get MagicLinkTokenPayload if magic link token found and is not expired
-	GetValidMagicLinkData(ctx context.Context, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkTokenPayload, error)
+	GetValidMagicLinkData(ctx context.Context, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkVerificationData, error)
 
 	Delete(ctx context.Context, verificationId int64) error
 }

@@ -19,17 +19,3 @@ type VToken struct {
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
 }
-
-// - Payloads -
-
-type MagicLinkTokenPayload struct {
-	VerificationId int64
-	UserId         int64
-}
-
-type OTPPayload struct {
-	UserId    int64
-	HashedOtp []byte
-	Attempts  uint8
-	ExpiresAt time.Time
-}
