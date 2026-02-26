@@ -1,4 +1,4 @@
-package api
+package mailer
 
 import (
 	"fmt"

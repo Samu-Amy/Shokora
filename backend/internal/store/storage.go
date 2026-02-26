@@ -10,6 +10,10 @@ import (
 	vtoken "github.com/Samu-Amy/Shokora/internal/store/verification-token"
 )
 
+/*
+The Repository layer, it manages the database interactions using queries.
+It is divided in Repositories (one for every db table) and it is used by the Service layer.
+*/
 type Storage struct {
 	User         user.IUserRepository
 	Product      product.IProductRepository

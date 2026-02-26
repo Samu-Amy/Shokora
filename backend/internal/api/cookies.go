@@ -66,6 +66,7 @@ func (app *App) setAuthCookies(w http.ResponseWriter, userId int64, plainRefresh
 }
 
 // Create a new Refresh Token, saves it in db and return token and expiration date
+// TODO: sposta in service
 func (app *App) generateNewRefreshToken(ctx context.Context, userId int64) (*auth.CreateRefreshTokenPayload, error) {
 	token, err := auth.GenerateBase64Token(app.config.Auth.Token.RefreshTokenByteSize)
 	if err != nil {

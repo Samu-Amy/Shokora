@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
-	"github.com/Samu-Amy/Shokora/internal/errorcodes"
+	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
+	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	vtoken "github.com/Samu-Amy/Shokora/internal/store/verification-token"
 )
 
@@ -19,8 +20,8 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64,
 	otpQueryData, err := service.vTokenRepo.GetOtpData(ctx, verificationId, verificationType)
 	if err != nil {
 		switch {
-		case errors.Is(err, errorcodes.ErrNotFound): // Not valid (id does not exists or wrong verificationType)
-			return nil, errorcodes.ErrInvalid
+		case errors.Is(err, domerrors.ErrNotFound): // Not valid (id does not exists or wrong verificationType)
+			return nil, domerrors.ErrInvalid
 		default:
 			return nil, err // db/query error
 		}
@@ -28,12 +29,12 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64,
 
 	// Verify attempts
 	if otpQueryData.Attempts >= maxAttempts {
-		return nil, errorcodes.ErrMaxAttemptsExceeded
+		return nil, domerrors.ErrMaxAttemptsExceeded
 	}
 
 	// Verify expiry
 	if otpQueryData.ExpiresAt.Before(time.Now()) {
-		return nil, errorcodes.InternalErrExpired
+		return nil, interrors.IErrExpired // TODO: non inviare interrors
 	}
 
 	// Validate OTP
@@ -46,12 +47,12 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64,
 		// Attempts updated successfully but OTP not valid
 		if err == nil {
 			switch {
-			case errors.Is(err, errorcodes.ErrNotFound):
-				err = errorcodes.ErrInvalid // VerificationId is not valid
-			case errors.Is(err, errorcodes.InternalErrNoRowsAffected): // Max attempts exceeded
-				err = errorcodes.ErrMaxAttemptsExceeded
+			case errors.Is(err, domerrors.ErrNotFound):
+				err = domerrors.ErrInvalid // VerificationId is not valid
+			case errors.Is(err, interrors.IErrNoRowsAffected): // Max attempts exceeded
+				err = domerrors.ErrMaxAttemptsExceeded
 			default:
-				err = errorcodes.ErrInvalid
+				err = domerrors.ErrInvalid
 			}
 		}
 

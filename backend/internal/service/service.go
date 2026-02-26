@@ -10,6 +10,10 @@ import (
 	"go.uber.org/zap"
 )
 
+/*
+The Service layer, it interacts with "internal services" (such as mailer and authenticators) and repository layer (store).
+It manages the logic and internal errors, returning data and domain errors to the handlers.
+*/
 type Service struct {
 	Auth *authservice.AuthService // Verification Tokens, Refresh Tokens, Permissions
 	User *userservice.UserService // (settings, stats, achievements)

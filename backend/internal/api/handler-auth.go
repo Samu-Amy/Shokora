@@ -7,7 +7,6 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/errorcodes"
-	"github.com/Samu-Amy/Shokora/internal/store/user"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -50,38 +49,11 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: sposta creazione utente (hash password, creazione user, gestione verification tokens, gestione refresh token, invio email) in service
 
-	// Hash password
-	hashedPassword, err := app.hashPassword(payload.Password)
+	// Register user
+	user, err := app.service.Auth.RegisterUser(ctx, payload)
 	if err != nil {
-		app.internalServerError(w, r, err)
-		return
-	}
-
-	// Create user from payload data
-	user := &user.User{
-		FirstName:    payload.FirstName,
-		LastName:     payload.LastName,
-		Email:        payload.Email,
-		PasswordHash: hashedPassword,
-		ImageUrl:     payload.ImageUrl,
-		BirthDate:    payload.BirthDate,
-	}
-
-	// Create Response Payload
-	resPayload := payloads.RegisterUserResPayload{}
-
-	// Create user in db
-	if err := app.service.User.Create(ctx, user); err != nil {
 		app.parseError(w, r, err)
 		return
-	}
-
-	resPayload.User = payloads.CreateUserResPayload(user) // Add user to payload
-
-	// Create Refresh Token
-	refreshToken, err := app.generateNewRefreshToken(ctx, user.Id)
-	if err != nil {
-		resPayload.AuthError = true
 	}
 
 	// Auth cookies

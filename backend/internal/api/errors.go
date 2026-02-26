@@ -5,10 +5,10 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/Samu-Amy/Shokora/internal/errorcodes"
+	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 )
 
-// TODO: passa errori strutturati (sopra) al frontend (invece che hardcoded strings)
+// TODO: qua devono esserci solo domerrors (il service deve gestire gli interrors e tradurli in domerrors) - evita comunque di inviare interrors se dovessero esserci per sbaglio (controlla manualmente gli errori com'è già adesso)
 
 // - Internal Errors (fixed message) -
 func (app *App) internalServerError(w http.ResponseWriter, r *http.Request, err error) {
@@ -45,11 +45,11 @@ func (app *App) badRequestError(w http.ResponseWriter, r *http.Request, err erro
 	errorMessage := "bad_request"
 
 	// Frontend receives "ErrInvalid"
-	if errors.Is(err, errorcodes.InternalErrExpired) {
-		err = errorcodes.ErrInvalid
-	}
+	// if errors.Is(err, domerrors.InternalErrExpired) {
+	// 	err = domerrors.ErrInvalid
+	// }
 
-	if errors.Is(err, errorcodes.ErrDuplicateEmail) || errors.Is(err, errorcodes.ErrInvalid) {
+	if errors.Is(err, domerrors.ErrDuplicateEmail) || errors.Is(err, domerrors.ErrInvalid) {
 		errorMessage = err.Error()
 	}
 
@@ -73,7 +73,7 @@ func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error
 
 	errorMessage := "forbidden"
 
-	if errors.Is(err, errorcodes.ErrMaxAttemptsExceeded) {
+	if errors.Is(err, domerrors.ErrMaxAttemptsExceeded) {
 		errorMessage = err.Error()
 	}
 
@@ -88,23 +88,24 @@ func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 	case errors.Is(err, context.DeadlineExceeded):
 		app.requestTimeoutError(w, r, err)
 
-	case errors.Is(err, errorcodes.ErrNotFound):
+	case errors.Is(err, domerrors.ErrNotFound):
 		app.notFoundError(w, r, err)
 
-	case errors.Is(err, errorcodes.ErrConflict):
+	case errors.Is(err, domerrors.ErrConflict):
 		app.conflictError(w, r, err)
 
-	case errors.Is(err, errorcodes.ErrDuplicateEmail), errors.Is(err, errorcodes.ErrInvalid), errors.Is(err, errorcodes.InternalErrExpired):
+	case errors.Is(err, domerrors.ErrDuplicateEmail), errors.Is(err, domerrors.ErrInvalid):
+		// , errors.Is(err, domerrors.InternalErrExpired):
 		app.badRequestError(w, r, err)
 
-	case errors.Is(err, errorcodes.ErrUnauthorized), errors.Is(err, errorcodes.ErrNotVerified):
+	case errors.Is(err, domerrors.ErrUnauthorized), errors.Is(err, domerrors.ErrNotVerified):
 		app.unauthorizedError(w, r, err)
 
-	case errors.Is(err, errorcodes.ErrMaxAttemptsExceeded):
+	case errors.Is(err, domerrors.ErrMaxAttemptsExceeded):
 		app.forbiddenError(w, r, err)
 
 	// Better to handle these case by case
-	case errors.Is(err, errorcodes.ErrMaxRetriesExceeded), errors.Is(err, errorcodes.ErrVerification), errors.Is(err, errorcodes.ErrEmailNotSent):
+	case errors.Is(err, domerrors.ErrMaxRetriesExceeded), errors.Is(err, domerrors.ErrVerification), errors.Is(err, domerrors.ErrEmailNotSent):
 		app.internalServerError(w, r, err)
 
 	default:

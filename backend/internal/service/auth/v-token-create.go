@@ -5,7 +5,8 @@ import (
 	"errors"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
-	"github.com/Samu-Amy/Shokora/internal/errorcodes"
+	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
+	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
@@ -21,7 +22,7 @@ func (service *AuthService) CreateVerificationTokensWithRetries(ctx context.Cont
 	if err == nil {
 		return verificationId, nil // OK, return no error
 
-	} else if !errors.Is(err, errorcodes.InternalErrDuplicateToken) {
+	} else if !errors.Is(err, interrors.IErrDuplicateToken) { // TODO: non ritornare interrors
 		return nil, err // Error (can't retry)
 	}
 
@@ -39,7 +40,7 @@ func (service *AuthService) CreateVerificationTokensWithRetries(ctx context.Cont
 		switch {
 
 		// Duplicated Magic Link Token
-		case errors.Is(err, errorcodes.InternalErrDuplicateToken):
+		case errors.Is(err, interrors.IErrDuplicateToken):
 			err = service.tokenAuthenticator.RegenerateMagicLinkToken(verificationTokens)
 			if err != nil {
 				continue // skip iteration
@@ -55,5 +56,5 @@ func (service *AuthService) CreateVerificationTokensWithRetries(ctx context.Cont
 		}
 	}
 
-	return nil, errorcodes.ErrMaxRetriesExceeded // Couldn't regenerate and save token successfully -> return error "max retries exceeded"
+	return nil, domerrors.ErrMaxRetriesExceeded // Couldn't regenerate and save token successfully -> return error "max retries exceeded"
 }

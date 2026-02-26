@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
-	"github.com/Samu-Amy/Shokora/internal/errorcodes"
+	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	"github.com/Samu-Amy/Shokora/internal/mailer"
 )
 
@@ -51,7 +51,7 @@ func (service *AuthService) SendVerificationEmail(ctx context.Context, verificat
 	// Email Verification and Password Reset (magic link + OTP)
 	if plainMagicLinkToken == nil {
 		service.logger.Warnf("plainMagicLinkToken required for verification type: %v", verificationType)
-		return errorcodes.InternalErrInvalidEmailVars
+		return interrors.IErrInvalidEmailVars
 	}
 
 	var templateFile mailer.TemplateFile

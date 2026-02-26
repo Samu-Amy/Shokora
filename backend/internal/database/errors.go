@@ -4,7 +4,8 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/Samu-Amy/Shokora/internal/errorcodes"
+	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
+	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	"github.com/lib/pq"
 )
 
@@ -49,17 +50,17 @@ func ParseDbError(err error) error {
 	switch {
 	// Generic
 	case errors.Is(err, sql.ErrNoRows):
-		return errorcodes.ErrNotFound
+		return domerrors.ErrNotFound
 
 	// Users
 	case isPostgresError(err, UNIQUE_VIOLATION_ERROR, USERS_USER_EMAIL_UNIQUE):
-		return errorcodes.ErrDuplicateEmail
+		return domerrors.ErrDuplicateEmail
 
 	case isPostgresError(err, UNIQUE_VIOLATION_ERROR, VTOKENS_MAGIC_LINK_TOKEN_UNIQUE):
-		return errorcodes.InternalErrDuplicateToken
+		return interrors.IErrDuplicateToken
 
 	case isPostgresError(err, UNIQUE_VIOLATION_ERROR, REFRESH_TOKENS_REPLACES_UNIQUE):
-		return errorcodes.InternalErrReusedToken // TODO: giusto?
+		return interrors.IErrReusedToken // TODO: giusto?
 
 	// TODO: implementa gestione di tutti i constraints
 
@@ -80,7 +81,7 @@ func HandleExecContextResult(res sql.Result, err error) error {
 	}
 
 	if rows == 0 {
-		return errorcodes.InternalErrNoRowsAffected
+		return interrors.IErrNoRowsAffected
 	}
 
 	return nil

@@ -8,13 +8,6 @@ import (
 
 // ------ CREATE USER -----
 
-func (service *UserService) Create(ctx context.Context, user *user.User) error {
-	// TODO: fare transaction per creazione user, stats and settings (oppure crearle nell'update se non esistono)?
-
-	// TODO: fai error handling
-	return service.userRepo.Create(ctx, user)
-}
-
 func (service *UserService) GetById(ctx context.Context, userId int64) (*user.User, error) {
 	// TODO: fai error handling
 	return service.userRepo.GetById(ctx, userId)
