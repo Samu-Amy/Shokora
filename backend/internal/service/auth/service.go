@@ -15,7 +15,7 @@ Executes the user registration:
   - create new user in db
     -
 */
-func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.RegisterUserReq) (*payloads.RegisterUserDto, error) {
+func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.RegisterUserReq) (*payloads.RegisterUserRes, *payloads.AuthTokensDto, error) {
 	// TODO: ritorna anche i dati per i cookies
 
 	// TODO: ogni controllo sulle date da fare nel db (?)
@@ -45,7 +45,10 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	// Build user payload from updated struct
 	userRes := payloads.ToUserRes(*user)
-
+	
+	// Create Response Payload with user
+	registerUserRes := payloads.NewRegisterUserRes(userRes)
+	
 	// -------------------------
 
 	//
@@ -56,25 +59,12 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	// -------------------------
 
-	// Create Response Payload with user
-	registerUserDto := &payloads.RegisterUserDto{
-		RegisterUserRes: payloads.RegisterUserRes{
-			User: userRes,
-		},
-	}
-
 	// TODO: continua
 
 	// Create Refresh Token
 	refreshToken, err := service.generateNewRefreshToken(ctx, user.Id)
 	if err != nil {
 		service.logger.Warnw("Error generating refresh token", "error", err)
-		resPayload.AuthError = true
-	}
-
-	// Auth cookies
-	err = app.setAuthCookies(w, user.Id, refreshToken.PlainToken, refreshToken.ExpiresAt)
-	if err != nil {
 		resPayload.AuthError = true
 	}
 
@@ -86,10 +76,10 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		registerUserDto.RegisterUserRes.VerificationError = softerrors.SoftErrVerification // Add error to payload // TODO: verifica che la serializzazione funzioni correttamente
 
 		//* Return user, verificationID and error
-		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
-			app.internalServerError(w, r, err)
-		}
-		return
+		// if err := app.jsonResponse(w, http.StatusCreated, registerUserRes); err != nil {
+		// 	app.internalServerError(w, r, err)
+		// }
+		// return
 	}
 
 	// Create Email Verification Tokens
@@ -100,13 +90,13 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		registerUserDto.RegisterUserRes.VerificationError = softerrors.SoftErrVerification // Add error to payload
 
 		//* Return user, verificationID and error
-		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
-			app.internalServerError(w, r, err)
-		}
-		return
+		// if err := app.jsonResponse(w, http.StatusCreated, registerUserRes); err != nil {
+		// 	app.internalServerError(w, r, err)
+		// }
+		// return
 	}
 
-	resPayload.VerificationId = verificationId // Ad verification id to payload
+	registerUserRes.VerificationId = verificationId // Ad verification id to payload
 
 	// Send email
 	err = app.SendVerificationEmail(
@@ -125,15 +115,15 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		registerUserDto.RegisterUserRes.VerificationError = softerrors.SoftErrEmailNotSent // Add error to payload
 
 		//* Return user, verificationID and error
-		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
-			app.internalServerError(w, r, err)
-		}
-		return
+		// if err := app.jsonResponse(w, http.StatusCreated, registerUserRes); err != nil {
+		// 	app.internalServerError(w, r, err)
+		// }
+		// return
 
 		// TODO: dire di riprovare più tardi? -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
 	}
 
 	app.logger.Info("User and Tokens created, Email sent successfully")
 
-	return registerUserDto, nil
+	return registerUserRes, , nil
 }

@@ -48,24 +48,19 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Register user
-	registerUserPayload, err := app.service.Auth.RegisterUser(ctx, payload)
+	registerUserRes, authTokensDto, err := app.service.Auth.RegisterUser(ctx, payload)
 	if err != nil {
 		app.parseError(w, r, err)
 		return
 	}
 
 	// Set cookies
-
-	//* Return user and verificationID
-	if err := app.jsonResponse(w, http.StatusCreated, registerUserPayload); err != nil {
-		app.internalServerError(w, r, err)
-		return
-	}
+	app.setAuthCookies(w, *authTokensDto)
 
 	// TODO: ricordati di scrivere di controllare nello spam (aggiungere timer al tasto per reinviare la mail (?))
 
 	//* Return user and verificationID
-	if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
+	if err := app.jsonResponse(w, http.StatusCreated, registerUserRes); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}

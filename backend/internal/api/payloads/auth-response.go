@@ -11,10 +11,22 @@ type RegisterUserRes struct {
 	User              UserRes            `json:"user"`
 	VerificationId    *int64             `json:"verification_id,omitempty"`
 	VerificationError softerrors.SoftErr `json:"verification_error,omitempty"`
-	AuthError         bool               `json:"auth_error,omitempty"`
+	HasAuthError      bool               `json:"auth_error,omitempty"`
 }
 
-// The data required to set cookies for auth
+func NewRegisterUserRes(user UserRes) *RegisterUserRes {
+	return &RegisterUserRes{
+		User:              user,
+		VerificationId:    nil,
+		VerificationError: "",
+		HasAuthError:      false,
+	}
+}
+
+/*
+The data required to set cookies for auth.
+DO NOT send this to frontend
+*/
 type AuthTokensDto struct {
 	AccessToken           string
 	PlainRefreshToken     string
@@ -22,8 +34,11 @@ type AuthTokensDto struct {
 	RefreshTokenExpiresAt time.Time
 }
 
-// The data returned from RegisterUser (auth service)
-type RegisterUserDto struct {
-	RegisterUserRes
-	AuthTokensDto
-}
+/*
+The data returned from RegisterUser (auth service).
+SEND ONLY UserRes to frontend
+*/
+// type RegisterUserDto struct {
+// 	UserRes    RegisterUserRes
+// 	AuthTokens AuthTokensDto
+// }

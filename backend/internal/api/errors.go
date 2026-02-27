@@ -102,7 +102,7 @@ func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 		app.forbiddenError(w, r, err)
 
 	// Better to handle these case by case
-	case errors.Is(err, domerrors.ErrMaxRetriesExceeded), errors.Is(err, domerrors.ErrVerification), errors.Is(err, domerrors.ErrEmailNotSent):
+	case errors.Is(err, domerrors.ErrMaxRetriesExceeded):
 		app.internalServerError(w, r, err)
 
 	default:
