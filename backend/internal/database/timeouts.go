@@ -3,6 +3,6 @@ package database
 import "time"
 
 const (
-	MEDIUM_QUERY_TIMEOUT = 8 * time.Second
-	LONG_QUERY_TIMEOUT   = 12 * time.Second
+	MediumQueryTimeout = 8 * time.Second
+	LongQueryTimeout   = 12 * time.Second
 )

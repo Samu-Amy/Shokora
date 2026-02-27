@@ -1,3 +1,5 @@
+-- TODO: rifai questa migartion dopo tutte quelle legate a user e auth
+
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS products(

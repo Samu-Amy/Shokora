@@ -24,7 +24,7 @@ func (store *PostgresProductStore) Create(ctx context.Context, product *Product)
 		RETURNING id, created_at, updated_at
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
 	err := store.db.QueryRowContext(
@@ -54,7 +54,7 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 		WHERE id = $1
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
 	var product Product
@@ -95,7 +95,7 @@ func (store *PostgresProductStore) GetProducts(ctx context.Context, queryPaginat
 		LIMIT $2 OFFSET $3
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, database.LONG_QUERY_TIMEOUT) //TODO: va bene?
+	queryCtx, cancel := context.WithTimeout(ctx, database.LongQueryTimeout) //TODO: va bene?
 	defer cancel()
 
 	rows, err := store.db.QueryContext(
@@ -148,7 +148,7 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *Product)
 		RETURNING version
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
 	// TODO: modifica e rendi "modulare" per aggiornare solo ciò che serve (e magari fai un controllo più accurato sulle modifiche fatte e non solo sulla versione)
@@ -181,7 +181,7 @@ func (store *PostgresProductStore) Update(ctx context.Context, product *Product)
 func (store *PostgresProductStore) Delete(ctx context.Context, productId int64) error {
 	query := `DELETE FROM products WHERE id = $1`
 
-	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
 	return database.HandleExecContextResult(store.db.ExecContext(queryCtx, query, productId))

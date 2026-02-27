@@ -49,7 +49,7 @@ func (service *AuthService) createRefreshToken(ctx context.Context, session *ses
 // 			return errorcodes.ErrInvalid
 // 		}
 
-// 		// TODO: implementa estensione expiry - usando costanti "SESSION_EXTENSION_<...>" (e nel token nuovo usa il conto di estensioni da quello vecchio (più eventualmente quella appena fatta))
+// 		// TODO: implementa estensione expiry - usando costanti "SessionExtensionDuration" e "SessionExtensionCondition" (e nel token nuovo usa il conto di estensioni da quello vecchio (più eventualmente quella appena fatta))
 
 // 		// Create new token
 // 		// (create token using same session_id of the old one and using its id as replaces)

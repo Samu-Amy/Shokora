@@ -4,63 +4,12 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
-/*
-Executes the user registration:
-  - create new user in db
-    -
-*/
-func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.RegisterUserReq) (*payloads.RegisterUserRes, error) { // TODO: ritorna anche i dati per i cookies
-
-	// Hash password
-	hashedPassword, err := service.hashPassword(payload.Password)
-	if err != nil {
-		service.logger.Warnw("Error hashing password", "error", err)
-		return nil, err // TODO: log errori (?)
-	}
-
-	// Create user from payload data
-	user := &user.User{
-		FirstName:    payload.FirstName,
-		LastName:     payload.LastName,
-		Email:        payload.Email,
-		PasswordHash: hashedPassword,
-		ImageUrl:     payload.ImageUrl,
-		BirthDate:    payload.BirthDate,
-	}
-
-	// Create user in db
-	if err := service.createUser(ctx, user); err != nil {
-		service.logger.Warnw("Error creating user", "error", err)
-		return nil, err
-	}
-
-	userRes := payloads.ToUserRes(*user)
-
-	// Create Response Payload with user
-	registerUserRes := &payloads.RegisterUserRes{
-		User: userRes,
-	}
-
-	// TODO: continua
-
-	// Create Refresh Token
-	refreshToken, err := service.generateNewRefreshToken(ctx, user.Id)
-	if err != nil {
-		service.logger.Warnw("Error generating refresh token", "error", err)
-		resPayload.AuthError = true
-	}
-
-	return resPayload, nil
-}
-
-// ----- CREATE USER -----
-
+// Create user
 func (service *AuthService) createUser(ctx context.Context, user *user.User) error {
-	return service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
+	return service.txManager.WithTx(ctx, func(tx *sql.Tx) error { // TODO: usare transaction oppure creare solo user e creare le righe nelle altre tabelle a parte (e se falliscono si creano quando vengono usate (però non si possono ottenere))
 
 		err := service.userRepo.Create(ctx, user)
 		if err != nil {

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/ratelimiter"
-	"github.com/Samu-Amy/Shokora/internal/auth"
+	"github.com/Samu-Amy/Shokora/internal/config"
 	"github.com/Samu-Amy/Shokora/internal/service"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
@@ -18,63 +18,16 @@ import (
 
 // - Structs -
 type App struct {
-	config      Config
+	config      config.Config
 	router      *chi.Mux
 	service     *service.Service
 	logger      *zap.SugaredLogger
 	rateLimiter ratelimiter.RateLimiterI
 }
 
-type Config struct {
-	Addr               string
-	Env                string // "env" | "prod"
-	FrontEndURL        string
-	AllowedOriginsURLs []string
-	Db                 DbConfig
-	Mail               MailConfig
-	Auth               AuthConfig
-	RateLimiter        ratelimiter.RateLimiterConfig
-}
-
-type DbConfig struct {
-	Addr         string
-	MaxOpenConns int
-	MaxIdleConns int
-	MaxIdleTime  string
-}
-
-type MailConfig struct {
-	Resend       ResendConfig
-	FromEmail    string
-	IsSandboxEnv bool
-}
-
-type ResendConfig struct {
-	ApiKey string
-}
-
-type AuthConfig struct {
-	PasswordHashingCost         int
-	Token                       TokenConfig
-	MagicLink                   auth.MagicLinkConfig
-	OTP                         auth.OTPConfig
-	VerficationTokensMaxRetries uint8 // Counting the first attempt
-	VerficationTokensSecret     string
-}
-
-type TokenConfig struct {
-	Secret               string
-	Audience             string
-	Issuer               string
-	AccessTokenExp       time.Duration
-	RefreshTokenByteSize int
-	RefreshTokenExp      time.Duration
-	SessionMaxExp        time.Duration // How long the expiration can be extended for
-}
-
 // - Functions/Methods -
 func NewApp(
-	config Config,
+	config config.Config,
 	service *service.Service,
 	logger *zap.SugaredLogger,
 	rateLimiter ratelimiter.RateLimiterI,

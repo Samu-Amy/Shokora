@@ -9,11 +9,11 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api"
 	"github.com/Samu-Amy/Shokora/internal/api/ratelimiter"
 	"github.com/Samu-Amy/Shokora/internal/auth"
+	"github.com/Samu-Amy/Shokora/internal/config"
 	"github.com/Samu-Amy/Shokora/internal/database"
 	"github.com/Samu-Amy/Shokora/internal/env"
 	"github.com/Samu-Amy/Shokora/internal/mailer"
 	"github.com/Samu-Amy/Shokora/internal/service"
-	authservice "github.com/Samu-Amy/Shokora/internal/service/auth"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"go.uber.org/zap"
 )
@@ -32,7 +32,7 @@ func main() {
 	}
 
 	// - App and DB Config -
-	config := api.Config{
+	configs := config.Config{
 		Addr:        env.GetString("SERVER_PORT", ":8080"),
 		Env:         environment,
 		FrontEndURL: env.GetString("FRONTEND_URL", "http://localhost:5173"),
@@ -40,7 +40,7 @@ func main() {
 			"http://localhost:5173",
 			"http://localhost:3000",
 		}),
-		Db: api.DbConfig{
+		Db: config.DbConfig{
 			// Addr: fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=%s", env.GetString("POSTGRES_USER", "user"), env.GetString("POSTGRES_PASSWORD", "password"), env.GetString("POSTGRES_DB", "db"), env.GetString("POSTGRES_PORT", "5432"), env.GetString("POSTGRES_SSL_MODE", "disable")),
 			// TODO: attivare modalità ssl (?)
 			Addr:         fmt.Sprintf("host=localhost port=%s user=%s password=%s dbname=%s sslmode=disable", env.GetString("POSTGRES_PORT", "5432"), env.GetString("POSTGRES_USER", ""), env.GetString("POSTGRES_PASSWORD", ""), env.GetString("POSTGRES_DB", "")),
@@ -48,16 +48,16 @@ func main() {
 			MaxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			MaxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
-		Mail: api.MailConfig{
-			Resend: api.ResendConfig{
+		Mail: config.MailConfig{
+			Resend: config.ResendConfig{
 				ApiKey: env.GetString("RESEND_API_KEY", ""),
 			},
 			FromEmail:    env.GetString("FROM_EMAIL", ""),
 			IsSandboxEnv: env.GetBool("SANDBOX", false),
 		},
-		Auth: api.AuthConfig{
+		Auth: config.AuthConfig{
 			PasswordHashingCost: 12, // bcrypt.DefaultCost = 10
-			Token: api.TokenConfig{
+			Token: config.TokenConfig{
 				Secret:               env.GetString("AUTH_TOKEN_SECRET", "4a4c345b5064c9a85fff749313ff25310085a606a47232c94e9d898470c6e854"), // TODO: cambia quello di default (oppure dai errore se non lo trova dall'env) e usa "openssl rand -hex 32" per generare token
 				Audience:             "shokora",
 				Issuer:               "shokora",
@@ -66,11 +66,11 @@ func main() {
 				RefreshTokenExp:      30 * 24 * time.Hour, // 30 days (suggested: 7-30 days)
 				SessionMaxExp:        90 * 24 * time.Hour, // 90 days (suggested: max 90 days)
 			},
-			MagicLink: auth.MagicLinkConfig{
+			MagicLink: config.MagicLinkConfig{
 				ByteSize: 32,
 				Exp:      30 * time.Minute, // 30 min
 			},
-			OTP: auth.OTPConfig{
+			OTP: config.OTPConfig{
 				Length:      6, // Suggested: between 4 and 10
 				MaxAttempts: 5,
 				LongExp:     10 * time.Minute, // 10 min (email verification, password reset)
@@ -90,28 +90,28 @@ func main() {
 	defer logger.Sync()
 
 	// - Mailer -
-	mailer := mailer.NewResendMailer(config.Mail.Resend.ApiKey, config.Mail.FromEmail)
+	mailer := mailer.NewResendMailer(configs.Mail.Resend.ApiKey, configs.Mail.FromEmail)
 
 	// - Authenticators -
 	jwtAuthenticator := auth.NewJWTAuthenticator(
-		config.Auth.Token.Secret,
-		config.Auth.Token.Audience,
-		config.Auth.Token.Issuer,
+		configs.Auth.Token.Secret,
+		configs.Auth.Token.Audience,
+		configs.Auth.Token.Issuer,
 	)
 
 	tokenAuthenricator := auth.NewTokenAuthenticator(
-		config.Auth.MagicLink,
-		config.Auth.OTP,
-		config.Auth.VerficationTokensMaxRetries,
-		config.Auth.VerficationTokensSecret,
+		configs.Auth.MagicLink,
+		configs.Auth.OTP,
+		configs.Auth.VerficationTokensMaxRetries,
+		configs.Auth.VerficationTokensSecret,
 	)
 
 	// - DB Connection -
 	db, err := database.New(
-		config.Db.Addr,
-		config.Db.MaxOpenConns,
-		config.Db.MaxIdleConns,
-		config.Db.MaxIdleTime,
+		configs.Db.Addr,
+		configs.Db.MaxOpenConns,
+		configs.Db.MaxIdleConns,
+		configs.Db.MaxIdleTime,
 		true,
 	)
 
@@ -129,20 +129,21 @@ func main() {
 	store := store.NewPostgresStorage(db)
 
 	// - Service -
-	authServiceConfig := authservice.AuthServiceConfig{
-		PasswordHashingCost: config.Auth.PasswordHashingCost,
-		Token:               config.Auth.Token,
-		Mail: authservice.MailConfig{
-			IsSandboxEnv: config.Mail.IsSandboxEnv,
-			FrontEndURL:  config.FrontEndURL,
+	authServiceConfig := config.AuthServiceConfig{
+		PasswordHashingCost: configs.Auth.PasswordHashingCost,
+		Token:               configs.Auth.Token,
+		Mail: config.MailerConfig{
+			FrontEndURL:  configs.FrontEndURL,
+			FromEmail:    configs.Mail.FromEmail,
+			IsSandboxEnv: configs.Mail.IsSandboxEnv,
 		},
 	}
 	service := service.NewService(txManager, store, mailer, logger, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
 
 	// - Rate Limiter -
 	rateLimiter := ratelimiter.NewFixedWindowLimiter(
-		config.RateLimiter.RequestsPerTimeFrame,
-		config.RateLimiter.TimeFrame,
+		configs.RateLimiter.RequestsPerTimeFrame,
+		configs.RateLimiter.TimeFrame,
 	)
 
 	// - Metrics -
@@ -161,7 +162,7 @@ func main() {
 
 	// - App -
 	app := api.NewApp(
-		config,
+		configs,
 		service,
 		logger,
 		rateLimiter,

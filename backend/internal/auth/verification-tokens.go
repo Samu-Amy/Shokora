@@ -7,29 +7,18 @@ import (
 	"fmt"
 	"math/big"
 	"time"
+
+	"github.com/Samu-Amy/Shokora/internal/config"
 )
 
 // TODO: forse molti metodi si possono rendere privati (es. quelli per generate e hash tokens)
 
 // - Authenticator -
 type TokenAuthenticator struct {
-	MagicLink  MagicLinkConfig
-	OTP        OTPConfig
+	MagicLink  config.MagicLinkConfig
+	OTP        config.OTPConfig
 	MaxRetries uint8 // Counting the first attempt
 	secret     string
-}
-
-type MagicLinkConfig struct {
-	ByteSize int
-	Exp      time.Duration
-}
-
-type OTPConfig struct {
-	Length      uint8
-	MaxAttempts uint8
-	LongExp     time.Duration // For Email Verification
-	BaseExp     time.Duration // For Password Reset and 2FA
-	// CriticalExp time.Duration // For critical operations (es. 30s)
 }
 
 // - Tokens -
@@ -54,7 +43,7 @@ const (
 
 // - Constructor -
 
-func NewTokenAuthenticator(MagicLink MagicLinkConfig, OTP OTPConfig, MaxRetries uint8, secret string) *TokenAuthenticator {
+func NewTokenAuthenticator(MagicLink config.MagicLinkConfig, OTP config.OTPConfig, MaxRetries uint8, secret string) *TokenAuthenticator {
 	return &TokenAuthenticator{MagicLink, OTP, MaxRetries, secret}
 }
 

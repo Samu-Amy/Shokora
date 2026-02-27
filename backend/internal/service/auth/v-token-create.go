@@ -12,9 +12,9 @@ import (
 
 // ----- CREATE VERIFICATION TOKENS -----
 
-func (service *AuthService) CreateVerificationTokensWithRetries(ctx context.Context, user *user.User, verificationTokens *auth.VerificationTokens) (*int64, error) {
+func (service *AuthService) createVerificationTokensWithRetries(ctx context.Context, user *user.User, verificationTokens *auth.VerificationTokens) (*int64, error) {
 
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, auth.REGENERATE_TOKEN_TIMEOUT)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, auth.RegenerateTokenTimeout)
 	defer cancel()
 
 	// Create Tokens in db

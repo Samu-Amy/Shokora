@@ -10,8 +10,8 @@ import (
 
 // ----- HEADERS -----
 const (
-	AUTH_HEADER string = "Authorization"
-	BEARER      string = "Bearer"
+	authHeader string = "Authorization"
+	bearer     string = "Bearer"
 )
 
 // ----- CONTEXT -----

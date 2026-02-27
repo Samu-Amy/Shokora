@@ -31,7 +31,7 @@ verificationType: enum in auth package (TokenEmailVerification, TokenPasswordRes
 
 return: error (from SendEmail method in mailer Client)
 */
-func (service *AuthService) SendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, user_name, email string, plainMagicLinkToken *string, plainOTP string, magicLinkTokenExp, otpExp time.Duration) error {
+func (service *AuthService) sendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, user_name, email string, plainMagicLinkToken *string, plainOTP string, magicLinkTokenExp, otpExp time.Duration) error {
 
 	isSandbox := service.config.Mail.IsSandboxEnv
 

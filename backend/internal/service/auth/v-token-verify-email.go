@@ -15,7 +15,7 @@ Errors
   - ErrInvalid
   - Other db errors
 */
-func (service *AuthService) VerifyEmailWithToken(ctx context.Context, hashedToken []byte) error {
+func (service *AuthService) verifyEmailWithToken(ctx context.Context, hashedToken []byte) error {
 
 	// Verify and Get data
 	magicLinkTokenQueryData, err := service.vTokenRepo.GetValidMagicLinkData(ctx, hashedToken, auth.EmailVerification)
@@ -49,7 +49,7 @@ Errors
   - ErrMaxAttemptsExceeded
   - Other db errors
 */
-func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, verificationId int64, hashedOTP []byte, maxAttempts uint8) error {
+func (service *AuthService) verifyEmailWithOTP(ctx context.Context, verificationId int64, hashedOTP []byte, maxAttempts uint8) error {
 
 	// Get data
 	otpQueryData, err := service.verifyOtp(ctx, verificationId, hashedOTP, maxAttempts, auth.EmailVerification)

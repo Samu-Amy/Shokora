@@ -30,7 +30,7 @@ func (store *PostgresVTokenStore) CreateTokens(ctx context.Context, userId int64
 		RETURNING id
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
 	// Fix magic link exp (nil if no magic link)
@@ -67,7 +67,7 @@ func (store *PostgresVTokenStore) UpdateMagicLinkTokenFromId(ctx context.Context
 		WHERE id = $3
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
 	return database.HandleExecContextResult(store.db.ExecContext(
@@ -86,7 +86,7 @@ func (store *PostgresVTokenStore) UpdateOTPFromId(ctx context.Context, verificat
 		WHERE id = $3
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
 	return database.HandleExecContextResult(store.db.ExecContext(
@@ -105,7 +105,7 @@ func (store *PostgresVTokenStore) UpdateOtpAttempts(ctx context.Context, verific
 		WHERE id = $1 AND otp_attempts < $2
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
 	return database.HandleExecContextResult(store.db.ExecContext(
@@ -125,7 +125,7 @@ func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, verificationId
 		WHERE id = $1 AND verification_type = $2
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
 	var otpPayload OTPVerificationData
@@ -154,7 +154,7 @@ func (store *PostgresVTokenStore) GetValidMagicLinkData(ctx context.Context, has
 		WHERE magic_link_token_hash = $1 AND verification_type = $2 AND magic_link_token_expires_at > NOW()
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
 	var magicLinkTokenPayload MagicLinkVerificationData
@@ -178,7 +178,7 @@ func (store *PostgresVTokenStore) Delete(ctx context.Context, verificationId int
 		DELETE from verification_tokens WHERE id = $1
 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, database.MEDIUM_QUERY_TIMEOUT)
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
 	return database.HandleExecContextResult(store.db.ExecContext(

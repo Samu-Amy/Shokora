@@ -35,7 +35,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 
 		// Get Auth header
-		authHeader := r.Header.Get(AUTH_HEADER)
+		authHeader := r.Header.Get(authHeader)
 		if authHeader == "" {
 			app.unauthorizedError(w, r, domerrors.ErrInvalid)
 			return
@@ -43,7 +43,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 
 		// Parse Auth header ("authorization: Bearer <token>")
 		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != BEARER {
+		if len(parts) != 2 || parts[0] != bearer {
 			app.unauthorizedError(w, r, domerrors.ErrInvalid)
 			return
 		}
