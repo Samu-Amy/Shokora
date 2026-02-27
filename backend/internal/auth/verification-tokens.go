@@ -24,7 +24,7 @@ type TokenAuthenticator struct {
 // - Tokens -
 type VerificationTokens struct {
 	VerificationType     VerificationType
-	PlainMagicLinkToken  *string
+	PlainMagicLinkToken  string
 	HashedMagicLinkToken []byte
 	PlainOTP             string
 	HashedOTP            []byte
@@ -52,7 +52,7 @@ func NewTokenAuthenticator(MagicLink config.MagicLinkConfig, OTP config.OTPConfi
 func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificationType VerificationType) (*VerificationTokens, error) {
 
 	// Generate and hash verification Token (only for email verification and password reset)
-	var plainMagicLinkToken *string = nil
+	var plainMagicLinkToken string
 	var hashedMagicLinkToken []byte = nil
 	var err error
 

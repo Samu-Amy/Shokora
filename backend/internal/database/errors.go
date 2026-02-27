@@ -22,14 +22,19 @@ const (
 
 	// Verification tokens
 	// vtokensUserIdAndVerificationTypeUnique = "v_tokens_user_id_and_verification_type_unique" // Unique (user_id, verification_id), usually handled by the create query
-	vtokensMagicLinkTokenUnique = "v_tokens_magic_link_token_hash_unique" // Duplicate Magic Link Token
+
+	// Duplicate Magic Link Token
+	vtokensMagicLinkTokenUnique = "v_tokens_magic_link_token_hash_unique"
+
 	// vtokensVerificationTypeRangeCheck      = "v_tokens_verification_type_range_check"        // Verification type enum out of range
 	// vtokensOtpAttemptsRangeCheck           = "v_tokens_otp_attempts_range_check"             // Attempts ([0, 255]) out of range (smallint in uint8 range)
 	// vtokensMagicLinkTokenCheck             = "v_tokens_magic_link_token_hash_check"          // Magic Link Token and expiration check (must be both null or not null)
 
 	// Refresh Tokens
 	// refreshTokensTokenUnique    = "refresh_tokens_token_hash_unique" // Duplicate Refresh Token
-	refreshTokensReplacesUnique = "refresh_tokens_replaces_unique" // Duplicate "repaces" Refresh Token id (reused token)
+
+	// Duplicate "repaces" Refresh Token id (reused token)
+	refreshTokensReplacesUnique = "refresh_tokens_replaces_unique"
 
 	// Products
 	// productsPriceRangeCheck    = "products_price_range_check"    // Price (>0) out of range

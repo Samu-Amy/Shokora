@@ -13,7 +13,8 @@ func (service *AuthService) createUser(ctx context.Context, user *user.User) err
 
 		err := service.userRepo.Create(ctx, user)
 		if err != nil {
-			return err // TODO: fai error handling (ritorna domerrors)
+			service.logger.Warnw("Error creating user in db", "error", err)
+			return err
 		}
 
 		// TODO: crea anche stats and settings (oppure crearle nell'update se non esistono)?

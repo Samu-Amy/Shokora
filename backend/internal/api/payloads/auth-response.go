@@ -34,11 +34,3 @@ type AuthTokensDto struct {
 	AccessTokenExpiresAt  time.Time `json:"-"`
 	RefreshTokenExpiresAt time.Time `json:"-"`
 }
-
-// Create a new AuthTokensDto with the refresh token data
-func NewAuthTokensDto(plainRefreshToken string, refreshTokenExpiresAt time.Time) *AuthTokensDto {
-	return &AuthTokensDto{
-		PlainRefreshToken:     plainRefreshToken,
-		RefreshTokenExpiresAt: refreshTokenExpiresAt,
-	}
-}

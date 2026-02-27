@@ -12,17 +12,25 @@ import (
 
 // ----- CREATE VERIFICATION TOKENS -----
 
-func (service *AuthService) createVerificationTokensWithRetries(ctx context.Context, user *user.User, verificationTokens *auth.VerificationTokens) (*int64, error) {
+func (service *AuthService) createVerificationTokensWithRetries(ctx context.Context, user *user.User) (*auth.VerificationTokens, error) {
+
+	// Generate tokens
+	verificationTokens, err := service.tokenAuthenticator.CreateVerificationTokens(auth.EmailVerification)
+	if err != nil {
+		service.logger.Warnw("Error generating verification tokens", "error", err)
+		return nil, err
+	}
 
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, auth.RegenerateTokenTimeout)
 	defer cancel()
 
-	// Create Tokens in db
+	// Create tokens in db
 	verificationId, err := service.vTokenRepo.CreateTokens(ctxWithTimeout, user.Id, verificationTokens) // TODO: controlla che le scadenze siano giuste
 	if err == nil {
-		return verificationId, nil // OK, return no error
+		return verificationTokens, nil // OK, return no error
 
-	} else if !errors.Is(err, interrors.IErrDuplicateToken) { // TODO: non ritornare interrors
+	} else if !errors.Is(err, interrors.IErrDuplicateToken) {
+		service.logger.Warnw("Error creating verification tokens in db", "error", err)
 		return nil, err // Error (can't retry)
 	}
 
@@ -43,15 +51,18 @@ func (service *AuthService) createVerificationTokensWithRetries(ctx context.Cont
 		case errors.Is(err, interrors.IErrDuplicateToken):
 			err = service.tokenAuthenticator.RegenerateMagicLinkToken(verificationTokens)
 			if err != nil {
+				service.logger.Warnw("Error rigenerating verification tokens", "error", err)
 				continue // skip iteration
 			}
 
 			verificationId, err = service.vTokenRepo.CreateTokens(ctx, user.Id, verificationTokens)
 			if err == nil {
-				return verificationId, nil // OK, return no error
+				service.logger.Warnw("Error ricreating verification tokens in db", "error", err)
+				return verificationTokens, nil // OK, return no error
 			}
 
 		default:
+			service.logger.Warnw("Error in create verification tokens retries", "error", err)
 			return nil, err // Error is not solvable (not "duplicate token") -> return it
 		}
 	}

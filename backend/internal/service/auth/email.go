@@ -31,7 +31,7 @@ verificationType: enum in auth package (TokenEmailVerification, TokenPasswordRes
 
 return: error (from SendEmail method in mailer Client)
 */
-func (service *AuthService) sendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, user_name, email string, plainMagicLinkToken *string, plainOTP string, magicLinkTokenExp, otpExp time.Duration) error {
+func (service *AuthService) sendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, user_name, email string, plainMagicLinkToken string, plainOTP string, magicLinkTokenExp, otpExp time.Duration) error {
 
 	isSandbox := service.config.Mail.IsSandboxEnv
 
@@ -49,7 +49,7 @@ func (service *AuthService) sendVerificationEmail(ctx context.Context, verificat
 	}
 
 	// Email Verification and Password Reset (magic link + OTP)
-	if plainMagicLinkToken == nil {
+	if plainMagicLinkToken == "" {
 		service.logger.Warnf("plainMagicLinkToken required for verification type: %v", verificationType)
 		return interrors.IErrInvalidEmailVars
 	}
@@ -67,7 +67,7 @@ func (service *AuthService) sendVerificationEmail(ctx context.Context, verificat
 		activationURL += "/reset-password/"
 	}
 
-	activationURL += *plainMagicLinkToken
+	activationURL += plainMagicLinkToken
 
 	vars := struct {
 		Name          string

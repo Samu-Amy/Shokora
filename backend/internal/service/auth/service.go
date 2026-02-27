@@ -2,10 +2,10 @@ package authservice
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
+	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 	softerrors "github.com/Samu-Amy/Shokora/internal/errors/soft"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
@@ -24,13 +24,17 @@ Return:
 */
 func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.RegisterUserReq) (*payloads.RegisterUserRes, *payloads.AuthTokensDto, error) {
 
-	// TODO: ogni controllo sulle date da fare nel db (?)
+	// TODO: aggiungi service.logger.Warnw("Error ...", "error", err) nei metodi del service "low level" usati qui
+
+	// TODO: usa il parsing in ogni return
+
+	// ----- USER -----
 
 	// Hash password
 	hashedPassword, err := service.hashPassword(payload.Password)
 	if err != nil {
 		service.logger.Warnw("Error hashing password", "error", err)
-		return nil, domerrors.ParseIntError(err) // TODO: usa il parsing in ogni return
+		return nil, nil, domerrors.ParseIntError(err)
 	}
 
 	// Build user struct from payload data
@@ -45,65 +49,25 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	// Create user in db and update its struct
 	if err := service.createUser(ctx, user); err != nil {
-		service.logger.Warnw("Error creating user", "error", err)
-		return nil, domerrors.ParseIntError(err)
+		return nil, nil, domerrors.ParseIntError(err)
 	}
 
-	// Build user payload from updated struct
-	userRes := payloads.ToUserRes(*user)
-	
-	// Create Response Payload with user
-	registerUserRes := payloads.NewRegisterUserRes(userRes)
-	
-	// -------------------------
+	// Create Response payload with UserRes built from user model
+	registerUserRes := payloads.NewRegisterUserRes(payloads.ToUserRes(*user))
 
-	//
+	// ----- VERIFICATION -----
 
-	// Generate Refresh Token
-
-	// Generate Access Token
-
-	// -------------------------
-
-	// Create Refresh Token
-	refreshToken, err := service.createNewRefreshToken(ctx, user.Id)
+	// Create Email Verification Tokens (soft error)
+	verificationTokens, err := service.createVerificationTokensWithRetries(ctx, user)
 	if err != nil {
-		service.logger.Warnw("Error generating refresh token", "error", err)
-		resPayload.AuthError = true
+		registerUserRes.VerificationError = softerrors.SoftErrVerification
 	}
 
-	// Generate verificationTokens (Magic Link and OTP)
-	verificationTokens, err := app.tokenAuthenticator.CreateVerificationTokens(auth.EmailVerification)
-	if err != nil {
-		app.logger.Warnw("error generating verification tokens", "error", err)
+	// Add verification id to payload
+	registerUserRes.VerificationId = verificationId // TODO: ottieni id da createVerificationTokensWithRetries()
 
-		registerUserDto.RegisterUserRes.VerificationError = softerrors.SoftErrVerification // Add error to payload // TODO: verifica che la serializzazione funzioni correttamente
-
-		//* Return user, verificationID and error
-		// if err := app.jsonResponse(w, http.StatusCreated, registerUserRes); err != nil {
-		// 	app.internalServerError(w, r, err)
-		// }
-		// return
-	}
-
-	// Create Email Verification Tokens
-	verificationId, err := app.service.Auth.CreateVerificationTokensWithRetries(ctx, user, verificationTokens)
-	if err != nil {
-		app.logger.Warnw("error creating email verification tokens in db", "error", err)
-
-		registerUserDto.RegisterUserRes.VerificationError = softerrors.SoftErrVerification // Add error to payload
-
-		//* Return user, verificationID and error
-		// if err := app.jsonResponse(w, http.StatusCreated, registerUserRes); err != nil {
-		// 	app.internalServerError(w, r, err)
-		// }
-		// return
-	}
-
-	registerUserRes.VerificationId = verificationId // Ad verification id to payload
-
-	// Send email
-	err = app.SendVerificationEmail(
+	// Send email (soft error)
+	err = service.sendVerificationEmail(
 		ctx,
 		auth.EmailVerification,
 		user.FirstName,
@@ -127,7 +91,15 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		// TODO: dire di riprovare più tardi? -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
 	}
 
-	app.logger.Info("User and Tokens created, Email sent successfully")
+	// ----- Auth -----
 
-	return registerUserRes, , nil
+	// Create Refresh Token (soft error)
+	authTokenDto, err := service.createNewRefreshToken(ctx, user.Id)
+	if err != nil {
+		resPayload.AuthError = true
+	}
+
+	// app.logger.Info("User and Tokens created, Email sent successfully")
+
+	return registerUserRes, authTokenDto, nil
 }

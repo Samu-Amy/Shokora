@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	rtoken "github.com/Samu-Amy/Shokora/internal/store/refresh-token.go"
 )
@@ -11,34 +12,36 @@ import (
 // ----- CREATE AND ROTATE REFRESH TOKENS -----
 
 // Create
-func (service *AuthService) createNewRefreshToken(ctx context.Context, userId int64) (*rtoken.CreateRefreshTokenDto, error) {
-	// TODO: genera refresh token qua e ritornalo dopo averlo messo nel db
+func (service *AuthService) createNewRefreshToken(ctx context.Context, userId int64) (*payloads.AuthTokensDto, error) {
 
-	// Create session
-	// Generate Token
-	// Create Refresh Token
-	var createRefreshTokenDto = &rtoken.CreateRefreshTokenDto{}
+	var createRefreshTokenDto = &payloads.AuthTokensDto{}
 
 	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
+
 		// Create session
-		sessionId, err := service.userSessionRepo.Create(ctx, tx, userId, service.config.Token.SessionMaxExp)
+		sessionId, err := service.userSessionRepo.Create(ctx, tx, userId, service.config.Token.SessionExp)
 		if err != nil {
+			service.logger.Warnw("Error creating session in db", "error", err)
 			return err
 		}
 
 		// Generate refresh token
 		plainRefreshToken, refreshToken, err := service.generateRefreshToken(sessionId)
 		if err != nil {
+			service.logger.Warnw("Error generating refresh token", "error", err)
 			return err
 		}
 
-		createRefreshTokenDto.PlainToken = *plainRefreshToken
+		createRefreshTokenDto.PlainRefreshToken = plainRefreshToken
 
 		// Create refresh token in db
-		err = service.refreshTokenRepo.CreateToken(ctx, tx, refreshToken, tokenExp)
+		err = service.refreshTokenRepo.Create(ctx, tx, refreshToken, service.config.Token.RefreshTokenExp)
 		if err != nil {
+			service.logger.Warnw("Error creating refresh token in db", "error", err)
 			return err
 		}
+
+		createRefreshTokenDto.RefreshTokenExpiresAt = refreshToken.ExpiresAt
 
 		return nil
 	})
@@ -109,18 +112,20 @@ func (service *AuthService) createNewRefreshToken(ctx context.Context, userId in
 // 	return err
 // }
 
+// ----- GENERATE TOKEN -----
+
 /*
 Generate Refresh Token
 
 Return:
   - plainToken
-  - refreshToken
+  - refreshToken (rtoken.RefreshToken)
   - error
 */
-func (service *AuthService) generateRefreshToken(sessionId int64) (*string, *rtoken.RefreshToken, error) {
+func (service *AuthService) generateRefreshToken(sessionId int64) (string, *rtoken.RefreshToken, error) {
 	plainToken, err := auth.GenerateBase64Token(service.config.Token.RefreshTokenByteSize)
 	if err != nil {
-		return nil, nil, err
+		return plainToken, nil, err
 	}
 
 	// Hash token
@@ -130,5 +135,5 @@ func (service *AuthService) generateRefreshToken(sessionId int64) (*string, *rto
 		SessionId: sessionId,
 		TokenHash: hashedToken,
 	}
-	return plainToken, refreshToken, nil
+	return "", refreshToken, nil
 }

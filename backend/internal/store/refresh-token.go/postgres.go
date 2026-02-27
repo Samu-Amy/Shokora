@@ -22,7 +22,7 @@ func (store *PostgresRefreshTokenStore) Create(ctx context.Context, transaction 
 	query := `
 		INSERT INTO refresh_tokens (session_id, token_hash, expires_at, replaces)
 		VALUES ($1, $2, $3, $4)
-		RETURNING expires_at, created_at
+		RETURNING expires_at
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
@@ -37,7 +37,6 @@ func (store *PostgresRefreshTokenStore) Create(ctx context.Context, transaction 
 		refreshToken.Replaces,
 	).Scan(
 		&refreshToken.ExpiresAt,
-		&refreshToken.CreatedAt,
 	)
 
 	return database.ParseDbError(err)
