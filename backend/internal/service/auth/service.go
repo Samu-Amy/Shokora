@@ -6,7 +6,7 @@ import (
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
-	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
+	softerrors "github.com/Samu-Amy/Shokora/internal/errors/soft"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
@@ -15,8 +15,10 @@ Executes the user registration:
   - create new user in db
     -
 */
-func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.RegisterUserReq) (*payloads.RegisterUserRes, error) {
+func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.RegisterUserReq) (*payloads.RegisterUserDto, error) {
 	// TODO: ritorna anche i dati per i cookies
+
+	// TODO: ogni controllo sulle date da fare nel db (?)
 
 	// Hash password
 	hashedPassword, err := service.hashPassword(payload.Password)
@@ -48,13 +50,17 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	//
 
-	//
+	// Generate Refresh Token and set payload
+
+	// Generate Access Token and set payload
 
 	// -------------------------
 
 	// Create Response Payload with user
-	registerUserRes := &payloads.RegisterUserRes{
-		User: userRes,
+	registerUserDto := &payloads.RegisterUserDto{
+		RegisterUserRes: payloads.RegisterUserRes{
+			User: userRes,
+		},
 	}
 
 	// TODO: continua
@@ -77,7 +83,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	if err != nil {
 		app.logger.Warnw("error generating verification tokens", "error", err)
 
-		resPayload.VerificationError = domerrors.ErrVerification.Error() // Add error to payload
+		registerUserDto.RegisterUserRes.VerificationError = softerrors.SoftErrVerification // Add error to payload // TODO: verifica che la serializzazione funzioni correttamente
 
 		//* Return user, verificationID and error
 		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
@@ -91,7 +97,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	if err != nil {
 		app.logger.Warnw("error creating email verification tokens in db", "error", err)
 
-		resPayload.VerificationError = domerrors.ErrVerification.Error() // Add error to payload
+		registerUserDto.RegisterUserRes.VerificationError = softerrors.SoftErrVerification // Add error to payload
 
 		//* Return user, verificationID and error
 		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
@@ -116,7 +122,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	if err != nil {
 		app.logger.Warnw("error sending welcome email", "error", err)
 
-		resPayload.VerificationError = domerrors.ErrEmailNotSent.Error() // Add error to payload
+		registerUserDto.RegisterUserRes.VerificationError = softerrors.SoftErrEmailNotSent // Add error to payload
 
 		//* Return user, verificationID and error
 		if err := app.jsonResponse(w, http.StatusCreated, resPayload); err != nil {
@@ -129,5 +135,5 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	app.logger.Info("User and Tokens created, Email sent successfully")
 
-	return resPayload, nil
+	return registerUserDto, nil
 }

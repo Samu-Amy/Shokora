@@ -3,29 +3,9 @@ package api
 import (
 	"net/http"
 	"time"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
-func (app *App) setAuthCookies(w http.ResponseWriter, userId int64, plainRefreshToken string, refreshTokenExpiresAt time.Time) error {
-
-	timeNow := time.Now()
-	accessTokenExp := timeNow.Add(app.config.Auth.Token.AccessTokenExp)
-
-	// Generate Access Token (and add claims)
-	claims := jwt.MapClaims{
-		"sub": userId, // subject
-		"exp": accessTokenExp.Unix(),
-		"iat": timeNow.Unix(),                 // issued at
-		"nbf": timeNow.Unix(),                 // not before time
-		"iss": app.config.Auth.Token.Issuer,   // issuer
-		"aud": app.config.Auth.Token.Audience, // audience
-	}
-
-	accessToken, err := app.jwtAuthenticator.GenerateJWTToken(claims)
-	if err != nil {
-		return err
-	}
+func (app *App) setAuthCookies(w http.ResponseWriter, userId int64, accessToken, plainRefreshToken string, accessTokenExpiresAt, refreshTokenExpiresAt time.Time) error {
 
 	// Create and set cookies
 	accessCookie := http.Cookie{
@@ -34,7 +14,7 @@ func (app *App) setAuthCookies(w http.ResponseWriter, userId int64, plainRefresh
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
-		MaxAge:   int(time.Until(accessTokenExp).Seconds()),
+		MaxAge:   int(time.Until(refreshTokenExpiresAt).Seconds()),
 		Path:     "/api",
 	}
 

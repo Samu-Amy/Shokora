@@ -18,8 +18,6 @@ var (
 	ErrDuplicateEmail      = domainErr("duplicate_email")
 	ErrInvalid             = domainErr("invalid")      // Invalid data (form data, tokens)
 	ErrMaxAttemptsExceeded = domainErr("max_attempts") // Too much attempts (otp)
-	ErrVerification        = domainErr("verification_error")
-	ErrEmailNotSent        = domainErr("email_not_sent")
 	ErrUnauthorized        = domainErr("unauthorized") // User does not exists or is not verified
 	ErrForbidden           = domainErr("forbidden")    // User does not have the necessary permissions
 	ErrNotVerified         = domainErr("not_verified") // User must verify email
