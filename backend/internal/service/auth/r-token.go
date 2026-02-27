@@ -21,13 +21,13 @@ func (service *AuthService) createNewRefreshToken(ctx context.Context, userId in
 
 	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 		// Create session
-		session, err := service.userSessionRepo.Create(ctx, tx, userId, service.config.Token.SessionMaxExp)
+		sessionId, err := service.userSessionRepo.Create(ctx, tx, userId, service.config.Token.SessionMaxExp)
 		if err != nil {
 			return err
 		}
 
 		// Generate refresh token
-		plainRefreshToken, refreshToken, err := service.generateRefreshToken(session.Id)
+		plainRefreshToken, refreshToken, err := service.generateRefreshToken(sessionId)
 		if err != nil {
 			return err
 		}
@@ -39,6 +39,8 @@ func (service *AuthService) createNewRefreshToken(ctx context.Context, userId in
 		if err != nil {
 			return err
 		}
+
+		return nil
 	})
 
 	if err != nil {

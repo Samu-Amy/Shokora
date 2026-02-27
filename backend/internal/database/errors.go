@@ -80,10 +80,12 @@ func ParseDbError(err error) error {
 
 // Wrap ExecContext to obtain the parsed error
 func HandleExecContextResult(res sql.Result, err error) error {
+	// ExecContext error
 	if err != nil {
 		return ParseDbError(err)
 	}
 
+	// Check rows
 	rows, err := res.RowsAffected()
 	if err != nil {
 		return err
