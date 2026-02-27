@@ -11,12 +11,18 @@ import (
 )
 
 /*
-Executes the user registration:
-  - create new user in db
-    -
+Creates a new user account and manages verification and authentication:
+  - create user
+  - create verification tokens (magic link and otp)
+  - send email with verification tokens
+  - create auth (access and refresh) tokens
+
+Return:
+  - *payloads.RegisterUserRes: response data (user, verification id and soft errors for verification and auth) to send to the frontend
+  - *payloads.AuthTokensDto: auth token data required so set auth cookies
+  - error: domerrors (safe to send to the frontend)
 */
 func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.RegisterUserReq) (*payloads.RegisterUserRes, *payloads.AuthTokensDto, error) {
-	// TODO: ritorna anche i dati per i cookies
 
 	// TODO: ogni controllo sulle date da fare nel db (?)
 
@@ -24,7 +30,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	hashedPassword, err := service.hashPassword(payload.Password)
 	if err != nil {
 		service.logger.Warnw("Error hashing password", "error", err)
-		return nil, err
+		return nil, domerrors.ParseIntError(err) // TODO: usa il parsing in ogni return
 	}
 
 	// Build user struct from payload data
@@ -40,7 +46,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	// Create user in db and update its struct
 	if err := service.createUser(ctx, user); err != nil {
 		service.logger.Warnw("Error creating user", "error", err)
-		return nil, err
+		return nil, domerrors.ParseIntError(err)
 	}
 
 	// Build user payload from updated struct
@@ -53,16 +59,14 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	//
 
-	// Generate Refresh Token and set payload
+	// Generate Refresh Token
 
-	// Generate Access Token and set payload
+	// Generate Access Token
 
 	// -------------------------
 
-	// TODO: continua
-
 	// Create Refresh Token
-	refreshToken, err := service.generateNewRefreshToken(ctx, user.Id)
+	refreshToken, err := service.createNewRefreshToken(ctx, user.Id)
 	if err != nil {
 		service.logger.Warnw("Error generating refresh token", "error", err)
 		resPayload.AuthError = true

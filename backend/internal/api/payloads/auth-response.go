@@ -14,6 +14,7 @@ type RegisterUserRes struct {
 	HasAuthError      bool               `json:"auth_error,omitempty"`
 }
 
+// Create a new RegisterUserRes with the user data and intializing the other fields
 func NewRegisterUserRes(user UserRes) *RegisterUserRes {
 	return &RegisterUserRes{
 		User:              user,
@@ -25,20 +26,19 @@ func NewRegisterUserRes(user UserRes) *RegisterUserRes {
 
 /*
 The data required to set cookies for auth.
-DO NOT send this to frontend
+Should not be send this to frontend (is not serializable)
 */
 type AuthTokensDto struct {
-	AccessToken           string
-	PlainRefreshToken     string
-	AccessTokenExpiresAt  time.Time
-	RefreshTokenExpiresAt time.Time
+	AccessToken           string    `json:"-"`
+	PlainRefreshToken     string    `json:"-"`
+	AccessTokenExpiresAt  time.Time `json:"-"`
+	RefreshTokenExpiresAt time.Time `json:"-"`
 }
 
-/*
-The data returned from RegisterUser (auth service).
-SEND ONLY UserRes to frontend
-*/
-// type RegisterUserDto struct {
-// 	UserRes    RegisterUserRes
-// 	AuthTokens AuthTokensDto
-// }
+// Create a new AuthTokensDto with the refresh token data
+func NewAuthTokensDto(plainRefreshToken string, refreshTokenExpiresAt time.Time) *AuthTokensDto {
+	return &AuthTokensDto{
+		PlainRefreshToken:     plainRefreshToken,
+		RefreshTokenExpiresAt: refreshTokenExpiresAt,
+	}
+}

@@ -18,7 +18,7 @@ func NewPostgresStore(db *sql.DB) *PostgresUserSessionStore {
 
 // ----- CREATE -----
 
-func (store *PostgresUserSessionStore) Create(ctx context.Context, transaction *sql.Tx, session *UserSession, sessionExp time.Duration) error {
+func (store *PostgresUserSessionStore) Create(ctx context.Context, transaction *sql.Tx, userId int64, sessionExp time.Duration) (*UserSession, error) {
 	query := `
 		INSERT INTO user_sessions (user_id, expires_at)
 		VALUES ($1, NOW() + $2)
@@ -27,6 +27,10 @@ func (store *PostgresUserSessionStore) Create(ctx context.Context, transaction *
 
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
+
+	var session = &UserSession{
+		UserId: userId,
+	}
 
 	err := transaction.QueryRowContext(
 		queryCtx,
@@ -39,7 +43,7 @@ func (store *PostgresUserSessionStore) Create(ctx context.Context, transaction *
 		&session.CreatedAt,
 	)
 
-	return err
+	return session, err
 }
 
 // ----- DELETE -----

@@ -1,10 +1,10 @@
-package auth
+package rtoken
 
 import (
 	"time"
 )
 
-type CreateRefreshTokenPayload struct {
+type CreateRefreshTokenDto struct {
 	PlainToken string
 	ExpiresAt  time.Time
 }

@@ -10,15 +10,15 @@ import (
 func (app *App) setAuthCookies(w http.ResponseWriter, authTokensDto payloads.AuthTokensDto) {
 
 	// Create and set cookies
-	accessCookie := setSecureCookie("access_token", authTokensDto.AccessToken, authTokensDto.AccessTokenExpiresAt)
+	accessCookie := newSecureCookie("access_token", authTokensDto.AccessToken, authTokensDto.AccessTokenExpiresAt)
 
-	refreshCookie := setSecureCookie("refresh_token", authTokensDto.PlainRefreshToken, authTokensDto.RefreshTokenExpiresAt)
+	refreshCookie := newSecureCookie("refresh_token", authTokensDto.PlainRefreshToken, authTokensDto.RefreshTokenExpiresAt)
 
 	http.SetCookie(w, &accessCookie)
 	http.SetCookie(w, &refreshCookie)
 }
 
-func setSecureCookie(name, value string, expiration time.Time) http.Cookie {
+func newSecureCookie(name, value string, expiration time.Time) http.Cookie {
 	return http.Cookie{
 		Name:     name,
 		Value:    value,

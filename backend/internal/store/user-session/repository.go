@@ -7,6 +7,6 @@ import (
 )
 
 type IUserSessionRepository interface {
-	Create(ctx context.Context, transaction *sql.Tx, session *UserSession, sessionExp time.Duration) error
+	Create(ctx context.Context, transaction *sql.Tx, userId int64, sessionExp time.Duration) (*UserSession, error)
 	Delete(ctx context.Context, transaction *sql.Tx, sessionId int64) error
 }
