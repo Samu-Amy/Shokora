@@ -1,15 +1,11 @@
 package api
 
 import (
-	"context"
-	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 	user_repo "github.com/Samu-Amy/Shokora/internal/store/user"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 // - Rate Limiter -
@@ -32,7 +28,7 @@ func (app *App) rateLimiterMiddleware(next http.Handler) http.Handler {
 func (app *App) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		ctx := r.Context()
+		// ctx := r.Context()
 
 		// Get Auth header
 		authHeader := r.Header.Get(authHeader)
@@ -48,40 +44,40 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		token := parts[1]
+		// token := parts[1]
 
-		jwtToken, err := app.jwtAuthenticator.ValidateJWTToken(token) // TODO: usa service (gestione sia di Access che di Refresh tokens)
-		if err != nil {
-			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
-			return
-		}
+		// jwtToken, err := app.jwtAuthenticator.ValidateJWTToken(token) // TODO: usa service (gestione sia di Access che di Refresh tokens)
+		// if err != nil {
+		// 	app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
+		// 	return
+		// }
 
 		// Get user id
-		claims := jwtToken.Claims.(jwt.MapClaims)
+		// claims := jwtToken.Claims.(jwt.MapClaims)
 
-		userId, err := strconv.ParseInt(fmt.Sprintf("%.f", claims["sub"]), 10, 64)
-		if err != nil {
-			app.unauthorizedError(w, r, err)
-			return
-		}
+		// userId, err := strconv.ParseInt(fmt.Sprintf("%.f", claims["sub"]), 10, 64)
+		// if err != nil {
+		// 	app.unauthorizedError(w, r, err)
+		// 	return
+		// }
 
 		// Get user
-		user, err := app.service.User.GetById(ctx, userId)
-		if err != nil {
-			app.unauthorizedError(w, r, err)
-			return
-		}
+		// user, err := app.service.User.GetById(ctx, userId)
+		// if err != nil {
+		// 	app.unauthorizedError(w, r, err)
+		// 	return
+		// }
 
 		// Check if user is not blocked
-		if !user.IsActive {
-			app.unauthorizedError(w, r, err) // TODO: usa errore dedicato (bloccato)
-			return
-		}
+		// if !user.IsActive {
+		// 	app.unauthorizedError(w, r, err) // TODO: usa errore dedicato (bloccato)
+		// 	return
+		// }
 
-		//* Save user in context
-		ctxWithUser := context.WithValue(ctx, userCtx, user)
+		// //* Save user in context
+		// ctxWithUser := context.WithValue(ctx, userCtx, user)
 
-		next.ServeHTTP(w, r.WithContext(ctxWithUser))
+		// next.ServeHTTP(w, r.WithContext(ctxWithUser))
 	})
 }
 

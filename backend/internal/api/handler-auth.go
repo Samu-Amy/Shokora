@@ -2,14 +2,8 @@ package api
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
-	"github.com/Samu-Amy/Shokora/internal/auth"
-	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
-	"github.com/go-chi/chi/v5"
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // ----- REGISTER -----
@@ -85,28 +79,28 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 // ----- EMAIL VERIFICATION -----
 
 func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	// ctx := r.Context()
 
-	// Get "token" param
-	token := chi.URLParam(r, verificationTokenParam)
+	// // Get "token" param
+	// token := chi.URLParam(r, verificationTokenParam)
 
-	// Hash token
-	hashedToken := auth.HashBase64Token(&token)
+	// // Hash token
+	// hashedToken := auth.HashBase64Token(&token)
 
-	// Verify
-	if err := app.service.Auth.VerifyEmailWithToken(ctx, hashedToken); err != nil {
-		app.logger.Warnw("Error with Email Verification using Token", "error", err)
+	// // Verify
+	// if err := app.service.Auth.VerifyEmailWithToken(ctx, hashedToken); err != nil {
+	// 	app.logger.Warnw("Error with Email Verification using Token", "error", err)
 
-		app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
-		return
-	}
+	// 	app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
+	// 	return
+	// }
 
-	//* No content
-	w.WriteHeader(http.StatusNoContent)
+	// //* No content
+	// w.WriteHeader(http.StatusNoContent)
 }
 
 func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	// ctx := r.Context()
 
 	// Get payload data
 	var payload payloads.OTPVerificationReq // TODO: nel FRONTEND ricorda di inviare l'otp come stringa
@@ -122,86 +116,90 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if len(payload.OTP) != int(app.config.Auth.OTP.Length) {
-		app.badRequestError(w, r, domerrors.ErrInvalid) // Invalid token
-		return
-	}
+	// if len(payload.OTP) != int(app.config.Auth.OTP.Length) {
+	// 	app.badRequestError(w, r, domerrors.ErrInvalid) // Invalid token
+	// 	return
+	// }
 
-	// Hash OTP
-	hashedOTP := app.tokenAuthenticator.HashOTP(payload.OTP, auth.EmailVerification)
+	// // Hash OTP
+	// hashedOTP := app.tokenAuthenticator.HashOTP(payload.OTP, auth.EmailVerification)
 
-	// Verify
-	if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload.VerificationId, hashedOTP, app.config.Auth.OTP.MaxAttempts); err != nil {
-		app.logger.Warnw("Error with Email Verification using OTP", "error", err)
+	// // Verify
+	// if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload.VerificationId, hashedOTP, app.config.Auth.OTP.MaxAttempts); err != nil {
+	// 	app.logger.Warnw("Error with Email Verification using OTP", "error", err)
 
-		app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
-		return
-	}
+	// 	app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
+	// 	return
+	// }
 
-	//* No content
-	w.WriteHeader(http.StatusNoContent)
+	// //* No content
+	// w.WriteHeader(http.StatusNoContent)
 }
 
 // ----- TOKENS -----
 
 // TODO: da "incorporare" in register, login (se no 2fa) e in 2fa (se attiva)
 func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	// TODO: usa service
 
-	// Get payload data
-	var payload payloads.LoginUserReq
+	// ctx := r.Context()
 
-	if err := readJSON(w, r, &payload); err != nil {
-		app.badRequestError(w, r, err)
-		return
-	}
+	// // Get payload data
+	// var payload payloads.LoginUserReq
 
-	// Validate
-	if err := Validate.Struct(payload); err != nil {
-		app.badRequestError(w, r, err)
-		return
-	}
+	// if err := readJSON(w, r, &payload); err != nil {
+	// 	app.badRequestError(w, r, err)
+	// 	return
+	// }
 
-	// Fetch the user (check if the user exist)
-	user, err := app.service.User.GetByEmail(ctx, payload.Email)
-	if err != nil {
-		app.parseError(w, r, err) // TODO: FRONTEND - non dire se l'email esiste o meno
-		return
-	}
+	// // Validate
+	// if err := Validate.Struct(payload); err != nil {
+	// 	app.badRequestError(w, r, err)
+	// 	return
+	// }
 
-	// Compare password
-	err = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(payload.Password))
-	if err != nil {
-		app.unauthorizedError(w, r, err)
-		return
-	}
+	// // Fetch the user (check if the user exist)
+	// user, err := app.service.User.GetByEmail(ctx, payload.Email)
+	// if err != nil {
+	// 	app.parseError(w, r, err) // TODO: FRONTEND - non dire se l'email esiste o meno
+	// 	return
+	// }
 
-	// Generate tokens (and add claims)
-	claims := jwt.MapClaims{
-		"sub": user.Id, // subject
-		"exp": time.Now().Add(app.config.Auth.Token.AccessTokenExp).Unix(),
-		"iat": time.Now().Unix(),              // issued at
-		"nbf": time.Now().Unix(),              // not before time
-		"iss": app.config.Auth.Token.Issuer,   // issuer
-		"aud": app.config.Auth.Token.Audience, // audience
-	}
+	// // Compare password
+	// err = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(payload.Password))
+	// if err != nil {
+	// 	app.unauthorizedError(w, r, err)
+	// 	return
+	// }
 
-	token, err := app.jwtAuthenticator.GenerateJWTToken(claims)
-	if err != nil {
-		app.internalServerError(w, r, err)
-		return
-	}
+	// // Generate tokens (and add claims)
+	// claims := jwt.MapClaims{
+	// 	"sub": user.Id, // subject
+	// 	"exp": time.Now().Add(app.config.Auth.Token.AccessTokenExp).Unix(),
+	// 	"iat": time.Now().Unix(),              // issued at
+	// 	"nbf": time.Now().Unix(),              // not before time
+	// 	"iss": app.config.Auth.Token.Issuer,   // issuer
+	// 	"aud": app.config.Auth.Token.Audience, // audience
+	// }
 
-	// TODO: setta cookie invece che inviarlo come payload (?)
+	// token, err := app.jwtAuthenticator.GenerateJWTToken(claims)
+	// if err != nil {
+	// 	app.internalServerError(w, r, err)
+	// 	return
+	// }
 
-	//* Send token to the client
-	if err := app.jsonResponse(w, http.StatusCreated, token); err != nil {
-		app.internalServerError(w, r, err)
-	}
+	// // TODO: setta cookie invece che inviarlo come payload
+
+	// //* Send token to the client
+	// if err := app.jsonResponse(w, http.StatusCreated, token); err != nil {
+	// 	app.internalServerError(w, r, err)
+	// }
 }
 
 func (app *App) refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+
 	// TODO: opzioni per cookie (da verificare)
+
 	// HttpOnly: true
 	// Secure: true
 	// SameSite: Strict (refresh) / Lax (access)
