@@ -4,7 +4,6 @@ import (
 	"time"
 )
 
-// TODO: modifica (ora anche tabella sessione)
 type RefreshToken struct {
 	Id        int64
 	SessionId int64

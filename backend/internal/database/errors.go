@@ -30,8 +30,8 @@ const (
 	// vtokensOtpAttemptsRangeCheck           = "v_tokens_otp_attempts_range_check"             // Attempts ([0, 255]) out of range (smallint in uint8 range)
 	// vtokensMagicLinkTokenCheck             = "v_tokens_magic_link_token_hash_check"          // Magic Link Token and expiration check (must be both null or not null)
 
-	// Refresh Tokens
-	// refreshTokensTokenUnique    = "refresh_tokens_token_hash_unique" // Duplicate Refresh Token
+	// Duplicate Refresh Token
+	refreshTokensTokenUnique = "refresh_tokens_token_hash_unique" // Duplicate Refresh Token
 
 	// Duplicate "repaces" Refresh Token id (reused token)
 	refreshTokensReplacesUnique = "refresh_tokens_replaces_unique"
@@ -64,7 +64,7 @@ func ParseDbError(err error) error {
 		return interrors.IErrNotFound
 
 	// Verification
-	case isPostgresError(err, UNIQUE_VIOLATION_ERROR, vtokensMagicLinkTokenUnique):
+	case isPostgresError(err, UNIQUE_VIOLATION_ERROR, vtokensMagicLinkTokenUnique), isPostgresError(err, UNIQUE_VIOLATION_ERROR, refreshTokensTokenUnique):
 		return interrors.IErrDuplicateToken
 
 	// Auth

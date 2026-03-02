@@ -3,16 +3,18 @@ package authservice
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
+	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	rtoken "github.com/Samu-Amy/Shokora/internal/store/refresh-token.go"
 )
 
 // ----- CREATE AND ROTATE REFRESH TOKENS -----
 
 // Create
-func (service *AuthService) createNewRefreshToken(ctx context.Context, userId int64) (*payloads.AuthTokensDto, error) {
+func (service *AuthService) createNewSessionAndRefreshToken(ctx context.Context, userId int64) (*payloads.AuthTokensDto, error) {
 
 	var createRefreshTokenDto = &payloads.AuthTokensDto{}
 
@@ -25,21 +27,13 @@ func (service *AuthService) createNewRefreshToken(ctx context.Context, userId in
 			return err
 		}
 
-		// Generate refresh token
-		plainRefreshToken, refreshToken, err := service.generateRefreshToken(sessionId)
+		// Create Refresh Token in db
+		plainRefreshToken, refreshToken, err := service.createRefreshTokenWithRetries(ctx, tx, sessionId, nil)
 		if err != nil {
-			service.logger.Warnw("Error generating refresh token", "error", err)
 			return err
 		}
 
 		createRefreshTokenDto.PlainRefreshToken = plainRefreshToken
-
-		// Create refresh token in db
-		err = service.refreshTokenRepo.Create(ctx, tx, refreshToken, service.config.Token.RefreshTokenExp)
-		if err != nil {
-			service.logger.Warnw("Error creating refresh token in db", "error", err)
-			return err
-		}
 
 		createRefreshTokenDto.RefreshTokenExpiresAt = refreshToken.ExpiresAt
 
@@ -112,7 +106,7 @@ func (service *AuthService) createNewRefreshToken(ctx context.Context, userId in
 // 	return err
 // }
 
-// ----- GENERATE TOKEN -----
+// ----- GENERATE / CREATE TOKEN -----
 
 /*
 Generate Refresh Token
@@ -122,7 +116,7 @@ Return:
   - refreshToken (rtoken.RefreshToken)
   - error
 */
-func (service *AuthService) generateRefreshToken(sessionId int64) (string, *rtoken.RefreshToken, error) {
+func (service *AuthService) generateRefreshToken(sessionId int64, replaces *int64) (string, *rtoken.RefreshToken, error) {
 	plainToken, err := auth.GenerateBase64Token(service.config.Token.RefreshTokenByteSize)
 	if err != nil {
 		return plainToken, nil, err
@@ -134,6 +128,74 @@ func (service *AuthService) generateRefreshToken(sessionId int64) (string, *rtok
 	refreshToken := &rtoken.RefreshToken{
 		SessionId: sessionId,
 		TokenHash: hashedToken,
+		Replaces:  replaces,
 	}
-	return "", refreshToken, nil
+
+	return plainToken, refreshToken, nil
+}
+
+/*
+Create Refresh Token
+
+Return:
+  - plainToken
+  - refreshToken (rtoken.RefreshToken)
+  - error
+*/
+func (service *AuthService) createRefreshTokenWithRetries(ctx context.Context, tx *sql.Tx, sessionId int64, replaces *int64) (string, *rtoken.RefreshToken, error) {
+	// Generate token
+	plainRefreshToken, refreshToken, err := service.generateRefreshToken(sessionId, replaces)
+	if err != nil {
+		service.logger.Warnw("Error generating refresh token", "error", err)
+		return "", nil, err
+	}
+
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, auth.RegenerateTokenTimeout)
+	defer cancel()
+
+	// Create token in db
+	err = service.refreshTokenRepo.Create(ctxWithTimeout, tx, refreshToken, service.config.Token.RefreshTokenExp)
+	if err == nil {
+		return plainRefreshToken, refreshToken, nil // Token Created (OK)
+
+	} else if !errors.Is(err, interrors.IErrDuplicateToken) {
+		service.logger.Warnw("Error creating refresh token in db", "error", err)
+		return "", nil, err // Error (can't retry)
+	}
+
+	// Retries (it's MaxRetries - 1 because one try is already done)
+	for range service.tokenAuthenticator.MaxRetries - 1 {
+
+		// Timeout
+		select {
+		case <-ctxWithTimeout.Done():
+			return "", nil, ctxWithTimeout.Err()
+		default:
+		}
+
+		// Regenerate Token (if error is "duplicate token")
+		switch {
+
+		case errors.Is(err, interrors.IErrDuplicateToken):
+			plainRefreshToken, refreshToken, err = service.generateRefreshToken(sessionId, replaces)
+			if err != nil {
+				service.logger.Warnw("Error rigenerating refresh token", "error", err)
+
+				// skip iteration (reset err to IErrDuplicateToken)
+				err = interrors.IErrDuplicateToken
+				continue
+			}
+
+			err = service.refreshTokenRepo.Create(ctxWithTimeout, tx, refreshToken, service.config.Token.RefreshTokenExp)
+			if err == nil {
+				return plainRefreshToken, refreshToken, nil // Tokens Created (OK)
+			}
+
+		default:
+			service.logger.Warnw("Error during refresh token creation retries", "error", err)
+			return "", nil, err // Error is not solvable (not "duplicate token") -> return it
+		}
+	}
+
+	return "", nil, interrors.IErrMaxRetriesExceeded // Couldn't regenerate and save token successfully -> return error "max retries exceeded"
 }

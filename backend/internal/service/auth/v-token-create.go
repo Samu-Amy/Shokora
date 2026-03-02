@@ -50,10 +50,13 @@ func (service *AuthService) createVerificationTokensWithRetries(ctx context.Cont
 			err = service.tokenAuthenticator.RegenerateMagicLinkToken(verificationTokens)
 			if err != nil {
 				service.logger.Warnw("Error rigenerating verification tokens", "error", err)
-				continue // skip iteration
+
+				// skip iteration (reset err to IErrDuplicateToken)
+				err = interrors.IErrDuplicateToken
+				continue
 			}
 
-			err = service.vTokenRepo.Create(ctx, userId, verificationTokens)
+			err = service.vTokenRepo.Create(ctxWithTimeout, userId, verificationTokens)
 			if err == nil {
 				return verificationTokens, nil // Tokens Created (OK)
 			}

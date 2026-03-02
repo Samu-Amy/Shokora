@@ -80,7 +80,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	// ----- AUTH -----
 
 	// Create Refresh Token (soft error)
-	authTokenDto, err := service.createNewRefreshToken(ctx, user.Id)
+	authTokenDto, err := service.createNewSessionAndRefreshToken(ctx, user.Id)
 	if err != nil {
 		registerUserRes.HasAuthError = true
 	}

@@ -33,7 +33,7 @@ func (store *PostgresRefreshTokenStore) Create(ctx context.Context, transaction 
 		query,
 		refreshToken.SessionId,
 		refreshToken.TokenHash,
-		time.Now().Add(tokenExp), // TODO: calcola lato service (?)
+		time.Now().Add(tokenExp),
 		refreshToken.Replaces,
 	).Scan(
 		&refreshToken.ExpiresAt,
