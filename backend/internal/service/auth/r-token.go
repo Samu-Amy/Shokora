@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
@@ -51,60 +52,73 @@ func (service *AuthService) createNewSessionAndRefreshToken(ctx context.Context,
 // TODO: aggiorna a session + refresh token
 
 // Rotate
-// func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedToken []byte, newRefreshToken *rtoken.RefreshToken) error {
-// 	err := db.WithTransaction(service.db, ctx, func(tx *sql.Tx) error {
+func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedToken []byte, newRefreshToken *rtoken.RefreshToken) (*payloads.AuthTokensDto, error) {
+	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
-// 		// Get token
-// 		oldRefreshToken, err := service.refreshTokenRepo.GetToken(ctx, tx, oldHashedToken)
-// 		if err != nil {
-// 			return err
-// 		}
+		// Get old refresh token and session data
+		oldRefreshToken, sessionExpiresAt, err := service.refreshTokenRepo.GetByToken(ctx, tx, oldHashedToken)
+		if err != nil {
+			return err
+		}
 
-// 		// Validate token - Expired or revoked
-// 		if oldRefreshToken.ExpiresAt.Before(time.Now()) || oldRefreshToken.RevokedAt != nil {
-// 			return errorcodes.ErrInvalid
-// 		}
+		// Validate token - Expired
+		if oldRefreshToken.ExpiresAt.Before(time.Now()) {
+			return interrors.IErrExpired
+		}
 
-// 		// Validate token - wrong RefreshToken, User or Session id
-// 		if oldRefreshToken.UserId != newRefreshToken.UserId || oldRefreshToken.SessionId != newRefreshToken.SessionId || oldRefreshToken.Id != newRefreshToken.Replaces {
-// 			return errorcodes.ErrInvalid
-// 		}
+		// Validate token - Revoked (there is already a token that replaces it)
+		if oldRefreshToken.RevokedAt != nil {
+			return interrors.IErrReusedToken // TODO: elimina sessione (?)
+		}
 
-// 		// TODO: implementa estensione expiry - usando costanti "SessionExtensionDuration" e "SessionExtensionCondition" (e nel token nuovo usa il conto di estensioni da quello vecchio (più eventualmente quella appena fatta))
+		// Validate token - different Session id
+		if oldRefreshToken.SessionId != newRefreshToken.SessionId {
+			// TODO: controllo su oldRefreshToken.Id != *newRefreshToken.Replaces (forse non serve, dato che setto Replaces qui con l'id del vecchio token)
+			return interrors.IErrInvalid
+		}
 
-// 		// Create new token
-// 		// (create token using same session_id of the old one and using its id as replaces)
-// 		err = service.refreshTokenRepo.CreateToken(ctx, tx, newRefreshToken)
-// 		if err != nil {
-// 			return err
-// 		}
+		// Try to extend expiration // TODO: controlla che sia giusto
+		if time.Until(oldRefreshToken.ExpiresAt) <= auth.SessionExtensionCondition && oldRefreshToken.ExpiresAt.Add(auth.SessionExtensionDuration).Before(sessionExpiresAt) {
+			// TODO: implementa estensione expiry (usa ExpiresAt del token vecchio)
 
-// 		if oldRefreshToken.Id == nil || newRefreshToken.CreatedAt == nil {
-// 			return errorcodes.ErrInvalid
-// 		}
+		}
 
-// 		// Revoke (update) old token
-// 		err = service.refreshTokenRepo.RevokeTokenById(ctx, tx, *oldRefreshToken.Id, *newRefreshToken.CreatedAt)
-// 		if err != nil {
-// 			// TODO: gestire token not found or already revoked (?)
-// 			switch {
-// 			case errors.Is(err, errorcodes.InternalErrNoRowsAffected):
-// 				return errorcodes.InternalErrTokenNotFoundOrAlreadyRevoked
-// 			default:
-// 				return err
-// 			}
-// 		}
+		// Create new token
 
-// 		return nil
-// 	})
+		var createRefreshTokenDto = &payloads.AuthTokensDto{}
 
-// 	// Revoke session (in case of Reuse Detection)
-// 	if errors.Is(err, errorcodes.InternalErrReusedToken) {
-// 		err = service.userSessionRepo.DeleteSessionById(ctx, newRefreshToken.UserId, newRefreshToken.SessionId)
-// 	}
+		// create token using same session_id of the old one and using its id as replaces
+		err = service.refreshTokenRepo.Create(ctx, tx, newRefreshToken) // TODO: invece di usare la durata (exp) bisogna usare un time.time per usare quella del vecchio token (eventualmente estesa di tot giorni) (magari settare ed usare direttamente ExpiresAt in refreshToken)
+		if err != nil {
+			return err
+		}
 
-// 	return err
-// }
+		if oldRefreshToken.Id == nil || newRefreshToken.CreatedAt == nil {
+			return interrors.IErrInvalid
+		}
+
+		// Revoke (update) old token
+		err = service.refreshTokenRepo.RevokeTokenById(ctx, tx, *oldRefreshToken.Id, *newRefreshToken.CreatedAt)
+		if err != nil {
+			// TODO: gestire token not found or already revoked (?)
+			switch {
+			case errors.Is(err, errorcodes.InternalErrNoRowsAffected):
+				return errorcodes.InternalErrTokenNotFoundOrAlreadyRevoked
+			default:
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	// Revoke session (in case of Reuse Detection)
+	if errors.Is(err, errorcodes.InternalErrReusedToken) {
+		err = service.userSessionRepo.DeleteSessionById(ctx, newRefreshToken.UserId, newRefreshToken.SessionId)
+	}
+
+	return err
+}
 
 // ----- GENERATE / CREATE TOKEN -----
 

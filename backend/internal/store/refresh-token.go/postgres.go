@@ -44,10 +44,11 @@ func (store *PostgresRefreshTokenStore) Create(ctx context.Context, transaction 
 
 // ----- GET -----
 
-func (store *PostgresRefreshTokenStore) Get(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*RefreshToken, error) {
+func (store *PostgresRefreshTokenStore) GetByToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*RefreshToken, time.Time, error) {
 	query := `
-		SELECT id, session_id, token_hash, expires_at, replaces, revoked_at, created_at
-		FROM refresh_tokens
+		SELECT r.id, r.session_id, r.expires_at, r.revoked_at, s.expires_at
+		FROM refresh_tokens r
+		JOIN user_sessions s ON r.session_id = s.id
 		WHERE token_hash = $1
 		FOR UPDATE;
 	` //? FOR UPDATE blocca la riga fino a fine transaction (commit o rollback) - solitamente usato per get e poi update
@@ -56,6 +57,7 @@ func (store *PostgresRefreshTokenStore) Get(ctx context.Context, transaction *sq
 	defer cancel()
 
 	var refreshToken RefreshToken
+	var sessionExpiresAt time.Time
 
 	err := transaction.QueryRowContext(
 		queryCtx,
@@ -64,14 +66,12 @@ func (store *PostgresRefreshTokenStore) Get(ctx context.Context, transaction *sq
 	).Scan(
 		&refreshToken.Id,
 		&refreshToken.SessionId,
-		&refreshToken.TokenHash,
 		&refreshToken.ExpiresAt,
-		&refreshToken.Replaces,
 		&refreshToken.RevokedAt,
-		&refreshToken.CreatedAt,
+		&sessionExpiresAt,
 	)
 
-	return &refreshToken, database.ParseDbError(err)
+	return &refreshToken, sessionExpiresAt, database.ParseDbError(err)
 }
 
 // ----- UPDATE -----
