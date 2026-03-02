@@ -17,9 +17,6 @@ type VerificationEmailData struct {
 	OTPExp        string
 }
 
-// TODO: fai creazione ed invio email in un service (con opzione per tipo di verifica -> generazione url e scelta template adatti)
-// TODO: sistema le vars (anche OTP e scadenze (?)) - fai utils apposta per email verification, password reset e 2FA
-
 /*
 This method is used to send an email for "email verification", "password reset" or "2 Factor Auth". Parameters:
 
@@ -31,7 +28,7 @@ verificationType: enum in auth package (TokenEmailVerification, TokenPasswordRes
 
 return: error (from SendEmail method in mailer Client)
 */
-func (service *AuthService) sendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, user_name, email string, plainMagicLinkToken string, plainOTP string, magicLinkTokenExp, otpExp time.Duration) error {
+func (service *AuthService) sendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, userName, email string, plainMagicLinkToken string, plainOTP string, magicLinkTokenExp, otpExp time.Duration) error {
 
 	isSandbox := service.config.Mail.IsSandboxEnv
 
@@ -41,11 +38,11 @@ func (service *AuthService) sendVerificationEmail(ctx context.Context, verificat
 			Name     string
 			OTPToken string
 		}{
-			Name:     user_name,
+			Name:     userName,
 			OTPToken: plainOTP,
 		}
 
-		return service.mailer.SendEmail(ctx, mailer.TwoFactorAuthTemplate, user_name, email, vars, isSandbox)
+		return service.mailer.SendVerificationEmail(ctx, mailer.TwoFactorAuthTemplate, verificationType, userName, email, vars, isSandbox)
 	}
 
 	// Email Verification and Password Reset (magic link + OTP)
@@ -74,10 +71,10 @@ func (service *AuthService) sendVerificationEmail(ctx context.Context, verificat
 		ActivationURL string
 		OTPToken      string
 	}{
-		Name:          user_name,
+		Name:          userName,
 		ActivationURL: activationURL,
 		OTPToken:      plainOTP,
 	}
 
-	return service.mailer.SendEmail(ctx, templateFile, user_name, email, vars, isSandbox)
+	return service.mailer.SendVerificationEmail(ctx, templateFile, verificationType, userName, email, vars, isSandbox)
 }

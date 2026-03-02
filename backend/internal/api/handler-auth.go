@@ -53,6 +53,8 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: ricordati di scrivere di controllare nello spam (aggiungere timer al tasto per reinviare la mail (?))
 
+	// TODO: se mail non inviata, dire di riprovare più tardi? -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
+
 	//* Return user and verificationID
 	if err := app.jsonResponse(w, http.StatusCreated, registerUserRes); err != nil {
 		app.internalServerError(w, r, err)

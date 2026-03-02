@@ -3,6 +3,8 @@ package mailer
 import (
 	"context"
 	"embed"
+
+	"github.com/Samu-Amy/Shokora/internal/auth"
 )
 
 // - Constants -
@@ -32,5 +34,5 @@ var FS embed.FS
 // - Interface -
 
 type IClient interface {
-	SendEmail(ctx context.Context, templateFile, name, email string, data any, isSandbox bool) error
+	SendVerificationEmail(ctx context.Context, templateFile TemplateFile, verificationType auth.VerificationType, name, email string, data any, isSandbox bool) error
 }

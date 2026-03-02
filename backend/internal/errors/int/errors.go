@@ -12,10 +12,12 @@ var (
 	// Generic
 	IErrNotFound       = internalErr("i_not_found")
 	IErrNoRowsAffected = internalErr("i_no_rows_affected")
+	IErrConflict       = internalErr("i_conflict")
 	IErrExpired        = internalErr("i_expired")
 
 	// Constraints
 	IErrDuplicate                     = internalErr("i_duplicate")       // Duplicate (unique constraint)
+	IErrDuplicateEmail                = internalErr("i_duplicate_email") // Duplicate email
 	IErrDuplicateToken                = internalErr("i_duplicate_token") // Duplicate token
 	IErrInvalid                       = internalErr("i_invalid")         // Invalid (value non valid) or range check failed)
 	IErrReusedToken                   = internalErr("i_reused_token")    // Refresh Token reused (reuse detection)

@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"time"
 
+	"github.com/Samu-Amy/Shokora/internal/auth"
 	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	"github.com/google/uuid"
 	"github.com/resend/resend-go/v2"
@@ -29,7 +30,7 @@ func NewResendMailer(apiKey, fromEmail string) *ResendMailer {
 	}
 }
 
-func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile TemplateFile, name, email string, data any, isSandbox bool) error {
+func (mailer *ResendMailer) SendVerificationEmail(ctx context.Context, templateFile TemplateFile, verificationType auth.VerificationType, name, email string, data any, isSandbox bool) error {
 
 	if isSandbox {
 		fmt.Printf("\n\nEmail Sandbox: %v\n\n", data)
@@ -64,10 +65,20 @@ func (mailer *ResendMailer) SendEmail(ctx context.Context, templateFile Template
 	}
 
 	// Generate random verification id
-	verificationId := uuid.New().String() // TODO: fare qualcosa di più efficiente e più "sicuro" (per evitare duplicati e non inviare mail - anche se re-inviando la mail se ne genera uno nuovo)
+	verificationId := uuid.New().String() // TODO: fare qualcosa di più efficiente e più "sicuro" (per evitare duplicati e non inviare mail - anche se re-inviando la mail se ne genera uno nuovo)?
+	var idepotencyKeyPrefix string
+
+	switch verificationType {
+	case auth.EmailVerification:
+		idepotencyKeyPrefix = "verify-email/"
+	case auth.PasswordReset:
+		idepotencyKeyPrefix = "password-reset/"
+	case auth.TwoFactorAuth:
+		idepotencyKeyPrefix = "two-factor-auth/"
+	}
 
 	options := &resend.SendEmailOptions{
-		IdempotencyKey: "verify-email/" + verificationId,
+		IdempotencyKey: idepotencyKeyPrefix + verificationId,
 	}
 
 	var retryErr error

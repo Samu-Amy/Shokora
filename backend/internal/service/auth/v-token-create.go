@@ -5,17 +5,15 @@ import (
 	"errors"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
-	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
-	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
 // ----- CREATE VERIFICATION TOKENS -----
 
-func (service *AuthService) createVerificationTokensWithRetries(ctx context.Context, user *user.User) (*auth.VerificationTokens, error) {
+func (service *AuthService) createVerificationTokensWithRetries(ctx context.Context, userId int64, verificationType auth.VerificationType) (*auth.VerificationTokens, error) {
 
 	// Generate tokens
-	verificationTokens, err := service.tokenAuthenticator.CreateVerificationTokens(auth.EmailVerification)
+	verificationTokens, err := service.tokenAuthenticator.CreateVerificationTokens(verificationType)
 	if err != nil {
 		service.logger.Warnw("Error generating verification tokens", "error", err)
 		return nil, err
@@ -25,16 +23,16 @@ func (service *AuthService) createVerificationTokensWithRetries(ctx context.Cont
 	defer cancel()
 
 	// Create tokens in db
-	verificationId, err := service.vTokenRepo.CreateTokens(ctxWithTimeout, user.Id, verificationTokens) // TODO: controlla che le scadenze siano giuste
+	err = service.vTokenRepo.Create(ctxWithTimeout, userId, verificationTokens)
 	if err == nil {
-		return verificationTokens, nil // OK, return no error
+		return verificationTokens, nil // Tokens Created (OK)
 
 	} else if !errors.Is(err, interrors.IErrDuplicateToken) {
 		service.logger.Warnw("Error creating verification tokens in db", "error", err)
 		return nil, err // Error (can't retry)
 	}
 
-	// Retries
+	// Retries (it's MaxRetries - 1 because one try is already done)
 	for range service.tokenAuthenticator.MaxRetries - 1 {
 
 		// Timeout
@@ -55,17 +53,16 @@ func (service *AuthService) createVerificationTokensWithRetries(ctx context.Cont
 				continue // skip iteration
 			}
 
-			verificationId, err = service.vTokenRepo.CreateTokens(ctx, user.Id, verificationTokens)
+			err = service.vTokenRepo.Create(ctx, userId, verificationTokens)
 			if err == nil {
-				service.logger.Warnw("Error ricreating verification tokens in db", "error", err)
-				return verificationTokens, nil // OK, return no error
+				return verificationTokens, nil // Tokens Created (OK)
 			}
 
 		default:
-			service.logger.Warnw("Error in create verification tokens retries", "error", err)
+			service.logger.Warnw("Error during verification tokens creation retries", "error", err)
 			return nil, err // Error is not solvable (not "duplicate token") -> return it
 		}
 	}
 
-	return nil, domerrors.ErrMaxRetriesExceeded // Couldn't regenerate and save token successfully -> return error "max retries exceeded"
+	return nil, interrors.IErrMaxRetriesExceeded // Couldn't regenerate and save token successfully -> return error "max retries exceeded"
 }

@@ -6,7 +6,6 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
-	softerrors "github.com/Samu-Amy/Shokora/internal/errors/soft"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
@@ -26,7 +25,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	// TODO: aggiungi service.logger.Warnw("Error ...", "error", err) nei metodi del service "low level" usati qui
 
-	// TODO: usa il parsing in ogni return
+	// TODO: usa ParseIntError in ogni err return
 
 	// ----- USER -----
 
@@ -58,13 +57,11 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	// ----- VERIFICATION -----
 
 	// Create Email Verification Tokens (soft error)
-	verificationTokens, err := service.createVerificationTokensWithRetries(ctx, user)
-	if err != nil {
-		registerUserRes.VerificationError = softerrors.SoftErrVerification
+	verificationTokens, err := service.createVerificationTokensWithRetries(ctx, user.Id, auth.EmailVerification) // TODO: controlla che le scadenze nel db siano giuste
+	if err == nil {
+		// Add verification id to response
+		registerUserRes.VerificationId = &verificationTokens.VerificationId //* If registerUserRes.VerificationId == nil -> error during verification (tokens not created)
 	}
-
-	// Add verification id to payload
-	registerUserRes.VerificationId = verificationId // TODO: ottieni id da createVerificationTokensWithRetries()
 
 	// Send email (soft error)
 	err = service.sendVerificationEmail(
@@ -78,20 +75,13 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		verificationTokens.OTPExp,
 	)
 	if err != nil {
-		app.logger.Warnw("error sending welcome email", "error", err)
+		service.logger.Warnw("error sending welcome email", "error", err)
 
-		registerUserDto.RegisterUserRes.VerificationError = softerrors.SoftErrEmailNotSent // Add error to payload
-
-		//* Return user, verificationID and error
-		// if err := app.jsonResponse(w, http.StatusCreated, registerUserRes); err != nil {
-		// 	app.internalServerError(w, r, err)
-		// }
-		// return
-
-		// TODO: dire di riprovare più tardi? -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
+		// Set email "error" in response
+		registerUserRes.IsEmailSent = false
 	}
 
-	// ----- Auth -----
+	// ----- AUTH -----
 
 	// Create Refresh Token (soft error)
 	authTokenDto, err := service.createNewRefreshToken(ctx, user.Id)

@@ -13,6 +13,7 @@ var (
 	ErrNotFound           = domainErr("not_found")
 	ErrConflict           = domainErr("conflict")    // Version conflict (on resource update)
 	ErrMaxRetriesExceeded = domainErr("max_retries") // Sending Email, Genereting Magic Link
+	ErrInternalError      = domainErr("internal_error")
 
 	// Auth
 	ErrDuplicateEmail      = domainErr("duplicate_email")

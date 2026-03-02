@@ -19,7 +19,7 @@ func NewPostgresStore(db *sql.DB) *PostgresVTokenStore {
 
 // ----- CREATE -----
 
-func (store *PostgresVTokenStore) CreateTokens(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) (int64, error) {
+func (store *PostgresVTokenStore) Create(ctx context.Context, userId int64, verificationTokens *auth.VerificationTokens) error {
 	// if pair (user_id, verification_type) exists -> update (set) columns with new values (tokens, exps) and reset otp attempts
 	// else create new row
 	query := `
@@ -40,7 +40,6 @@ func (store *PostgresVTokenStore) CreateTokens(ctx context.Context, userId int64
 	}
 
 	// Create tokens
-	var verificationId int64
 
 	err := store.db.QueryRowContext(
 		queryCtx,
@@ -52,10 +51,10 @@ func (store *PostgresVTokenStore) CreateTokens(ctx context.Context, userId int64
 		verificationTokens.HashedOTP,
 		time.Now().Add(verificationTokens.OTPExp),
 	).Scan(
-		&verificationId,
+		&verificationTokens.VerificationId,
 	)
 
-	return verificationId, database.ParseDbError(err)
+	return database.ParseDbError(err)
 }
 
 // ----- UPDATE -----

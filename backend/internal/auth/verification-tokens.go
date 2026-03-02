@@ -13,7 +13,7 @@ import (
 
 // TODO: forse molti metodi si possono rendere privati (es. quelli per generate e hash tokens)
 
-// - Authenticator -
+// Authenticator
 type TokenAuthenticator struct {
 	MagicLink  config.MagicLinkConfig
 	OTP        config.OTPConfig
@@ -21,8 +21,9 @@ type TokenAuthenticator struct {
 	secret     string
 }
 
-// - Tokens -
+// Tokens
 type VerificationTokens struct {
+	VerificationId       int64
 	VerificationType     VerificationType
 	PlainMagicLinkToken  string
 	HashedMagicLinkToken []byte
@@ -47,14 +48,14 @@ func NewTokenAuthenticator(MagicLink config.MagicLinkConfig, OTP config.OTPConfi
 	return &TokenAuthenticator{MagicLink, OTP, MaxRetries, secret}
 }
 
-// - Methods -
+// - Tokens Creation -
 
 func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificationType VerificationType) (*VerificationTokens, error) {
 
 	// Generate and hash verification Token (only for email verification and password reset)
 	var plainMagicLinkToken string
 	var hashedMagicLinkToken []byte = nil
-	var err error
+	var err error //* Do not remove (otherwise in the if we should use ":=" to define err but also redefining plainMagicLinkToken, that would not work outside the if)
 
 	if verificationType != TwoFactorAuth {
 		plainMagicLinkToken, err = GenerateBase64Token(tokenAuthenticator.MagicLink.ByteSize)
@@ -71,9 +72,10 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificat
 		return nil, err
 	}
 
-	hashedOTP := tokenAuthenticator.HashOTP(plainOTP, verificationType)
+	hashedOTP := tokenAuthenticator.hashOTP(plainOTP, verificationType)
 
 	return &VerificationTokens{
+		VerificationId:       -1,
 		VerificationType:     verificationType,
 		PlainMagicLinkToken:  plainMagicLinkToken,
 		HashedMagicLinkToken: hashedMagicLinkToken,
@@ -84,53 +86,22 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificat
 	}, nil
 }
 
-func (tokenAuthenticator *TokenAuthenticator) HashOTP(plainOTP string, verificationType VerificationType) []byte {
-	mac := hmac.New(sha256.New, []byte(tokenAuthenticator.secret))
-	mac.Write([]byte(plainOTP + tokenAuthenticator.getVerificationTypeString(verificationType)))
-	return mac.Sum(nil)
-}
-
-// Regenerate
 func (tokenAuthenticator *TokenAuthenticator) RegenerateMagicLinkToken(verificationTokens *VerificationTokens) error {
+	// Generate new plain token
 	newMagicLinkToken, err := GenerateBase64Token(tokenAuthenticator.MagicLink.ByteSize)
 	if err != nil {
 		return err
 	}
 
+	// Update verificationTokens
 	verificationTokens.PlainMagicLinkToken = newMagicLinkToken
 	verificationTokens.HashedMagicLinkToken = HashBase64Token(newMagicLinkToken)
 
 	return nil
 }
 
-func (tokenAuthenticator *TokenAuthenticator) RegenerateOTP(verificationTokens *VerificationTokens) error {
-	newOTP, err := tokenAuthenticator.generateOTP()
-	if err != nil {
-		return err
-	}
+// - Verification -
 
-	verificationTokens.PlainOTP = newOTP
-	verificationTokens.HashedOTP = tokenAuthenticator.HashOTP(newOTP, verificationTokens.VerificationType)
-
-	return nil
-}
-
-// Verification
-// func (tokenAuthenticator *TokenAuthenticator) VerifyMagicLinkToken(plainToken *string, hashedToken []byte) bool {
-// 	if plainToken == nil || hashedToken == nil { // theoretically hashedToken should be also checked from len(hashedToken), since would return 0 if nil (so is redundant)
-// 		return false
-// 	}
-// 	hash := tokenAuthenticator.HashMagicLinkToken(plainToken)
-
-// 	//? si può aggiungere padding al/ai token e fare comunque il controllo per evitare timing leak (ma rischiando di validare token sbagliati)
-// 	if len(hash) != 32 || len(hashedToken) != 32 {
-// 		return false
-// 	}
-
-// 	return subtle.ConstantTimeCompare(hash, hashedToken) == 1
-// }
-
-// Verification
 func (tokenAuthenticator *TokenAuthenticator) VerifyOTP(hashedOtp1 []byte, hashedOtp2 []byte) bool {
 	return hmac.Equal(hashedOtp1, hashedOtp2)
 }
@@ -148,6 +119,12 @@ func (tokenAuthenticator *TokenAuthenticator) generateOTP() (string, error) { //
 	}
 
 	return fmt.Sprintf("%0*d", length, otp), nil // Format with [length] numbers/zeros
+}
+
+func (tokenAuthenticator *TokenAuthenticator) hashOTP(plainOTP string, verificationType VerificationType) []byte {
+	mac := hmac.New(sha256.New, []byte(tokenAuthenticator.secret))
+	mac.Write([]byte(plainOTP + tokenAuthenticator.getVerificationTypeString(verificationType)))
+	return mac.Sum(nil)
 }
 
 // - Utils -
