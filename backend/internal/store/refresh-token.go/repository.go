@@ -8,7 +8,7 @@ import (
 
 type IRefreshTokenRepository interface {
 	// Create a new refresh token (or one that replaces an old one) and update the struct "refreshToken" with the ExpiresAt and CreatedAt
-	Create(ctx context.Context, transaction *sql.Tx, refreshToken *RefreshToken, tokenExp time.Duration) error
+	Create(ctx context.Context, transaction *sql.Tx, refreshToken *RefreshToken) error
 
 	// Get the refresh token data and the session ExpiresAt
 	GetByToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*RefreshToken, time.Time, error)

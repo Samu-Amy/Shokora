@@ -18,11 +18,11 @@ func NewPostgresStore(db *sql.DB) *PostgresRefreshTokenStore {
 
 // ----- CREATE -----
 
-func (store *PostgresRefreshTokenStore) Create(ctx context.Context, transaction *sql.Tx, refreshToken *RefreshToken, tokenExp time.Duration) error {
+func (store *PostgresRefreshTokenStore) Create(ctx context.Context, transaction *sql.Tx, refreshToken *RefreshToken) error {
 	query := `
 		INSERT INTO refresh_tokens (session_id, token_hash, expires_at, replaces)
 		VALUES ($1, $2, $3, $4)
-		RETURNING expires_at
+		RETURNING created_at
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
@@ -33,10 +33,10 @@ func (store *PostgresRefreshTokenStore) Create(ctx context.Context, transaction 
 		query,
 		refreshToken.SessionId,
 		refreshToken.TokenHash,
-		time.Now().Add(tokenExp),
+		refreshToken.ExpiresAt,
 		refreshToken.Replaces,
 	).Scan(
-		&refreshToken.ExpiresAt,
+		&refreshToken.CreatedAt,
 	)
 
 	return database.ParseDbError(err)
@@ -56,7 +56,10 @@ func (store *PostgresRefreshTokenStore) GetByToken(ctx context.Context, transact
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
-	var refreshToken RefreshToken
+	refreshToken := RefreshToken{
+		TokenHash: hashedToken,
+	}
+
 	var sessionExpiresAt time.Time
 
 	err := transaction.QueryRowContext(
