@@ -1,8 +1,8 @@
 package api
 
 import (
+	"context"
 	"net/http"
-	"strings"
 
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 	user_repo "github.com/Samu-Amy/Shokora/internal/store/user"
@@ -28,56 +28,55 @@ func (app *App) rateLimiterMiddleware(next http.Handler) http.Handler {
 func (app *App) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// ctx := r.Context()
+		ctx := r.Context()
 
-		// Get Auth header
-		authHeader := r.Header.Get(authHeader)
-		if authHeader == "" {
-			app.unauthorizedError(w, r, domerrors.ErrInvalid)
+		// Get Access Token
+		var accessToken string
+		accessCookie, err := r.Cookie(accessTokenCookieName)
+		if err == nil {
+			accessToken = accessCookie.Value
+		}
+
+		// Get Refresh Token
+		refreshCookie, err := r.Cookie(refreshTokenCookieName)
+		if err != nil {
+			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 			return
 		}
 
-		// Parse Auth header ("authorization: Bearer <token>")
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != bearer {
-			app.unauthorizedError(w, r, domerrors.ErrInvalid)
+		plainRefreshToken := refreshCookie.Value
+
+		// Check Tokens
+		authTokensCheckDto, err := app.service.Auth.HandleAuthTokensCheck(ctx, accessToken, plainRefreshToken)
+		if err != nil {
+			app.unauthorizedError(w, r, err)
 			return
 		}
 
-		// token := parts[1]
-
-		// jwtToken, err := app.jwtAuthenticator.ValidateJWTToken(token) // TODO: usa service (gestione sia di Access che di Refresh tokens)
-		// if err != nil {
-		// 	app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
-		// 	return
-		// }
-
-		// Get user id
-		// claims := jwtToken.Claims.(jwt.MapClaims)
-
-		// userId, err := strconv.ParseInt(fmt.Sprintf("%.f", claims["sub"]), 10, 64)
-		// if err != nil {
-		// 	app.unauthorizedError(w, r, err)
-		// 	return
-		// }
+		// Set cookies
+		if !authTokensCheckDto.IsAccessTokenValid {
+			app.setAuthCookies(w, authTokensCheckDto.TokensDto)
+		}
 
 		// Get user
-		// user, err := app.service.User.GetById(ctx, userId)
-		// if err != nil {
-		// 	app.unauthorizedError(w, r, err)
-		// 	return
-		// }
+		user, err := app.service.User.GetById(ctx, authTokensCheckDto.UserId)
+		if err != nil {
+			app.unauthorizedError(w, r, err)
+			return
+		}
 
 		// Check if user is not blocked
-		// if !user.IsActive {
-		// 	app.unauthorizedError(w, r, err) // TODO: usa errore dedicato (bloccato)
-		// 	return
-		// }
+		if !user.IsActive {
+			app.forbiddenError(w, r, domerrors.ErrForbidden)
+			return
+		}
+
+		// TODO: ricontrolla che sia tutto giusto
 
 		// //* Save user in context
-		// ctxWithUser := context.WithValue(ctx, userCtx, user)
+		ctxWithUser := context.WithValue(ctx, userCtx, user)
 
-		// next.ServeHTTP(w, r.WithContext(ctxWithUser))
+		next.ServeHTTP(w, r.WithContext(ctxWithUser))
 	})
 }
 

@@ -3,31 +3,37 @@ package authservice
 import (
 	"time"
 
+	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// TODO: implementa
+// Generate an Access Token (JWT) with expiration and add them to authTokensTdo
+func (service *AuthService) addJWTAccessToken(authTokensTdo *payloads.AuthTokensDto, userId int64) error {
 
-func (service *AuthService) generateAccessToken(userId int64) (*string, error) {
-
-	// Set times
+	// Set expiration
 	timeNow := time.Now()
-	accessTokenExp := time.Now().Add(service.config.Token.AccessTokenExp)
+	accessTokenExpiresAt := time.Now().Add(service.config.Token.AccessTokenExp)
 
-	// Generate Access Token (and add claims)
+	// Create Claims
 	claims := jwt.MapClaims{
 		"sub": userId, // subject
-		"exp": accessTokenExp.Unix(),
+		"exp": accessTokenExpiresAt.Unix(),
 		"iat": timeNow.Unix(),                // issued at
 		"nbf": timeNow.Unix(),                // not before time
 		"iss": service.config.Token.Issuer,   // issuer
 		"aud": service.config.Token.Audience, // audience
 	}
 
+	// Generate Access Token (and add claims)
 	accessToken, err := service.jwtAuthenticator.GenerateJWTToken(claims)
 	if err != nil {
-		return nil, err
+		service.logger.Warnw("Error generating access token (jwt)", "error", err)
+		return err
 	}
 
-	return &accessToken, nil
+	// Add token and expiration to authTokenDto
+	authTokensTdo.AccessToken = accessToken
+	authTokensTdo.AccessTokenExpiresAt = accessTokenExpiresAt
+
+	return nil
 }

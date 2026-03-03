@@ -2,11 +2,14 @@ package authservice
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 /*
@@ -16,9 +19,9 @@ Creates a new user account and manages verification and authentication:
   - send email with verification tokens
   - create auth (access and refresh) tokens
 
-Return:
+Returns:
   - *payloads.RegisterUserRes: response data (user, verification id and soft errors for verification and auth) to send to the frontend
-  - *payloads.AuthTokensDto: auth token data required so set auth cookies
+  - *payloads.AuthTokensDto: auth tokens data required so set auth cookies
   - error: domerrors (safe to send to the frontend)
 */
 func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.RegisterUserReq) (*payloads.RegisterUserRes, *payloads.AuthTokensDto, error) {
@@ -32,7 +35,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		return nil, nil, domerrors.ParseIntError(err)
 	}
 
-	// Build user struct from payload data
+	// Build User struct from payload data
 	user := &user.User{
 		FirstName:    payload.FirstName,
 		LastName:     payload.LastName,
@@ -42,7 +45,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		BirthDate:    payload.BirthDate,
 	}
 
-	// Create user in db and update its struct
+	// Create User in db and update its struct
 	if err := service.createUser(ctx, user); err != nil {
 		return nil, nil, domerrors.ParseIntError(err)
 	}
@@ -71,7 +74,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		verificationTokens.OTPExp,
 	)
 	if err != nil {
-		service.logger.Warnw("error sending welcome email", "error", err)
+		service.logger.Warnw("Error sending welcome email", "error", err)
 
 		// Set email "error" in response
 		registerUserRes.IsEmailSent = false
@@ -80,14 +83,22 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	// ----- AUTH -----
 
 	// Create Refresh Token (soft error)
-	authTokenDto, err := service.createNewSessionAndRefreshToken(ctx, user.Id)
+	authTokensDto, err := service.createNewSessionAndRefreshToken(ctx, user.Id)
 	if err != nil {
 		registerUserRes.HasAuthError = true
+		return registerUserRes, nil, nil
+	}
+
+	// Create Access Token (soft error)
+	err = service.addJWTAccessToken(authTokensDto, user.Id)
+	if err != nil {
+		registerUserRes.HasAuthError = true
+		return registerUserRes, nil, nil
 	}
 
 	service.logger.Info("User and Tokens created, Email sent successfully", "userId", user.Id)
 
-	return registerUserRes, authTokenDto, nil
+	return registerUserRes, authTokensDto, nil
 }
 
 /*
@@ -97,9 +108,9 @@ Get the user account and manages verification and authentication:
   - if not verified or has 2fa active create verification tokens (magic link and/or otp) and send them
   - if verified and doesn't have 2fa active create auth (access and refresh) tokens
 
-Return:
+Returns:
   - *payloads.LoginUserRes: response data to send to the frontend
-  - *payloads.AuthTokensDto: auth token data required so set auth cookies
+  - *payloads.AuthTokensDto: auth tokens data required so set auth cookies
   - error: domerrors (safe to send to the frontend)
 */
 func (service *AuthService) LoginUser(ctx context.Context, payload payloads.LoginUserReq) (*payloads.LoginUserRes, *payloads.AuthTokensDto, error) {
@@ -145,16 +156,69 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 }
 
 /*
-TODO: aggiungi commenti e parametri della funzione
+Log out the user
 */
-func (service *AuthService) HandleRefreshToken(ctx context.Context, oldHashedToken []byte) (*payloads.AuthTokensDto, error) {
-	// Rotate refresh token
-	createRefreshTokenDto, err := service.rotateRefreshToken(ctx, oldHashedToken)
+func (service *AuthService) LogoutUser(ctx context.Context, userId int64) error {
+
+	// Delete session
+
+	// TODO: elimina cookies in hanlder
+
+	return nil
+}
+
+/*
+Takes Access and Refresh Tokens, verifies and updates them (if necessary)
+
+Return:
+  - *payloads.AuthTokensCheckDto: auth tokens data required so set auth cookies (AuthTokensDto) + IsAccessTokenValid and UserId
+  - error: domerrors (safe to send to the frontend)
+*/
+func (service *AuthService) HandleAuthTokensCheck(ctx context.Context, accessToken, plainRefreshToken string) (*payloads.AuthTokensCheckDto, error) {
+
+	authTokensCheckDto := payloads.AuthTokensCheckDto{
+		IsAccessTokenValid: false,
+	}
+
+	// Verify Access Token
+	jwtToken, err := service.jwtAuthenticator.ValidateJWTToken(accessToken)
+	if err == nil && jwtToken != nil {
+
+		// Get user Id from claims
+		claims := jwtToken.Claims.(jwt.MapClaims)
+
+		userId, err := strconv.ParseInt(fmt.Sprintf("%.f", claims["sub"]), 10, 64)
+		if err == nil {
+			// Access Token valid -> set data and return
+			authTokensCheckDto.IsAccessTokenValid = true
+			authTokensCheckDto.UserId = userId
+
+			return &authTokensCheckDto, nil
+		}
+	}
+
+	// Access Token not valid -> Rotate Refresh Token
+	hashedRefreshToken := auth.HashBase64Token(plainRefreshToken)
+	authTokensDto, userId, err := service.rotateRefreshToken(ctx, hashedRefreshToken)
 	if err != nil {
 		return nil, domerrors.ParseIntError(err)
 	}
 
+	if userId == -1 {
+		return nil, domerrors.ErrNotFound
+	}
+
+	// Create Access Token
+	err = service.addJWTAccessToken(authTokensDto, userId)
+	if err != nil {
+		return nil, domerrors.ParseIntError(err)
+	}
+
+	// TODO: controlla che sia tutto giusto
+
+	authTokensCheckDto.TokensDto = *authTokensDto
+
 	// Create new access token
 
-	return createRefreshTokenDto, nil
+	return &authTokensCheckDto, nil
 }

@@ -50,3 +50,12 @@ type AuthTokensDto struct {
 	AccessTokenExpiresAt  time.Time `json:"-"`
 	RefreshTokenExpiresAt time.Time `json:"-"`
 }
+
+/*
+Contains AuthTokensDto plus data for the middleware
+*/
+type AuthTokensCheckDto struct {
+	IsAccessTokenValid bool
+	UserId             int64
+	TokensDto          AuthTokensDto
+}

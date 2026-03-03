@@ -44,9 +44,9 @@ func (store *PostgresRefreshTokenStore) Create(ctx context.Context, transaction 
 
 // ----- GET -----
 
-func (store *PostgresRefreshTokenStore) GetByToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*RefreshToken, time.Time, error) {
+func (store *PostgresRefreshTokenStore) GetByToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*TokenAndSessionData, error) {
 	query := `
-		SELECT r.id, r.session_id, r.expires_at, r.revoked_at, s.expires_at
+		SELECT r.id, r.session_id, r.expires_at, r.revoked_at, s.user_id, s.expires_at
 		FROM refresh_tokens r
 		JOIN user_sessions s ON r.session_id = s.id
 		WHERE token_hash = $1
@@ -56,25 +56,22 @@ func (store *PostgresRefreshTokenStore) GetByToken(ctx context.Context, transact
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
-	refreshToken := RefreshToken{
-		TokenHash: hashedToken,
-	}
-
-	var sessionExpiresAt time.Time
+	var tokenAndSessionData TokenAndSessionData
 
 	err := transaction.QueryRowContext(
 		queryCtx,
 		query,
 		hashedToken,
 	).Scan(
-		&refreshToken.Id,
-		&refreshToken.SessionId,
-		&refreshToken.ExpiresAt,
-		&refreshToken.RevokedAt,
-		&sessionExpiresAt,
+		&tokenAndSessionData.Id,
+		&tokenAndSessionData.SessionId,
+		&tokenAndSessionData.ExpiresAt,
+		&tokenAndSessionData.RevokedAt,
+		&tokenAndSessionData.UserId,
+		&tokenAndSessionData.SessionExpiresAt,
 	)
 
-	return &refreshToken, sessionExpiresAt, database.ParseDbError(err)
+	return &tokenAndSessionData, database.ParseDbError(err)
 }
 
 // ----- UPDATE -----

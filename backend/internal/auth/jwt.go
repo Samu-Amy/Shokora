@@ -1,6 +1,7 @@
 package auth
 
 import (
+	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -31,7 +32,12 @@ func (a *JWTAuthenticator) GenerateJWTToken(claims jwt.Claims) (string, error) {
 	return tokenString, nil
 }
 
+// Validate a JWT Token
 func (a *JWTAuthenticator) ValidateJWTToken(token string) (*jwt.Token, error) {
+	if token == "" {
+		return nil, interrors.IErrInvalid
+	}
+
 	return jwt.Parse(token, func(t *jwt.Token) (any, error) {
 		// Check signing method (algoritm)
 		// if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {

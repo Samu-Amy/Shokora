@@ -7,12 +7,17 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 )
 
+const (
+	accessTokenCookieName  string = "access_token"
+	refreshTokenCookieName string = "refresh_token"
+)
+
 func (app *App) setAuthCookies(w http.ResponseWriter, authTokensDto payloads.AuthTokensDto) {
 
 	// Create and set cookies
-	accessCookie := newSecureCookie("access_token", authTokensDto.AccessToken, authTokensDto.AccessTokenExpiresAt)
+	accessCookie := newSecureCookie(accessTokenCookieName, authTokensDto.AccessToken, authTokensDto.AccessTokenExpiresAt)
 
-	refreshCookie := newSecureCookie("refresh_token", authTokensDto.PlainRefreshToken, authTokensDto.RefreshTokenExpiresAt)
+	refreshCookie := newSecureCookie(refreshTokenCookieName, authTokensDto.PlainRefreshToken, authTokensDto.RefreshTokenExpiresAt)
 
 	http.SetCookie(w, &accessCookie)
 	http.SetCookie(w, &refreshCookie)
