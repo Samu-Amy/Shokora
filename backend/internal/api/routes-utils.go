@@ -8,12 +8,6 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// ----- HEADERS -----
-const (
-	authHeader string = "Authorization"
-	bearer     string = "Bearer"
-)
-
 // ----- CONTEXT -----
 
 // Keys

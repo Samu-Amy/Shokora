@@ -34,10 +34,10 @@ func (app *App) requestTimeoutError(w http.ResponseWriter, r *http.Request, err 
 	writeJSONError(w, http.StatusRequestTimeout, "failed to process request in time")
 }
 
-func (app *App) unauthorizedError(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Warnf("unauthorized error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+func (app *App) conflictError(w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Errorf("conflict error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
-	writeJSONError(w, http.StatusUnauthorized, "unauthorized")
+	writeJSONError(w, http.StatusConflict, "conflict")
 }
 
 // - Dynamic Errors (message from error) -
@@ -60,10 +60,16 @@ func (app *App) notFoundError(w http.ResponseWriter, r *http.Request, err error)
 	writeJSONError(w, http.StatusNotFound, "not_found")
 }
 
-func (app *App) conflictError(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Errorf("conflict error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+func (app *App) unauthorizedError(w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Warnf("unauthorized error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
-	writeJSONError(w, http.StatusConflict, "conflict")
+	errorMessage := "unauthorized"
+
+	if domerrors.IsDomainErr(err) {
+		errorMessage = err.Error()
+	}
+
+	writeJSONError(w, http.StatusUnauthorized, errorMessage)
 }
 
 func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error) {
@@ -80,6 +86,7 @@ func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error
 
 // ----- PARSE ERROR -----
 
+// TODO: aggiorna con tutti i domerrors
 func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, context.DeadlineExceeded):

@@ -34,7 +34,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 		var accessToken string
 		accessCookie, err := r.Cookie(accessTokenCookieName)
 		if err == nil {
-			accessToken = accessCookie.Value
+			accessToken = accessCookie.Value // The Access Token can be expired (and the cookie deleted), the important one is the refresh
 		}
 
 		// Get Refresh Token
@@ -53,7 +53,7 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Set cookies
+		// Set cookies (if tokens are updated)
 		if !authTokensCheckDto.IsAccessTokenValid {
 			app.setAuthCookies(w, authTokensCheckDto.TokensDto)
 		}
@@ -70,8 +70,6 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 			app.forbiddenError(w, r, domerrors.ErrForbidden)
 			return
 		}
-
-		// TODO: ricontrolla che sia tutto giusto
 
 		// //* Save user in context
 		ctxWithUser := context.WithValue(ctx, userCtx, user)

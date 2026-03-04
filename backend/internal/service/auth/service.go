@@ -2,7 +2,6 @@ package authservice
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
@@ -186,19 +185,23 @@ func (service *AuthService) HandleAuthTokensCheck(ctx context.Context, accessTok
 
 		// Get user Id from claims
 		claims := jwtToken.Claims.(jwt.MapClaims)
-
-		userId, err := strconv.ParseInt(fmt.Sprintf("%.f", claims["sub"]), 10, 64)
+		subject, err := claims.GetSubject()
 		if err == nil {
-			// Access Token valid -> set data and return
-			authTokensCheckDto.IsAccessTokenValid = true
-			authTokensCheckDto.UserId = userId
 
-			return &authTokensCheckDto, nil
+			userId, err := strconv.ParseInt(subject, 10, 64)
+			if err == nil {
+				// Access Token valid -> set data and return
+				authTokensCheckDto.IsAccessTokenValid = true
+				authTokensCheckDto.UserId = userId
+
+				return &authTokensCheckDto, nil
+			}
 		}
 	}
 
 	// Access Token not valid -> Rotate Refresh Token
 	hashedRefreshToken := auth.HashBase64Token(plainRefreshToken)
+
 	authTokensDto, userId, err := service.rotateRefreshToken(ctx, hashedRefreshToken)
 	if err != nil {
 		return nil, domerrors.ParseIntError(err)
@@ -208,17 +211,13 @@ func (service *AuthService) HandleAuthTokensCheck(ctx context.Context, accessTok
 		return nil, domerrors.ErrNotFound
 	}
 
-	// Create Access Token
+	// Create new Access Token (and update authTokensDto)
 	err = service.addJWTAccessToken(authTokensDto, userId)
 	if err != nil {
 		return nil, domerrors.ParseIntError(err)
 	}
 
-	// TODO: controlla che sia tutto giusto
-
 	authTokensCheckDto.TokensDto = *authTokensDto
-
-	// Create new access token
 
 	return &authTokensCheckDto, nil
 }

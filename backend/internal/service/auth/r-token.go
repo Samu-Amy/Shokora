@@ -75,32 +75,35 @@ func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedTok
 		sessionId = oldTokenAndSessionData.SessionId
 		userId = oldTokenAndSessionData.UserId
 
-		// Validate token - Expired
-		if oldTokenAndSessionData.ExpiresAt.Before(time.Now()) {
-			service.logger.Warn("Old refresh token expired")
+		// Validate token and session - Expired (token.ExpiresAt should be <= session.ExpiresAt, but better to check both)
+		if oldTokenAndSessionData.TokenExpiresAt.Before(time.Now()) || oldTokenAndSessionData.SessionExpiresAt.Before(time.Now()) {
+			service.logger.Warnw("Old refresh token or session expired", "tokenId", oldTokenAndSessionData.Id)
 			return interrors.IErrExpired
 		}
 
 		// Validate token - Revoked (there is already a token that replaces it)
 		if oldTokenAndSessionData.RevokedAt != nil {
-			service.logger.Warn("Old refresh token expired")
+			service.logger.Warnw("Reused refresh token", "tokenId", oldTokenAndSessionData.Id)
 			return interrors.IErrReusedToken
 		}
 
 		// Try to extend expiration
 		var newTokenExpiresAt time.Time
 
-		if time.Until(oldTokenAndSessionData.ExpiresAt) <= auth.SessionExtensionCondition {
-			newExpiresAt := oldTokenAndSessionData.ExpiresAt.Add(auth.SessionExtensionDuration)
+		if time.Until(oldTokenAndSessionData.TokenExpiresAt) <= auth.SessionExtensionCondition {
 
-			// Extend expiration by min(oldToken ExpiresAt + SessionExtensionDuration, sessionExpiresAt)
+			// Extend token expiration by min(oldToken ExpiresAt + SessionExtensionDuration, sessionExpiresAt)
+			newExpiresAt := oldTokenAndSessionData.TokenExpiresAt.Add(auth.SessionExtensionDuration)
+
 			if newExpiresAt.Before(oldTokenAndSessionData.SessionExpiresAt) {
 				newTokenExpiresAt = newExpiresAt
 			} else {
 				newTokenExpiresAt = oldTokenAndSessionData.SessionExpiresAt
 			}
 		} else {
-			newTokenExpiresAt = oldTokenAndSessionData.ExpiresAt
+
+			// Keep old token expiration
+			newTokenExpiresAt = oldTokenAndSessionData.TokenExpiresAt
 		}
 
 		// Create Refresh Token in db
@@ -122,19 +125,19 @@ func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedTok
 		// Revoke (update) old token
 		err = service.refreshTokenRepo.RevokeById(ctx, tx, oldTokenAndSessionData.Id, newTokenCreatedAt)
 		if err != nil {
-			service.logger.Warnw("Error updating the old refresh token", "error", err)
+			service.logger.Warnw("Error updating the old refresh token", "error", err, "tokenId", oldTokenAndSessionData.Id)
 			return err
 		}
 
 		return nil
 	})
 
-	// Revoke session (in case of Reuse Detection)
-	if errors.Is(err, interrors.IErrReusedToken) {
-		service.logger.Warnw("Reused Refresh Token", "error", err)
+	// Revoke session (in case of Reuse Detection or token/session expired)
+	if errors.Is(err, interrors.IErrReusedToken) || errors.Is(err, interrors.IErrExpired) {
+		service.logger.Info("Deleting user session", "error", err, "sessionId", sessionId)
 
 		if sessionId != -1 {
-			err = service.userSessionRepo.Delete(ctx, sessionId) // TODO: controlla che sessionId sia sempre disponibile in questo caso (GetByToken non dovrebbe mai ritornare IErrReusedToken, quindi dovrebbe essere ok)
+			err = service.userSessionRepo.Delete(ctx, sessionId)
 			if err != nil {
 				service.logger.Warnw("Error deleting Session", "error", err)
 			}
@@ -154,7 +157,7 @@ Return:
   - refreshToken (rtoken.RefreshToken)
   - error
 */
-func (service *AuthService) generateRefreshToken(sessionId int64, replaces *int64, expiresAt *time.Time) (string, *rtoken.RefreshToken, error) {
+func (service *AuthService) generateRefreshToken(sessionId int64, replaces *int64, expiresAtOverride *time.Time) (string, *rtoken.RefreshToken, error) {
 	plainToken, err := auth.GenerateBase64Token(service.config.Token.RefreshTokenByteSize)
 	if err != nil {
 		return plainToken, nil, err
@@ -165,8 +168,8 @@ func (service *AuthService) generateRefreshToken(sessionId int64, replaces *int6
 
 	// ExpiresAt
 	tokenExpiresAt := time.Now().Add(service.config.Token.RefreshTokenExp)
-	if expiresAt != nil {
-		tokenExpiresAt = *expiresAt
+	if expiresAtOverride != nil {
+		tokenExpiresAt = *expiresAtOverride
 	}
 
 	refreshToken := &rtoken.RefreshToken{
@@ -187,9 +190,9 @@ Return:
   - refreshToken (rtoken.RefreshToken)
   - error
 */
-func (service *AuthService) createRefreshTokenWithRetries(ctx context.Context, tx *sql.Tx, sessionId int64, replaces *int64, expiresAt *time.Time) (string, *rtoken.RefreshToken, error) {
+func (service *AuthService) createRefreshTokenWithRetries(ctx context.Context, tx *sql.Tx, sessionId int64, replaces *int64, expiresAtOverride *time.Time) (string, *rtoken.RefreshToken, error) {
 	// Generate token
-	plainRefreshToken, refreshToken, err := service.generateRefreshToken(sessionId, replaces, expiresAt)
+	plainRefreshToken, refreshToken, err := service.generateRefreshToken(sessionId, replaces, expiresAtOverride)
 	if err != nil {
 		service.logger.Warnw("Error generating refresh token", "error", err)
 		return "", nil, err
@@ -222,7 +225,7 @@ func (service *AuthService) createRefreshTokenWithRetries(ctx context.Context, t
 		switch {
 
 		case errors.Is(err, interrors.IErrDuplicateToken):
-			plainRefreshToken, refreshToken, err = service.generateRefreshToken(sessionId, replaces, expiresAt)
+			plainRefreshToken, refreshToken, err = service.generateRefreshToken(sessionId, replaces, expiresAtOverride)
 			if err != nil {
 				service.logger.Warnw("Error rigenerating refresh token", "error", err)
 

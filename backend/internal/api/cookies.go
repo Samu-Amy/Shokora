@@ -16,7 +16,6 @@ func (app *App) setAuthCookies(w http.ResponseWriter, authTokensDto payloads.Aut
 
 	// Create and set cookies
 	accessCookie := newSecureCookie(accessTokenCookieName, authTokensDto.AccessToken, authTokensDto.AccessTokenExpiresAt)
-
 	refreshCookie := newSecureCookie(refreshTokenCookieName, authTokensDto.PlainRefreshToken, authTokensDto.RefreshTokenExpiresAt)
 
 	http.SetCookie(w, &accessCookie)

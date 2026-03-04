@@ -65,7 +65,7 @@ func (store *PostgresRefreshTokenStore) GetByToken(ctx context.Context, transact
 	).Scan(
 		&tokenAndSessionData.Id,
 		&tokenAndSessionData.SessionId,
-		&tokenAndSessionData.ExpiresAt,
+		&tokenAndSessionData.TokenExpiresAt,
 		&tokenAndSessionData.RevokedAt,
 		&tokenAndSessionData.UserId,
 		&tokenAndSessionData.SessionExpiresAt,

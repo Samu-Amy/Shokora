@@ -197,12 +197,12 @@ func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 }
 
-func (app *App) refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+// func (app *App) refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 
-	// TODO: opzioni per cookie (da verificare)
+// TODO: opzioni per cookie (da verificare)
 
-	// HttpOnly: true
-	// Secure: true
-	// SameSite: Strict (refresh) / Lax (access)
-	// Path: /auth/refresh (per refresh token)
-}
+// HttpOnly: true
+// Secure: true
+// SameSite: Strict (refresh) / Lax (access)
+// Path: /auth/refresh (per refresh token)
+// }
