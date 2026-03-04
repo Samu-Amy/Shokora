@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
+	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
+	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
 // ----- REGISTER -----
@@ -61,7 +63,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ----- LOGIN -----
+// ----- LOGIN/LOGOUT -----
 
 func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
@@ -75,6 +77,28 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	// 	app.internalServerError(w, r, err)
 	// 	return
 	// }
+}
+
+func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	user, ok := ctx.Value(userCtx).(*user.User)
+	if !ok {
+		app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
+		return
+	}
+
+	// TODO: controlla (va bene?)
+
+	err := app.service.Auth.LogoutUser(ctx, user.Id)
+	if err != nil {
+		app.parseError(w, r, err)
+		return
+	}
+
+	// TODO: delete cookies
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // ----- EMAIL VERIFICATION -----

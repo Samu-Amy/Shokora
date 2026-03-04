@@ -76,7 +76,7 @@ func (app *App) initRouter() *chi.Mux {
 			// Auth
 			r.Post("/user", app.registerUserHandler)
 			r.Post("/login", app.loginUserHandler)
-			// r.Post("/logout", ...)
+			r.Post("/logout", app.logoutUserHandler)
 
 			// Google
 			// r.Post("/google", app.googleRegisterUserHandler)
