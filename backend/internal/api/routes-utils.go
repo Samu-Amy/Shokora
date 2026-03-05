@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Samu-Amy/Shokora/internal/store/user"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -15,13 +14,8 @@ type contextKey uint8
 
 const (
 	userCtx contextKey = iota
+	sessionIdCtx
 )
-
-// Functions
-func getUserFromContext(r *http.Request) (*user.User, bool) {
-	user, ok := r.Context().Value(userCtx).(*user.User)
-	return user, ok
-}
 
 // ----- PARAMS -----
 

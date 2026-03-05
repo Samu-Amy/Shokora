@@ -2,13 +2,13 @@ package authservice
 
 import (
 	"context"
-	"strconv"
+	"errors"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
+	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 /*
@@ -157,7 +157,7 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 /*
 Log out the user
 */
-func (service *AuthService) LogoutUser(ctx context.Context, userId int64) error {
+func (service *AuthService) LogoutUser(ctx context.Context, sessionId int64) error {
 
 	// Delete session
 
@@ -170,39 +170,23 @@ func (service *AuthService) LogoutUser(ctx context.Context, userId int64) error 
 Takes Access and Refresh Tokens, verifies and updates them (if necessary)
 
 Return:
-  - *payloads.AuthTokensCheckDto: auth tokens data required so set auth cookies (AuthTokensDto) + IsAccessTokenValid and UserId
+  - *payloads.AuthTokensCheckDto: auth tokens data required so set auth cookies (AuthTokensDto) + IsAccessTokenValid, UserId and SessionId
   - error: domerrors (safe to send to the frontend)
 */
 func (service *AuthService) HandleAuthTokensCheck(ctx context.Context, accessToken, plainRefreshToken string) (*payloads.AuthTokensCheckDto, error) {
 
-	authTokensCheckDto := payloads.AuthTokensCheckDto{
-		IsAccessTokenValid: false,
-	}
-
-	// Verify Access Token
-	jwtToken, err := service.jwtAuthenticator.ValidateJWTToken(accessToken)
-	if err == nil && jwtToken != nil {
-
-		// Get user Id from claims
-		claims := jwtToken.Claims.(jwt.MapClaims)
-		subject, err := claims.GetSubject()
-		if err == nil {
-
-			userId, err := strconv.ParseInt(subject, 10, 64)
-			if err == nil {
-				// Access Token valid -> set data and return
-				authTokensCheckDto.IsAccessTokenValid = true
-				authTokensCheckDto.UserId = userId
-
-				return &authTokensCheckDto, nil
-			}
-		}
-	}
-
-	// Access Token not valid -> Rotate Refresh Token
 	hashedRefreshToken := auth.HashBase64Token(plainRefreshToken)
 
-	authTokensDto, userId, err := service.rotateRefreshToken(ctx, hashedRefreshToken)
+	// Verify Access Token
+	authTokensCheckDto, err := service.checkAccessToken(ctx, accessToken, hashedRefreshToken)
+	if err == nil {
+		return authTokensCheckDto, nil // Access Token valid -> return early
+	} else if errors.Is(err, interrors.IErrUnauthorized) {
+		return nil, domerrors.ErrUnauthorized // Tokens doesn't correspond -> something is wrong
+	}
+
+	// Rotate Refresh Token (Access Token not valid)
+	authTokensCheckDto, userId, err := service.rotateRefreshToken(ctx, hashedRefreshToken)
 	if err != nil {
 		return nil, domerrors.ParseIntError(err)
 	}
@@ -212,12 +196,10 @@ func (service *AuthService) HandleAuthTokensCheck(ctx context.Context, accessTok
 	}
 
 	// Create new Access Token (and update authTokensDto)
-	err = service.addJWTAccessToken(authTokensDto, userId)
+	err = service.addJWTAccessToken(&authTokensCheckDto.TokensDto, userId)
 	if err != nil {
 		return nil, domerrors.ParseIntError(err)
 	}
 
-	authTokensCheckDto.TokensDto = *authTokensDto
-
-	return &authTokensCheckDto, nil
+	return authTokensCheckDto, nil
 }

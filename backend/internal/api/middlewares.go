@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
+	"github.com/Samu-Amy/Shokora/internal/store/user"
 	user_repo "github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
@@ -71,10 +72,11 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// //* Save user in context
+		//* Save user and sessionId in context
 		ctxWithUser := context.WithValue(ctx, userCtx, user)
+		ctxWithSessionData := context.WithValue(ctxWithUser, sessionIdCtx, authTokensCheckDto.SessionId)
 
-		next.ServeHTTP(w, r.WithContext(ctxWithUser))
+		next.ServeHTTP(w, r.WithContext(ctxWithSessionData))
 	})
 }
 
@@ -117,7 +119,7 @@ func (app *App) userVerifiedMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get User from context (auth middleware)
-		user, ok := getUserFromContext(r)
+		user, ok := r.Context().Value(userCtx).(*user.User)
 		if !ok || user == nil {
 			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 			return
@@ -141,7 +143,7 @@ func (app *App) employeeMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get User
-		user, ok := getUserFromContext(r)
+		user, ok := r.Context().Value(userCtx).(*user.User)
 		if !ok || user == nil {
 			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 			return
@@ -165,7 +167,7 @@ func (app *App) adminMiddleware(next http.Handler) http.Handler {
 		// TODO: aggiungi controllo permessi (solo per employee)
 
 		// Get User
-		user, ok := getUserFromContext(r)
+		user, ok := r.Context().Value(userCtx).(*user.User)
 		if !ok || user == nil {
 			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 			return
@@ -187,7 +189,7 @@ func (app *App) devMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get User
-		user, ok := getUserFromContext(r)
+		user, ok := r.Context().Value(userCtx).(*user.User)
 		if !ok || user == nil {
 			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 			return

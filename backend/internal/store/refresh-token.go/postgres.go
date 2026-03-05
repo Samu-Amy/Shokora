@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/database"
+	session "github.com/Samu-Amy/Shokora/internal/store/user-session"
 )
 
 type PostgresRefreshTokenStore struct {
@@ -72,6 +73,31 @@ func (store *PostgresRefreshTokenStore) GetByToken(ctx context.Context, transact
 	)
 
 	return &tokenAndSessionData, database.ParseDbError(err)
+}
+
+func (store *PostgresRefreshTokenStore) GetSessionDataByToken(ctx context.Context, hashedToken []byte) (*session.SessionData, error) {
+	query := `
+		SELECT s.session_id, s.user_id
+		FROM refresh_tokens r
+		JOIN user_sessions s ON r.session_id = s.id
+		WHERE token_hash = $1
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
+	defer cancel()
+
+	var sessionData session.SessionData
+
+	err := store.db.QueryRowContext(
+		queryCtx,
+		query,
+		hashedToken,
+	).Scan(
+		&sessionData.SessionId,
+		&sessionData.UserId,
+	)
+
+	return &sessionData, database.ParseDbError(err)
 }
 
 // ----- UPDATE -----

@@ -56,11 +56,11 @@ Returns:
   - int64: userId
   - error: interrors (to be parsed into domerrors)
 */
-func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedToken []byte) (*payloads.AuthTokensDto, int64, error) {
+func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedToken []byte) (*payloads.AuthTokensCheckDto, int64, error) {
 
-	var createRefreshTokenDto = &payloads.AuthTokensDto{}
-	var sessionId int64 = -1
-	var userId int64 = -1
+	var authTokensCheckDto = &payloads.AuthTokensCheckDto{IsAccessTokenValid: false}
+	var sessionId int64
+	var userId int64
 
 	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
@@ -113,8 +113,8 @@ func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedTok
 		}
 
 		// Update refresh token dto
-		createRefreshTokenDto.PlainRefreshToken = newPlainRefreshToken
-		createRefreshTokenDto.RefreshTokenExpiresAt = newTokenExpiresAt
+		authTokensCheckDto.TokensDto.PlainRefreshToken = newPlainRefreshToken
+		authTokensCheckDto.TokensDto.RefreshTokenExpiresAt = newTokenExpiresAt
 
 		// Validate data for revoked_at
 		newTokenCreatedAt := newRefreshToken.CreatedAt
@@ -136,15 +136,16 @@ func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedTok
 	if errors.Is(err, interrors.IErrReusedToken) || errors.Is(err, interrors.IErrExpired) {
 		service.logger.Info("Deleting user session", "error", err, "sessionId", sessionId)
 
-		if sessionId != -1 {
-			err = service.userSessionRepo.Delete(ctx, sessionId)
-			if err != nil {
-				service.logger.Warnw("Error deleting Session", "error", err)
-			}
+		err = service.userSessionRepo.Delete(ctx, sessionId)
+		if err != nil {
+			service.logger.Warnw("Error deleting Session", "error", err)
 		}
 	}
 
-	return createRefreshTokenDto, userId, err
+	authTokensCheckDto.UserId = userId
+	authTokensCheckDto.SessionId = sessionId
+
+	return authTokensCheckDto, userId, err
 }
 
 // ----- GENERATE / CREATE TOKEN -----

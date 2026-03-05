@@ -5,7 +5,6 @@ import (
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
-	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
 // ----- REGISTER -----
@@ -13,18 +12,10 @@ import (
 // TODO: l'accesso con google (fai handler apposta) sostituisce solo la parte di autenticazione (login e register (in questo caso fornisce già la verifica della mail, settata a true)), poi la gestione di accesso e sessione è gestita dal mio sistema (?)
 
 /*
-Return
-  - RegisterUserResPayload
-
-Errors
-  - ErrDuplicateEmail
-  - ErrMaxRetriesExceeded (magic link verification token generation)
-  - ErrEmailNotSent	(magic link verification token)
-  - ErrInvalidEmailVars (magic link verification token missing)
-
-Payload Error types
-  - ErrVerification
-  - ErrEmailNotSent
+Registers the user:
+  - creates user account in db
+  - handles email verification (creating tokens and sending email)
+  - handles auth (creating tokens and setting cookies)
 */
 func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -82,15 +73,13 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	user, ok := ctx.Value(userCtx).(*user.User)
+	sessionId, ok := r.Context().Value(sessionIdCtx).(int64)
 	if !ok {
 		app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 		return
 	}
 
-	// TODO: controlla (va bene?)
-
-	err := app.service.Auth.LogoutUser(ctx, user.Id)
+	err := app.service.Auth.LogoutUser(ctx, sessionId)
 	if err != nil {
 		app.parseError(w, r, err)
 		return

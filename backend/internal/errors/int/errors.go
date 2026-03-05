@@ -20,6 +20,7 @@ var (
 	IErrDuplicateEmail                = internalErr("i_duplicate_email") // Duplicate email
 	IErrDuplicateToken                = internalErr("i_duplicate_token") // Duplicate token
 	IErrInvalid                       = internalErr("i_invalid")         // Invalid (value non valid) or range check failed)
+	IErrUnauthorized                  = internalErr("i_unauthorized")    // Unauthorized
 	IErrReusedToken                   = internalErr("i_reused_token")    // Refresh Token reused (reuse detection)
 	IErrTokenNotFoundOrAlreadyRevoked = internalErr("i_token_not_found_or_already_revoked")
 	IErrInvalidEmailVars              = internalErr("i_invalid_email_vars") // SendEmail called with wrong variables for the template
