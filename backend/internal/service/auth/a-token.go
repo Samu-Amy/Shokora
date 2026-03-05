@@ -45,6 +45,7 @@ func (service *AuthService) checkAccessToken(ctx context.Context, accessToken st
 		return nil, interrors.IErrInvalid
 	}
 
+	// TODO: mettere sessionId nel jwt ed evitare query al db (togliere quindi anche coherence check di userId tra tokens)
 	// Get sessionId and userId from db (refresh token) //? (maggiore sicurezza, performance minori, l'alternativa è mettere sessionId nel jwt dell'access token (per evitare query db))
 	sessionData, err := service.refreshTokenRepo.GetSessionDataByToken(ctx, hashedRefreshToken)
 	if err != nil {
@@ -76,15 +77,15 @@ func (service *AuthService) checkAccessToken(ctx context.Context, accessToken st
 }
 
 // Generate an Access Token (JWT) with expiration and add them to authTokensTdo
-func (service *AuthService) addJWTAccessToken(authTokensTdo *payloads.AuthTokensDto, userId int64) error {
+func (service *AuthService) addJWTAccessToken(authTokensDto *payloads.AuthTokensDto, userId int64) error {
 
 	// Set expiration
 	timeNow := time.Now()
-	accessTokenExpiresAt := time.Now().Add(service.config.Token.AccessTokenExp)
+	accessTokenExpiresAt := timeNow.Add(service.config.Token.AccessTokenExp)
 
 	// Create Claims
 	claims := jwt.MapClaims{
-		"sub": userId, // subject
+		"sub": strconv.FormatInt(userId, 10), // subject
 		"exp": accessTokenExpiresAt.Unix(),
 		"iat": timeNow.Unix(),                // issued at
 		"nbf": timeNow.Unix(),                // not before time
@@ -100,8 +101,8 @@ func (service *AuthService) addJWTAccessToken(authTokensTdo *payloads.AuthTokens
 	}
 
 	// Add token and expiration to authTokenDto
-	authTokensTdo.AccessToken = accessToken
-	authTokensTdo.AccessTokenExpiresAt = accessTokenExpiresAt
+	authTokensDto.AccessToken = accessToken
+	authTokensDto.AccessTokenExpiresAt = accessTokenExpiresAt
 
 	return nil
 }
