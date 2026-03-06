@@ -82,14 +82,14 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	// ----- AUTH -----
 
 	// Create Refresh Token (soft error)
-	authTokensDto, err := service.createNewSessionAndRefreshToken(ctx, user.Id)
+	authTokensDto, sessionId, err := service.createNewSessionAndRefreshToken(ctx, user.Id)
 	if err != nil {
 		registerUserRes.HasAuthError = true
 		return registerUserRes, nil, nil
 	}
 
 	// Create Access Token (soft error)
-	err = service.addJWTAccessToken(authTokensDto, user.Id)
+	err = service.addJWTAccessToken(authTokensDto, sessionId, user.Id)
 	if err != nil {
 		registerUserRes.HasAuthError = true
 		return registerUserRes, nil, nil
@@ -178,7 +178,7 @@ func (service *AuthService) HandleAuthTokensCheck(ctx context.Context, accessTok
 	hashedRefreshToken := auth.HashBase64Token(plainRefreshToken)
 
 	// Verify Access Token
-	authTokensCheckDto, err := service.checkAccessToken(ctx, accessToken, hashedRefreshToken)
+	authTokensCheckDto, err := service.checkAccessToken(accessToken)
 	if err == nil {
 		return authTokensCheckDto, nil // Access Token valid -> return early
 	} else if errors.Is(err, interrors.IErrUnauthorized) {
@@ -186,17 +186,13 @@ func (service *AuthService) HandleAuthTokensCheck(ctx context.Context, accessTok
 	}
 
 	// Rotate Refresh Token (Access Token not valid)
-	authTokensCheckDto, userId, err := service.rotateRefreshToken(ctx, hashedRefreshToken)
+	authTokensCheckDto, err = service.rotateRefreshToken(ctx, hashedRefreshToken)
 	if err != nil {
 		return nil, domerrors.ParseIntError(err)
 	}
 
-	if userId == -1 {
-		return nil, domerrors.ErrNotFound
-	}
-
 	// Create new Access Token (and update authTokensDto)
-	err = service.addJWTAccessToken(&authTokensCheckDto.TokensDto, userId)
+	err = service.addJWTAccessToken(&authTokensCheckDto.TokensDto, authTokensCheckDto.SessionId, authTokensCheckDto.UserId)
 	if err != nil {
 		return nil, domerrors.ParseIntError(err)
 	}

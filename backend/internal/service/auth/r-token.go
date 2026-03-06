@@ -14,15 +14,19 @@ import (
 
 // ----- CREATE AND ROTATE REFRESH TOKENS -----
 
-// Create
-func (service *AuthService) createNewSessionAndRefreshToken(ctx context.Context, userId int64) (*payloads.AuthTokensDto, error) {
+/*
+Create a new session and refresh token, return AuthTokensDto, sessionId and error
+*/
+func (service *AuthService) createNewSessionAndRefreshToken(ctx context.Context, userId int64) (*payloads.AuthTokensDto, int64, error) {
 
 	var createRefreshTokenDto = &payloads.AuthTokensDto{}
+	var sessionId int64
+	var err error // Used to avoid shadowing sessionId with ":="
 
-	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
+	err = service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
 		// Create session
-		sessionId, err := service.userSessionRepo.Create(ctx, tx, userId, service.config.Token.SessionExp)
+		sessionId, err = service.userSessionRepo.Create(ctx, tx, userId, service.config.Token.SessionExp)
 		if err != nil {
 			service.logger.Warnw("Error creating session in db", "error", err)
 			return err
@@ -42,10 +46,10 @@ func (service *AuthService) createNewSessionAndRefreshToken(ctx context.Context,
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, sessionId, err
 	}
 
-	return createRefreshTokenDto, nil
+	return createRefreshTokenDto, sessionId, nil
 }
 
 /*
@@ -56,7 +60,7 @@ Returns:
   - int64: userId
   - error: interrors (to be parsed into domerrors)
 */
-func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedToken []byte) (*payloads.AuthTokensCheckDto, int64, error) {
+func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedToken []byte) (*payloads.AuthTokensCheckDto, error) {
 
 	var authTokensCheckDto = &payloads.AuthTokensCheckDto{IsAccessTokenValid: false}
 	var sessionId int64
@@ -145,7 +149,7 @@ func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedTok
 	authTokensCheckDto.UserId = userId
 	authTokensCheckDto.SessionId = sessionId
 
-	return authTokensCheckDto, userId, err
+	return authTokensCheckDto, err
 }
 
 // ----- GENERATE / CREATE TOKEN -----
