@@ -160,8 +160,11 @@ Log out the user
 func (service *AuthService) LogoutUser(ctx context.Context, sessionId int64) error {
 
 	// Delete session
-
-	// TODO: elimina cookies in hanlder
+	err := service.userSessionRepo.Delete(ctx, sessionId)
+	if err != nil {
+		service.logger.Warnw("Error deleting Session", "error", err)
+		return domerrors.ParseIntError(err)
+	}
 
 	return nil
 }

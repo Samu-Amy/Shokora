@@ -8,19 +8,29 @@ import (
 )
 
 const (
+	cookiePath             string = "/api"
 	accessTokenCookieName  string = "access_token"
 	refreshTokenCookieName string = "refresh_token"
 )
 
 func (app *App) setAuthCookies(w http.ResponseWriter, authTokensDto payloads.AuthTokensDto) {
 
-	// Create and set cookies
 	accessCookie := newSecureCookie(accessTokenCookieName, authTokensDto.AccessToken, authTokensDto.AccessTokenExpiresAt)
 	refreshCookie := newSecureCookie(refreshTokenCookieName, authTokensDto.PlainRefreshToken, authTokensDto.RefreshTokenExpiresAt)
 
 	http.SetCookie(w, &accessCookie)
 	http.SetCookie(w, &refreshCookie)
 }
+
+func (app *App) clearAuthCookies(w http.ResponseWriter) {
+	accessCookie := expiredSecureCookie(accessTokenCookieName)
+	refreshCookie := expiredSecureCookie(refreshTokenCookieName)
+
+	http.SetCookie(w, &accessCookie)
+	http.SetCookie(w, &refreshCookie)
+}
+
+// ----- UTILS -----
 
 func newSecureCookie(name, value string, expiration time.Time) http.Cookie {
 	return http.Cookie{
@@ -31,7 +41,20 @@ func newSecureCookie(name, value string, expiration time.Time) http.Cookie {
 		SameSite: http.SameSiteStrictMode, // TODO: forntend e backend devono avere stesso dominio (con reverse proxy di nginx dovrebbe andare bene)
 		MaxAge:   getMaxAge(expiration),
 		Expires:  expiration.UTC(),
-		Path:     "/api",
+		Path:     cookiePath,
+	}
+}
+
+func expiredSecureCookie(name string) http.Cookie {
+	return http.Cookie{
+		Name:     name,
+		Value:    "",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   -1,
+		Expires:  time.Unix(0, 0),
+		Path:     cookiePath,
 	}
 }
 

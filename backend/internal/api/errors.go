@@ -86,9 +86,12 @@ func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error
 
 // ----- PARSE ERROR -----
 
-// TODO: aggiorna con tutti i domerrors
+// TODO: aggiorna con tutti i domerrors (e ricontrolla assegnazioni)
 func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
+	case !domerrors.IsDomainErr(err):
+		app.internalServerError(w, r, err)
+
 	case errors.Is(err, context.DeadlineExceeded):
 		app.requestTimeoutError(w, r, err)
 

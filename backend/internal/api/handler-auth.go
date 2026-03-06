@@ -85,7 +85,9 @@ func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: delete cookies
+	app.clearAuthCookies(w)
+
+	// TODO: verifica che funzioni correttamente
 
 	w.WriteHeader(http.StatusNoContent)
 }
