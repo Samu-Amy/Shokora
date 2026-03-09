@@ -32,7 +32,8 @@ func ParseIntError(err error) error {
 		return ErrInternalError
 	case errors.Is(err, interrors.IErrMaxRetriesExceeded):
 		return ErrMaxRetriesExceeded
-		// TODO: usa anche ErrNotVerified (domain error)
+	case errors.Is(err, interrors.IErrNotVerified):
+		return ErrNotVerified
 
 	default:
 		return err

@@ -10,18 +10,18 @@ func (err internalErr) Error() string {
 
 var (
 	// Generic
-	IErrNotFound       = internalErr("i_not_found")
-	IErrNoRowsAffected = internalErr("i_no_rows_affected")
-	IErrConflict       = internalErr("i_conflict")
-	IErrExpired        = internalErr("i_expired")
-
-	// Constraints
+	IErrNotFound                      = internalErr("i_not_found")
+	IErrNoRowsAffected                = internalErr("i_no_rows_affected")
+	IErrConflict                      = internalErr("i_conflict")
+	IErrExpired                       = internalErr("i_expired")
 	IErrDuplicate                     = internalErr("i_duplicate")       // Duplicate (unique constraint)
 	IErrDuplicateEmail                = internalErr("i_duplicate_email") // Duplicate email
 	IErrDuplicateToken                = internalErr("i_duplicate_token") // Duplicate token
 	IErrInvalid                       = internalErr("i_invalid")         // Invalid (value non valid) or range check failed)
-	IErrUnauthorized                  = internalErr("i_unauthorized")    // Unauthorized
-	IErrReusedToken                   = internalErr("i_reused_token")    // Refresh Token reused (reuse detection)
+	IErrNotVerified                   = internalErr("i_not_verified")    // User email not verified
+	IErrTwoFactorAuthReqired          = internalErr("i_two_factor_auth_reqired")
+	IErrUnauthorized                  = internalErr("i_unauthorized") // Unauthorized
+	IErrReusedToken                   = internalErr("i_reused_token") // Refresh Token reused (reuse detection)
 	IErrTokenNotFoundOrAlreadyRevoked = internalErr("i_token_not_found_or_already_revoked")
 	IErrInvalidEmailVars              = internalErr("i_invalid_email_vars") // SendEmail called with wrong variables for the template
 	IErrMaxRetriesExceeded            = internalErr("i_max_retries")        // SendEmail called with wrong variables for the template

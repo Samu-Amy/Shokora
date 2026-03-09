@@ -57,19 +57,42 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 // ----- LOGIN/LOGOUT -----
 
 func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
-	// TODO: gestisci casi user non verificato e user verificato ma con 2fa richiesta (se 2fa -> "verify-2fa[/{token}]" -> generate auth tokens ("tokens"), se no 2fa -> generate auth tokens ("tokens"))
+	ctx := r.Context()
 
-	// TODO: ritorna user (se non verificato ritorna RegisterUserResPayload?)
+	// Get payload data
+	var payload payloads.LoginUserReq
 
-	// TODO: se login fare pulizia (eliminare token di sessioni scadute - attenzione agli expires aggiornati (vecchi token scaduti ma nuovi no -> sessione ancora valida), controlla per tutta la sessione)?
-	// refreshToken, err := app.generateRefreshToken(ctx, user.Id)
-	// if err != nil {
-	// 	app.internalServerError(w, r, err)
-	// 	return
-	// }
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Validate
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Log in user
+	loginUserRes, authTokensDto, err := app.service.Auth.LoginUser(ctx, payload)
+	if err != nil {
+		app.parseError(w, r, err)
+		return
+	}
+
+	// Set cookies if no verification required
+	if loginUserRes.VerificationId == nil {
+		app.setAuthCookies(w, *authTokensDto) // TODO: solo se 2fa non attiva
+	}
+
+	//* Return user
+	if err := app.jsonResponse(w, http.StatusCreated, loginUserRes); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 }
 
+// TODO: verifica che funzioni correttamente
 func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -86,8 +109,6 @@ func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.clearAuthCookies(w)
-
-	// TODO: verifica che funzioni correttamente
 
 	w.WriteHeader(http.StatusNoContent)
 }

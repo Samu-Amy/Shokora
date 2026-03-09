@@ -28,16 +28,8 @@ func NewRegisterUserRes(user UserRes) *RegisterUserRes {
 
 // The response sent to the frontend (with soft failure report)
 type LoginUserRes struct {
-	User UserRes `json:"user"`
-	// VerificationId *int64  `json:"verification_id,omitempty"` // TODO: forse può servire per 2fa
-}
-
-// Create a new RegisterUserRes with the user data and intializing the other fields
-func NewLoginUserRes(user UserRes) *LoginUserRes {
-	return &LoginUserRes{
-		User: user,
-		// VerificationId: nil,
-	}
+	User           *UserRes `json:"user,omitempty"`
+	VerificationId *int64   `json:"verification_id,omitempty"` // TODO: può servire per 2fa (se nil -> non serve verifica)
 }
 
 /*

@@ -113,29 +113,39 @@ Returns:
   - error: domerrors (safe to send to the frontend)
 */
 func (service *AuthService) LoginUser(ctx context.Context, payload payloads.LoginUserReq) (*payloads.LoginUserRes, *payloads.AuthTokensDto, error) {
-	// TODO: usa ParseIntError in ogni err return
+
+	var verificationType *auth.VerificationType = nil
 
 	// ----- USER -----
 
-	// Hash password
-	// hashedPassword, err := service.hashPassword(payload.Password)
-	// if err != nil {
-	// 	service.logger.Warnw("Error hashing password", "error", err)
-	// 	return nil, nil, domerrors.ParseIntError(err)
-	// }
-
 	// Get user
-	// user, err := service.getUser(ctx, email, hashedPassword) // TODO: fai metodo per ottenere user da email e verificare (password, is_verified, is_active (?))
-	// if err != nil {
-	// 	return nil, nil, domerrors.ParseIntError(err)
-	// }
+	user, err := service.getUser(ctx, payload.Email, []byte(payload.Password)) // TODO: aggiungi controllo compleanno (per non farlo lato frontend)
+	if err != nil {
+
+		if errors.Is(err, interrors.IErrNotVerified) {
+			*verificationType = auth.EmailVerification
+		}
+
+		if errors.Is(err, interrors.IErrTwoFactorAuthReqired) {
+			*verificationType = auth.TwoFactorAuth
+		}
+
+		return nil, nil, domerrors.ParseIntError(err)
+	}
+
+	userRes := payloads.ToUserRes(*user)
+	loginUserRed := payloads.LoginUserRes{User: &userRes}
 
 	// Create Response payload with UserRes built from user model
 	// loginUserRes := payloads.NewLoginUserRes(payloads.ToUserRes(*user))
 
 	// ----- VERIFICATION -----
 
-	// TODO: se non verificato o 2fa -> crea verificationTokens ed invia email, altrimenti crea authTokens (modificare return per distinguere i due casi)
+	if verificationType != nil {
+		// TODO: se non verificato o 2fa -> crea verificationTokens ed invia email, altrimenti crea authTokens (modificare return per distinguere i due casi)
+		// TODO: gestisci casi user non verificato e user verificato ma con 2fa richiesta (se 2fa -> "verify-2fa[/{token}]" -> generate auth tokens ("tokens"), se no 2fa -> generate auth tokens ("tokens"))
+		// TODO: se login fare pulizia (eliminare token di sessioni scadute - attenzione agli expires aggiornati (vecchi token scaduti ma nuovi no -> sessione ancora valida), controlla per tutta la sessione)?
+	}
 
 	// ----- AUTH -----
 

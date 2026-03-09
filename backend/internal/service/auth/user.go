@@ -3,8 +3,11 @@ package authservice
 import (
 	"context"
 	"database/sql"
+	"errors"
 
+	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Create user and related tables (e.g. settings, stats, achievements, copons)
@@ -22,4 +25,42 @@ func (service *AuthService) createUser(ctx context.Context, user *user.User) err
 		return nil
 	})
 
+}
+
+func (service *AuthService) getUser(ctx context.Context, email string, plainPasswordBytes []byte) (*user.User, error) {
+
+	user, err := service.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		service.logger.Warnw("Error getting user from db", "error", err)
+		if errors.Is(err, interrors.IErrNotFound) {
+			return nil, interrors.IErrInvalid
+		}
+
+		return nil, err
+	}
+
+	// Check password
+	if err = bcrypt.CompareHashAndPassword(user.PasswordHash, plainPasswordBytes); err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) { // TODO: aggiungere numero massimo di tentativi (?)
+			return nil, interrors.IErrInvalid
+		}
+
+		service.logger.Warnw("Password compare error", "error", err)
+		return nil, err
+	}
+
+	// Check user
+	if !user.IsActive {
+		return nil, interrors.IErrUnauthorized
+	}
+
+	if !user.IsVerified {
+		return nil, interrors.IErrNotVerified
+	}
+
+	// if user.HasTwoFactorAuth { // TODO: aggiungi two factor auth check (magari join con settings table?)
+
+	// }
+
+	return user, nil
 }

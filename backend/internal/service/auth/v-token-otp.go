@@ -2,6 +2,7 @@ package authservice
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
@@ -14,48 +15,60 @@ import (
 // ----- VERIFY OTP -----
 
 func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64, hashedOTP []byte, maxAttempts uint8, verificationType auth.VerificationType) (*vtoken.OTPVerificationData, error) {
-	// TODO: usare transaction (ed usare FOR UPDATE nel get?) per GetOtpData e UpdateOtpAttempts?
 
-	// Get data
-	otpQueryData, err := service.vTokenRepo.GetOtpData(ctx, verificationId, verificationType)
-	if err != nil {
-		switch {
-		case errors.Is(err, domerrors.ErrNotFound): // Not valid (id does not exists or wrong verificationType)
-			return nil, domerrors.ErrInvalid
-		default:
-			return nil, err // db/query error
-		}
-	}
+	var otpQueryData *vtoken.OTPVerificationData
+	var err error
 
-	// Verify attempts
-	if otpQueryData.Attempts >= maxAttempts {
-		return nil, domerrors.ErrMaxAttemptsExceeded
-	}
+	err = service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
-	// Verify expiry
-	if otpQueryData.ExpiresAt.Before(time.Now()) {
-		return nil, interrors.IErrExpired // TODO: non inviare interrors
-	}
-
-	// Validate OTP
-	isOtpValid := service.tokenAuthenticator.VerifyOTP(hashedOTP, otpQueryData.HashedOtp)
-	if !isOtpValid {
-
-		// Increment attempts and Handle errors
-		err = service.vTokenRepo.UpdateOtpAttempts(ctx, verificationId, maxAttempts)
-
-		// Attempts updated successfully but OTP not valid
-		if err == nil {
-			switch {
-			case errors.Is(err, domerrors.ErrNotFound):
-				err = domerrors.ErrInvalid // VerificationId is not valid
-			case errors.Is(err, interrors.IErrNoRowsAffected): // Max attempts exceeded
-				err = domerrors.ErrMaxAttemptsExceeded
-			default:
-				err = domerrors.ErrInvalid
+		// Get data
+		otpQueryData, err = service.vTokenRepo.GetOtpData(ctx, verificationId, verificationType)
+		if err != nil {
+			service.logger.Warnw("Error getting otp data", "error", err, "verificationId", verificationId)
+			// Not valid (id does not exists or wrong verificationType)
+			if errors.Is(err, interrors.IErrNotFound) {
+				return interrors.IErrInvalid
 			}
+
+			return err // db/query error
 		}
 
+		// Verify attempts
+		if otpQueryData.Attempts >= maxAttempts {
+			// service.logger.Warn("Max attempts for otp")
+			return interrors.IErrMaxRetriesExceeded
+		}
+
+		// Verify expiry
+		if otpQueryData.ExpiresAt.Before(time.Now()) {
+			// service.logger.Warn("Expired otp")
+			return interrors.IErrExpired
+		}
+
+		// Validate OTP
+		isOtpValid := service.tokenAuthenticator.VerifyOTP(hashedOTP, otpQueryData.HashedOtp)
+		if !isOtpValid {
+
+			// Increment attempts and handle errors
+			err = service.vTokenRepo.UpdateOtpAttempts(ctx, verificationId, maxAttempts)
+			if err != nil {
+				service.logger.Warnw("Error updating otp attempts", "error", err, "verificationId", verificationId)
+			}
+
+			// Attempts updated successfully but OTP not valid
+			if errors.Is(err, interrors.IErrNoRowsAffected) { // Max attempts exceeded
+				err = domerrors.ErrMaxAttemptsExceeded
+			} else {
+				err = domerrors.ErrInvalid // VerificationId is not valid (also if IErrNotFound)
+			}
+
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		return nil, err
 	}
 

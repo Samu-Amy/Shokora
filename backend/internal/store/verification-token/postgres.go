@@ -122,6 +122,7 @@ func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, verificationId
 		SELECT user_id, otp_hash, otp_attempts, otp_expires_at
 		FROM verification_tokens
 		WHERE id = $1 AND verification_type = $2
+		FOR UPDATE
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
