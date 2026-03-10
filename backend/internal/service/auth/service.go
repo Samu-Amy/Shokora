@@ -157,11 +157,10 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 
 	// service.logger.Info("User and Tokens created, Email sent successfully", "userId", user.Id)
 
-	// return loginUserRes, authTokenDto, nil
-
 	// TODO: nel login fai anche delete di tutti i refresh token scaduti per quell'utente (o in generale?) - ottenere un l'ultimo token creato per ogni session_id (join con order by) e se è scaduto -> sessione scaduta (?)
 
-	return nil, nil, nil // TODO: modifica (quello sopra)
+	// return &loginUserRes, authTokenDto, nil
+	return &loginUserRed, nil, nil
 }
 
 /*

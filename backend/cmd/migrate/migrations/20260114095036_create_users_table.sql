@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users(
   is_verified boolean NOT NULL DEFAULT FALSE,
   is_active boolean NOT NULL DEFAULT TRUE,
   user_role smallint NOT NULL DEFAULT 0,
+  permissions int NOT NULL DEFAULT 0,
   
   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
   updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW(), -- TODO: aggiungere campo per 2FA?

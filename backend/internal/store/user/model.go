@@ -15,12 +15,12 @@ type User struct {
 	IsVerified   bool
 	IsActive     bool
 	Role         Role
+	Permissions  Permission
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
 
 // - Role -
-
 type Role uint8
 
 const (
@@ -32,4 +32,30 @@ const (
 
 func (user *User) IsRoleValid(requiredRole Role) bool {
 	return user.Role >= requiredRole
+}
+
+// - Permissions -
+type Permission uint32
+
+const (
+	ProductAdd Permission = 1 << iota
+	ProductUpdate
+	ProductDelete
+	StockProductAdd
+	StockProductUpdate
+	StockProductDelete
+	OrderUpdate
+	OrderDelete
+)
+
+func (user *User) AddPermission(permission Permission) {
+	user.Permissions |= permission
+}
+
+func (user *User) HasPermission(permission Permission) bool {
+	return user.Permissions&permission != 0
+}
+
+func (user *User) RemovePermission(permission Permission) {
+	user.Permissions &^= permission
 }

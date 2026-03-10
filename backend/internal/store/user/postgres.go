@@ -51,7 +51,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 
 func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*User, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password, image_url, birth_date, is_verified, user_role, created_at, updated_at
+		SELECT id, first_name, last_name, email, password, image_url, birth_date, is_verified, user_role, permissions, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
@@ -75,6 +75,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 		&user.BirthDate,
 		&user.IsVerified,
 		&user.Role,
+		&user.Permissions,
 		// &user.Version,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -85,7 +86,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 
 func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password, image_url, birth_date, is_verified, user_role, created_at, updated_at
+		SELECT id, first_name, last_name, email, password, image_url, birth_date, is_verified, user_role, permissions, created_at, updated_at
 		FROM users
 		WHERE email = $1 AND is_verified = true
 	`
@@ -109,6 +110,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 		&user.BirthDate,
 		&user.IsVerified,
 		&user.Role,
+		&user.Permissions,
 		// &user.Version,
 		&user.CreatedAt,
 		&user.UpdatedAt,

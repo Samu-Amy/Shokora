@@ -135,7 +135,7 @@ func (app *App) userVerifiedMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// - Authorization - Roles -
+// - Authorization - Roles - // TODO: fai funzione/i wrapper che permettano di definire ruoli/permessi nel router in modo comodo (se role == requiredRole controlla permessi, se role > required, ok)
 
 // Verify that the user's role is >= employee.
 // Must be called after the authMiddleware
