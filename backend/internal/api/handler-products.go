@@ -9,6 +9,8 @@ import (
 func (app *App) createProductHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 
+	// TODO: usa paginate middleware (chi) per la paginazione?
+
 	// // Get payload data
 	// var payload payloads.CreateProductReqPayload
 

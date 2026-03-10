@@ -4,6 +4,7 @@ import (
 	"expvar"
 	"net/http"
 
+	"github.com/Samu-Amy/Shokora/internal/store/user"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -25,8 +26,6 @@ func (app *App) initRouter() *chi.Mux {
 	) */
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
-
-	// router.Use(middleware.Timeout(60 * time.Second)) // Timeout // TODO: bisogna controllarlo negli handler per evitare panic (eventualmente usarlo solo su alcuni?)
 
 	// TODO: setta comunque (con il dominio)
 	// CORS
@@ -60,9 +59,10 @@ func (app *App) initRouter() *chi.Mux {
 
 	// v1
 	router.Route("/api/v1", func(r chi.Router) { //! Se la route dovesse cambiare, modificare path cookies
-		// - Public Routes (commons) -
 
-		r.Get("/health", app.checkHealthHandler) //! TODO: togli
+		// ----- PUBLIC ROUTES (commons) -----
+
+		r.Get("/health", app.checkHealthHandler) // TODO: togli
 
 		// Products
 		r.Get("/menu/products", app.getMenuProductsHandler)
@@ -71,7 +71,10 @@ func (app *App) initRouter() *chi.Mux {
 
 		r.Get("/products/{productId}", app.getProductHandler) // TODO: per ora prende da product invece che da menu (va bene?)
 
-		// - Auth Routes -
+		//
+
+		// ----- AUTH ROUTES -----
+
 		r.Route("/auth", func(r chi.Router) {
 			// Auth
 			r.Post("/user", app.registerUserHandler)
@@ -104,12 +107,18 @@ func (app *App) initRouter() *chi.Mux {
 			})
 		})
 
-		// - Auth-Protected Routes -
+		//
+
+		// ----- AUTH PROTECTED ROUTES -----
+
 		r.Group(func(r chi.Router) {
+
+			// --- USER ROUTES ---
+
 			r.Use(app.authMiddleware) // Auth Middleware
 			// TODO: controllo modifiche -> gli utenti possono modificare solo il proprio profilo (solo le info di base, non ruolo o altro (quelli modificabili solo da admin))
 
-			// - Customers Routes -
+			// - Basic User Routes -
 
 			// User Data
 			r.Route("/user", func(r chi.Router) {
@@ -126,57 +135,91 @@ func (app *App) initRouter() *chi.Mux {
 				})
 			})
 
+			// - Verified User Routes -
+
 			// Shop Orders
 			r.Group(func(r chi.Router) {
 				r.Use(app.userVerifiedMiddleware)
 				// r.Post("/orders", app.shopOrderHandler)
 			})
 
-			// - Employee (and Admin) Routes -
+			//
+
+			// --- EMPLOYEE ROUTES ---
+
 			r.Route("/employee", func(r chi.Router) {
-				r.Use(app.employeeMiddleware)
-				// TODO: aggiungi middleware per permessi (?)
 
-				r.Get("/health", app.checkHealthHandler)
+				// - Basic -
 
-				// r.Get("/orders", ...)
+				r.Group(func(r chi.Router) {
+					r.Use(app.roleMiddleware(user.RoleEmployee))
 
-				// Users
-				r.Route("/users", func(r chi.Router) {
-					// r.Get("/", app.getUsersHandler) // Get list of users
+					// r.Get("/health", app.checkHealthHandler)
 
-					r.Route("/{userId}", func(r chi.Router) {
-						r.Get("/", app.getUserHandler)
-						// TODO: nell'handler delete user richiedi la password come sicurezza per eliminare l'account (solo jwt non è abbastanza sicuro)
+					// r.Get("/orders", ...)
+
+					// Users
+					r.Route("/users", func(r chi.Router) {
+						// r.Get("/", app.getUsersHandler) // Get list of users
+
+						r.Route("/{userId}", func(r chi.Router) {
+							r.Get("/", app.getUserHandler)
+							// TODO: nell'handler delete user richiedi la password come sicurezza per eliminare l'account (solo jwt non è abbastanza sicuro)
+						})
 					})
 				})
 
-				// TODO: usare middleware per i permessi (employyes non possono modificare questi dati se non hanno i permessi)
+				// - With Permissions -
+
 				// Products
-				// r.Group(func(r chi.Router) {
-				// r.Use(ProductsManagementAuthorization) // middleware per gestione permessi
 				r.Route("/products", func(r chi.Router) {
-					r.Post("/", app.createProductHandler)
+					r.With(app.permissionMiddleware(user.RoleEmployee, user.EmplPermProductAdd)).Post("/", app.createProductHandler)
 
 					r.Route("/{productId}", func(r chi.Router) {
-						r.Patch("/", app.updateProductHandler)
-						r.Delete("/", app.deleteProductHandler)
+						r.With(app.permissionMiddleware(user.RoleEmployee, user.EmplPermProductUpdate)).Patch("/", app.updateProductHandler)
+						r.With(app.permissionMiddleware(user.RoleEmployee, user.EmplPermProductDelete)).Delete("/", app.deleteProductHandler)
 					})
 				})
-				// })
+
+				// Stock Products
+				r.Route("/stock-products", func(r chi.Router) {
+					// r.With(app.permissionMiddleware(user.RoleEmployee, user.EmplPermStockProductAdd)).Post("/", app.createStockProductHandler)
+
+					r.Route("/{productId}", func(r chi.Router) {
+						// r.With(app.permissionMiddleware(user.RoleEmployee, user.EmplPermStockProductUpdate)).Patch("/", app.updateStockProductHandler)
+						// r.With(app.permissionMiddleware(user.RoleEmployee, user.EmplPermStockProductDelete)).Delete("/", app.deleteStockProductHandler)
+					})
+				})
+
+				// Orders Products
+				r.Route("/orders", func(r chi.Router) {
+					// r.With(app.permissionMiddleware(user.RoleEmployee, user.EmplPermOrderGet)).Get("/", app.getOrdersHandler)
+
+					r.Route("/{orderId}", func(r chi.Router) {
+						// r.With(app.permissionMiddleware(user.RoleEmployee, user.EmplPermOrderGet)).Get("/", app.getOrderHandler)
+						// r.With(app.permissionMiddleware(user.RoleEmployee, user.EmplPermOrderUpdate)).Patch("/", app.updateOrderHandler)
+						// r.With(app.permissionMiddleware(user.RoleEmployee, user.EmplPermOrderDelete)).Delete("/", app.deleteOrderHandler)
+					})
+				})
 			})
 
-			// - Admin Routes -
+			//
+
+			// --- ADMIN ROUTES ---
+
 			r.Route("/admin", func(r chi.Router) {
-				r.Use(app.adminMiddleware)
+				r.Use(app.roleMiddleware(user.RoleAdmin))
 
 				// r.Get("/users", ...)
 				// r.Patch("/users/{userId}", ...) // gestione users (ruoli e permessi)
 			})
 
-			// - Developer Routes -
+			//
+
+			// --- DEV ROUTES ---
+
 			r.Route("/dev", func(r chi.Router) {
-				r.Use(app.devMiddleware)
+				r.Use(app.roleMiddleware(user.RoleDev))
 
 				// TODO: il ruolo dev non può essere settato dall'app (solo "a mano" nel db da docker)
 				// TODO: route per vedere metrics particolari, logs ed altre cose legate al development (?)

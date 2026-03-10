@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
-	"github.com/Samu-Amy/Shokora/internal/store/user"
 	user_repo "github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
@@ -119,7 +118,7 @@ func (app *App) userVerifiedMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get User from context (auth middleware)
-		user, ok := r.Context().Value(userCtx).(*user.User)
+		user, ok := r.Context().Value(userCtx).(*user_repo.User)
 		if !ok || user == nil {
 			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 			return
@@ -137,70 +136,72 @@ func (app *App) userVerifiedMiddleware(next http.Handler) http.Handler {
 
 // - Authorization - Roles - // TODO: fai funzione/i wrapper che permettano di definire ruoli/permessi nel router in modo comodo (se role == requiredRole controlla permessi, se role > required, ok)
 
-// Verify that the user's role is >= employee.
+// Verify that the user's role is >= requiredRole.
 // Must be called after the authMiddleware
-func (app *App) employeeMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (app *App) roleMiddleware(requiredRole user_repo.Role) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Get User
-		user, ok := r.Context().Value(userCtx).(*user.User)
-		if !ok || user == nil {
-			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
-			return
-		}
+			// Get User
+			user, ok := r.Context().Value(userCtx).(*user_repo.User)
+			if !ok || user == nil {
+				app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
+				return
+			}
 
-		// Check User Role
-		if !user.IsRoleValid(user_repo.RoleEmployee) {
-			app.forbiddenError(w, r, domerrors.ErrForbidden)
-			return
-		}
+			// Check if User is verified
+			if !user.IsVerified {
+				app.unauthorizedError(w, r, domerrors.ErrUnauthorized) // TODO: in forntend chiedi verifica
+				return
+			}
 
-		next.ServeHTTP(w, r)
-	})
+			// Check User Role
+			if !user.IsRoleValid(requiredRole) {
+				app.forbiddenError(w, r, domerrors.ErrForbidden)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
-// Verify that the user's role is >= admin.
+// - Authorization - Permissions -
+
+// Verify that the user's role is > requiredRole or it is == to requiredRole but with requiredPermissions.
 // Must be called after the authMiddleware
-func (app *App) adminMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (app *App) permissionMiddleware(requiredRole user_repo.Role, requiredPermission user_repo.Permission) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// TODO: aggiungi controllo permessi (solo per employee)
+			// Get User
+			user, ok := r.Context().Value(userCtx).(*user_repo.User)
+			if !ok || user == nil {
+				app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
+				return
+			}
 
-		// Get User
-		user, ok := r.Context().Value(userCtx).(*user.User)
-		if !ok || user == nil {
-			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
-			return
-		}
+			// Check if User is verified
+			if !user.IsVerified {
+				app.unauthorizedError(w, r, domerrors.ErrUnauthorized) // TODO: in forntend chiedi verifica
+				return
+			}
 
-		// Check User Role
-		if !user.IsRoleValid(user_repo.RoleAdmin) {
-			app.forbiddenError(w, r, domerrors.ErrForbidden)
-			return
-		}
+			// Check User Role
+			if !user.IsRoleValid(requiredRole) {
+				app.forbiddenError(w, r, domerrors.ErrForbidden)
+				return
+			}
 
-		next.ServeHTTP(w, r)
-	})
-}
+			// Check permission
+			if user.Role == (requiredRole) {
+				if !user.HasPermission(requiredPermission) {
+					app.forbiddenError(w, r, domerrors.ErrForbidden)
+					return
+				}
+			}
 
-// Verify that the user's role is >= dev.
-// Must be called after the authMiddleware
-func (app *App) devMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Get User
-		user, ok := r.Context().Value(userCtx).(*user.User)
-		if !ok || user == nil {
-			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
-			return
-		}
-
-		// Check User Role
-		if !user.IsRoleValid(user_repo.RoleDev) {
-			app.forbiddenError(w, r, domerrors.ErrForbidden)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		})
+	}
 }

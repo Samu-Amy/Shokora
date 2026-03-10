@@ -38,14 +38,22 @@ func (user *User) IsRoleValid(requiredRole Role) bool {
 type Permission uint32
 
 const (
-	ProductAdd Permission = 1 << iota
-	ProductUpdate
-	ProductDelete
-	StockProductAdd
-	StockProductUpdate
-	StockProductDelete
-	OrderUpdate
-	OrderDelete
+	// Products
+	EmplPermProductAdd Permission = 1 << iota
+	// EmplPermProductGet
+	EmplPermProductUpdate
+	EmplPermProductDelete
+
+	// Stock Products
+	EmplPermStockProductAdd
+	// EmplPermStockProductGet
+	EmplPermStockProductUpdate
+	EmplPermStockProductDelete
+
+	// Orders
+	EmplPermOrderGet
+	EmplPermOrderUpdate
+	EmplPermOrderDelete
 )
 
 func (user *User) AddPermission(permission Permission) {
