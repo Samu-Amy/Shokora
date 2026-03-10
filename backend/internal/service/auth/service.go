@@ -114,7 +114,8 @@ Returns:
 */
 func (service *AuthService) LoginUser(ctx context.Context, payload payloads.LoginUserReq) (*payloads.LoginUserRes, *payloads.AuthTokensDto, error) {
 
-	var verificationType *auth.VerificationType = nil
+	var verificationType auth.VerificationType
+	requireVerification := false
 
 	// ----- USER -----
 
@@ -123,11 +124,13 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 	if err != nil {
 
 		if errors.Is(err, interrors.IErrNotVerified) {
-			*verificationType = auth.EmailVerification
+			verificationType = auth.EmailVerification
+			requireVerification = true
 		}
 
 		if errors.Is(err, interrors.IErrTwoFactorAuthReqired) {
-			*verificationType = auth.TwoFactorAuth
+			verificationType = auth.TwoFactorAuth
+			requireVerification = true
 		}
 
 		return nil, nil, domerrors.ParseIntError(err)
@@ -141,7 +144,7 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 
 	// ----- VERIFICATION -----
 
-	if verificationType != nil {
+	if requireVerification {
 		// TODO: se non verificato o 2fa -> crea verificationTokens ed invia email, altrimenti crea authTokens (modificare return per distinguere i due casi)
 		// TODO: gestisci casi user non verificato e user verificato ma con 2fa richiesta (se 2fa -> "verify-2fa[/{token}]" -> generate auth tokens ("tokens"), se no 2fa -> generate auth tokens ("tokens"))
 		// TODO: se login fare pulizia (eliminare token di sessioni scadute - attenzione agli expires aggiornati (vecchi token scaduti ma nuovi no -> sessione ancora valida), controlla per tutta la sessione)?

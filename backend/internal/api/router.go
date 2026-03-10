@@ -140,7 +140,7 @@ func (app *App) initRouter() *chi.Mux {
 			// Shop Orders
 			r.Group(func(r chi.Router) {
 				r.Use(app.userVerifiedMiddleware)
-				// r.Post("/orders", app.shopOrderHandler)
+				// r.Post("/orders", app.createOrderHandler)
 			})
 
 			//
