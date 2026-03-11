@@ -42,7 +42,9 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set cookies
-	app.setAuthCookies(w, *authTokensDto)
+	if authTokensDto != nil {
+		app.setAuthCookies(w, *authTokensDto)
+	}
 
 	// TODO: ricordati di scrivere di controllare nello spam (aggiungere timer al tasto per reinviare la mail (?))
 	// TODO: se mail non inviata, dire di riprovare più tardi? -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
@@ -81,12 +83,12 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set cookies if no verification required
-	if loginUserRes.VerificationId == nil {
-		app.setAuthCookies(w, *authTokensDto) // TODO: solo se 2fa non attiva
+	if loginUserRes.User != nil && loginUserRes.VerificationId == nil && authTokensDto != nil {
+		app.setAuthCookies(w, *authTokensDto) // TODO: solo se 2fa non attiva (altimenti va fatta dopo la verifica dell'otp)
 	}
 
 	//* Return user
-	if err := app.jsonResponse(w, http.StatusCreated, loginUserRes); err != nil {
+	if err := app.jsonResponse(w, http.StatusCreated, loginUserRes); err != nil { // TODO: lato frontend bisognerà gestire i casi (es. call route per verifica)
 		app.internalServerError(w, r, err)
 		return
 	}

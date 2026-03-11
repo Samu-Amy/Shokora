@@ -21,6 +21,7 @@ type User struct {
 }
 
 // - Role -
+
 type Role uint8
 
 const (
@@ -35,18 +36,17 @@ func (user *User) IsRoleValid(requiredRole Role) bool {
 }
 
 // - Permissions -
+
 type Permission uint32
 
 const (
 	// Products
 	EmplPermProductAdd Permission = 1 << iota
-	// EmplPermProductGet
 	EmplPermProductUpdate
 	EmplPermProductDelete
 
 	// Stock Products
 	EmplPermStockProductAdd
-	// EmplPermStockProductGet
 	EmplPermStockProductUpdate
 	EmplPermStockProductDelete
 

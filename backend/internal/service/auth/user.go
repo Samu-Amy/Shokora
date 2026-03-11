@@ -29,6 +29,7 @@ func (service *AuthService) createUser(ctx context.Context, user *user.User) err
 
 func (service *AuthService) getUser(ctx context.Context, email string, plainPasswordBytes []byte) (*user.User, error) {
 
+	// Get user from db
 	user, err := service.userRepo.GetByEmail(ctx, email)
 	if err != nil {
 		service.logger.Warnw("Error getting user from db", "error", err)
@@ -59,7 +60,7 @@ func (service *AuthService) getUser(ctx context.Context, email string, plainPass
 	}
 
 	// if user.HasTwoFactorAuth { // TODO: aggiungi two factor auth check (magari join con settings table?)
-
+	// return nil, interrors.IErrTwoFactorAuthReqired
 	// }
 
 	return user, nil

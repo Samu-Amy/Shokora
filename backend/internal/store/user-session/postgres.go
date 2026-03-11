@@ -52,3 +52,15 @@ func (store *PostgresUserSessionStore) Delete(ctx context.Context, sessionId int
 
 	return database.HandleExecContextResult(store.db.ExecContext(queryCtx, query, sessionId))
 }
+
+func (store *PostgresUserSessionStore) DeleteExpired(ctx context.Context, userId int64) error {
+	query := `
+		DELETE FROM user_sessions
+		WHERE user_id = $1 AND expires_at < NOW()
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
+	defer cancel()
+
+	return database.HandleExecContextResult(store.db.ExecContext(queryCtx, query, userId))
+}

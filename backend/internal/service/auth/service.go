@@ -73,7 +73,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		verificationTokens.OTPExp,
 	)
 	if err != nil {
-		service.logger.Warnw("Error sending welcome email", "error", err)
+		service.logger.Warnw("Error sending verification email", "error", err)
 
 		// Set email "error" in response
 		registerUserRes.IsEmailSent = false
@@ -95,7 +95,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		return registerUserRes, nil, nil
 	}
 
-	service.logger.Info("User and Tokens created, Email sent successfully", "userId", user.Id)
+	service.logger.Info("User and Tokens created", "userId", user.Id)
 
 	return registerUserRes, authTokensDto, nil
 }
@@ -114,56 +114,96 @@ Returns:
 */
 func (service *AuthService) LoginUser(ctx context.Context, payload payloads.LoginUserReq) (*payloads.LoginUserRes, *payloads.AuthTokensDto, error) {
 
+	loginUserRes := payloads.LoginUserRes{}
 	var verificationType auth.VerificationType
-	requireVerification := false
+	isVerificationRequired := false
 
 	// ----- USER -----
 
 	// Get user
-	user, err := service.getUser(ctx, payload.Email, []byte(payload.Password)) // TODO: aggiungi controllo compleanno (per non farlo lato frontend)
+	user, err := service.getUser(ctx, payload.Email, []byte(payload.Password)) // TODO: aggiungi controllo compleanno (per non farlo lato frontend) e two factor auth check (magari join con settings table?)
 	if err != nil {
 
 		if errors.Is(err, interrors.IErrNotVerified) {
 			verificationType = auth.EmailVerification
-			requireVerification = true
+			isVerificationRequired = true
 		}
 
 		if errors.Is(err, interrors.IErrTwoFactorAuthReqired) {
 			verificationType = auth.TwoFactorAuth
-			requireVerification = true
+			isVerificationRequired = true
 		}
 
 		return nil, nil, domerrors.ParseIntError(err)
 	}
 
-	userRes := payloads.ToUserRes(*user)
-	loginUserRed := payloads.LoginUserRes{User: &userRes}
+	// If no 2fa required
+	if !(isVerificationRequired && verificationType == auth.TwoFactorAuth) {
 
-	// Create Response payload with UserRes built from user model
-	// loginUserRes := payloads.NewLoginUserRes(payloads.ToUserRes(*user))
+		// Create Response payload with UserRes built from user model
+		userRes := payloads.ToUserRes(*user)
+		loginUserRes.User = &userRes
+	}
 
 	// ----- VERIFICATION -----
 
-	if requireVerification {
-		// TODO: se non verificato o 2fa -> crea verificationTokens ed invia email, altrimenti crea authTokens (modificare return per distinguere i due casi)
-		// TODO: gestisci casi user non verificato e user verificato ma con 2fa richiesta (se 2fa -> "verify-2fa[/{token}]" -> generate auth tokens ("tokens"), se no 2fa -> generate auth tokens ("tokens"))
-		// TODO: se login fare pulizia (eliminare token di sessioni scadute - attenzione agli expires aggiornati (vecchi token scaduti ma nuovi no -> sessione ancora valida), controlla per tutta la sessione)?
+	if isVerificationRequired {
+
+		// Create Verification Tokens (soft error)
+		verificationTokens, err := service.createVerificationTokensWithRetries(ctx, user.Id, verificationType)
+		if err == nil {
+			// Add verification id to response
+			loginUserRes.VerificationId = &verificationTokens.VerificationId //* If registerUserRes.VerificationId == nil -> error during verification (tokens not created)
+		}
+
+		// Send email (soft error)
+		err = service.sendVerificationEmail(
+			ctx,
+			verificationType,
+			user.FirstName,
+			user.Email,
+			verificationTokens.PlainMagicLinkToken,
+			verificationTokens.PlainOTP,
+			verificationTokens.MagicLinkTokenExp,
+			verificationTokens.OTPExp,
+		)
+		if err != nil {
+			service.logger.Warnw("Error sending verification email", "error", err)
+
+			// Set email "error" in response
+			loginUserRes.IsEmailSent = false
+		}
+
+		service.logger.Info("Verification email sent", "userId", user.Id, "verificationType", verificationType)
 	}
 
 	// ----- AUTH -----
 
-	// Create Refresh Token
-	// authTokenDto, err := service.createNewRefreshToken(ctx, user.Id)
-	// if err != nil {
-	// 	return nil, nil, domerrors.ParseIntError(err) // TODO: controlla parsing errore
-	// }
+	var authTokensDto *payloads.AuthTokensDto
+	var sessionId int64
 
-	// service.logger.Info("User and Tokens created, Email sent successfully", "userId", user.Id)
+	// If no 2fa required
+	if !(isVerificationRequired && verificationType == auth.TwoFactorAuth) {
 
-	// TODO: nel login fai anche delete di tutti i refresh token scaduti per quell'utente (o in generale?) - ottenere un l'ultimo token creato per ogni session_id (join con order by) e se è scaduto -> sessione scaduta (?)
+		// Delete old sessions
+		_ = service.userSessionRepo.DeleteExpired(ctx, user.Id)
 
-	// return &loginUserRes, authTokenDto, nil
-	return &loginUserRed, nil, nil
+		// Create Refresh Token
+		authTokensDto, sessionId, err = service.createNewSessionAndRefreshToken(ctx, user.Id)
+		if err != nil {
+			return nil, nil, domerrors.ParseIntError(err) // TODO: controlla parsing errore
+		}
+
+		// Create Access Token
+		err = service.addJWTAccessToken(authTokensDto, sessionId, user.Id)
+		if err != nil {
+			return nil, nil, domerrors.ParseIntError(err)
+		}
+
+		service.logger.Info("User logged, Tokens created", "userId", user.Id)
+	}
+
+	return &loginUserRes, authTokensDto, nil
 }
 
 /*

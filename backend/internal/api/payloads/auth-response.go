@@ -10,7 +10,7 @@ import (
 type RegisterUserRes struct {
 	User           UserRes `json:"user"`
 	VerificationId *int64  `json:"verification_id,omitempty"`
-	IsEmailSent    bool    `json:"is_email_sent"`
+	IsEmailSent    bool    `json:"is_email_sent"` // Email for verification
 	HasAuthError   bool    `json:"has_auth_error"`
 }
 
@@ -26,10 +26,11 @@ func NewRegisterUserRes(user UserRes) *RegisterUserRes {
 
 // ----- LOGIN -----
 
-// The response sent to the frontend (with soft failure report)
+// The response sent to the frontend
 type LoginUserRes struct {
-	User           *UserRes `json:"user,omitempty"`
-	VerificationId *int64   `json:"verification_id,omitempty"` // TODO: può servire per 2fa (se nil -> non serve verifica)
+	User           *UserRes `json:"user,omitempty"`            // If present -> authenticated (no 2fa)
+	VerificationId *int64   `json:"verification_id,omitempty"` // for 2fa (if nil: if user ok -> no verification required, if user nil -> verification error)
+	IsEmailSent    bool     `json:"is_email_sent"`             // Email for verification
 }
 
 /*
