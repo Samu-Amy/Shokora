@@ -17,15 +17,15 @@ It manages the logic and internal errors, returning data and domain errors to th
 */
 type Service struct {
 	Auth *authservice.AuthService // Verification Tokens, Refresh Tokens, Permissions
-	User *userservice.UserService // (settings, stats, achievements)
+	User *userservice.UserService // User-related updates (user, settings, stats, achievements)
 	// Menu (menu sections -> productsId)
-	// Shop
-	// Orders
+	// Shop // Shop, orders, coupons
+	// Orders?
 }
 
 func NewService(txManager database.ITransactionManager, store *store.Storage, mailer mailer.IClient, logger *zap.SugaredLogger, jwtAuthenticator *auth.JWTAuthenticator, tokenAuthenticator *auth.TokenAuthenticator, authServiceConfig config.AuthServiceConfig) *Service {
 	return &Service{
-		Auth: authservice.NewService(txManager, store.User, store.VToken, store.RefreshToken, store.UserSession, mailer, logger, jwtAuthenticator, tokenAuthenticator, authServiceConfig),
+		Auth: authservice.NewService(txManager, store.VToken, store.RefreshToken, store.UserSession, store.User, store.UserSettings, mailer, logger, jwtAuthenticator, tokenAuthenticator, authServiceConfig),
 		User: userservice.NewService(txManager, store.User, logger),
 	}
 }

@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS products(
   CONSTRAINT products_discount_range_check CHECK (discount BETWEEN 0 AND 1)
 );
 
+-- Updated At
 CREATE TRIGGER update_products_updated_at
 BEFORE UPDATE ON products
 FOR EACH ROW

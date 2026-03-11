@@ -38,6 +38,7 @@ CREATE UNIQUE INDEX v_tokens_magic_link_token_hash_unique
 ON verification_tokens(magic_link_token_hash)
 WHERE magic_link_token_hash IS NOT NULL;
 
+-- Updated At
 CREATE TRIGGER update_verification_tokens_updated_at
 BEFORE UPDATE ON verification_tokens
 FOR EACH ROW

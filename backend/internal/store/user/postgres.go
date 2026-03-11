@@ -19,7 +19,7 @@ func NewPostgresStore(db *sql.DB) *PostgresUserStore {
 
 // ----- CREATE -----
 
-func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
+func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx, user *User) error {
 	query := `
 		INSERT INTO users (first_name, last_name, email, password, image_url, birth_date)
 		VALUES ($1, $2, $3, $4, $5, $6)
@@ -29,7 +29,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, user *User) error {
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
-	err := store.db.QueryRowContext(
+	err := transaction.QueryRowContext(
 		queryCtx,
 		query,
 		user.FirstName,

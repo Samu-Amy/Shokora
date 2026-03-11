@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS users(
   CONSTRAINT users_user_role_range_check CHECK (user_role BETWEEN 0 AND 3)
 );
 
+-- Updated At
 CREATE TRIGGER update_users_updated_at
 BEFORE UPDATE ON users
 FOR EACH ROW
