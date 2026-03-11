@@ -55,7 +55,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	// ----- VERIFICATION -----
 
 	// Create Email Verification Tokens (soft error)
-	verificationTokens, err := service.createVerificationTokensWithRetries(ctx, user.Id, auth.EmailVerification) // TODO: controlla che le scadenze nel db siano giuste
+	verificationTokens, err := service.createVerificationTokensWithRetries(ctx, user.Id, auth.EmailVerification)
 	if err == nil {
 		// Add verification id to response
 		registerUserRes.VerificationId = &verificationTokens.VerificationId //* If registerUserRes.VerificationId == nil -> error during verification (tokens not created)
