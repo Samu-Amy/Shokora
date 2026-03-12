@@ -16,10 +16,6 @@ const (
 
 // Error constraints
 const (
-	// Users
-	// usersUserEmailUnique    = "users_email_unique"          // Duplicate email
-	// usersUserRoleRangeCheck = "users_user_role_range_check" // Role enum out of range
-
 	// Verification tokens
 	// vtokensUserIdAndVerificationTypeUnique = "v_tokens_user_id_and_verification_type_unique" // Unique (user_id, verification_id), usually handled by the create query
 
@@ -35,6 +31,18 @@ const (
 
 	// Duplicate "repaces" Refresh Token id (reused token)
 	refreshTokensReplacesUnique = "refresh_tokens_replaces_unique"
+
+	// Users
+	// usersUserEmailUnique    = "users_email_unique"          // Duplicate email
+	// usersUserRoleRangeCheck = "users_user_role_range_check" // Role enum out of range
+
+	// User Settings
+	// userSettingsUserIdUnique = "user_settings_user_id_unique"
+
+	// User Stats
+	// userStatsUserIdUnique = "user_stats_user_id_unique"
+	// userStatsPointsRangeCheck = "user_stats_points_range_check"
+	// userStatsNumOfOrdersRangeCheck = "user_stats_num_of_orders_range_check"
 
 	// Products
 	// productsPriceRangeCheck    = "products_price_range_check"    // Price (>0) out of range

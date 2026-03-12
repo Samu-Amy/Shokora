@@ -1,6 +1,7 @@
 package authservice
 
 import (
+	"errors"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
@@ -22,6 +23,11 @@ func (service *AuthService) checkAccessToken(accessToken string) (*payloads.Auth
 	claims, err := service.jwtAuthenticator.ValidateJWTToken(accessToken)
 	if err != nil {
 		service.logger.Infow("JWT not valid", "error", err)
+
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, interrors.IErrExpired
+		}
+
 		return nil, interrors.IErrInvalid
 	}
 

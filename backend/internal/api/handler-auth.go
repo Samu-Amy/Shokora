@@ -5,6 +5,7 @@ import (
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
+	"github.com/go-chi/chi/v5"
 )
 
 // ----- REGISTER -----
@@ -118,24 +119,21 @@ func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
 // ----- EMAIL VERIFICATION -----
 
 func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
+	ctx := r.Context()
 
-	// // Get "token" param
-	// token := chi.URLParam(r, verificationTokenParam)
+	// Get "token" param
+	token := chi.URLParam(r, verificationTokenParam)
 
-	// // Hash token
-	// hashedToken := auth.HashBase64Token(&token)
+	// Verify
+	if err := app.service.Auth.VerifyEmailWithToken(ctx, token); err != nil {
+		app.logger.Warnw("Error with Email Verification using Token", "error", err)
 
-	// // Verify
-	// if err := app.service.Auth.VerifyEmailWithToken(ctx, hashedToken); err != nil {
-	// 	app.logger.Warnw("Error with Email Verification using Token", "error", err)
+		app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
+		return
+	}
 
-	// 	app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
-	// 	return
-	// }
-
-	// //* No content
-	// w.WriteHeader(http.StatusNoContent)
+	//* No content
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request) {
@@ -173,6 +171,13 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 
 	// //* No content
 	// w.WriteHeader(http.StatusNoContent)
+}
+
+// ----- PASSWORD RESET -----
+
+// ----- TWO FACTOR AUTH -----
+func (app *App) verifyTwoFactorAuthWithOTPHandler(w http.ResponseWriter, r *http.Request) {
+	// Verifica OTP, poi crea auth tokens e setta cookies per lo user ottenuto dal db (in OTPVerificationData)
 }
 
 // ----- TOKENS -----

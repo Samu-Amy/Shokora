@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
-	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	vtoken "github.com/Samu-Amy/Shokora/internal/store/verification-token"
 )
@@ -22,7 +21,7 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64,
 	err = service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
 		// Get data
-		otpQueryData, err = service.vTokenRepo.GetOtpData(ctx, verificationId, verificationType)
+		otpQueryData, err = service.vTokenRepo.GetOtpData(ctx, tx, verificationId, verificationType)
 		if err != nil {
 			service.logger.Warnw("Error getting otp data", "error", err, "verificationId", verificationId)
 			// Not valid (id does not exists or wrong verificationType)
@@ -50,17 +49,18 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64,
 		if !isOtpValid {
 
 			// Increment attempts and handle errors
-			err = service.vTokenRepo.UpdateOtpAttempts(ctx, verificationId, maxAttempts)
+			err = service.vTokenRepo.UpdateOtpAttempts(ctx, tx, verificationId, maxAttempts)
 			if err != nil {
 				service.logger.Warnw("Error updating otp attempts", "error", err, "verificationId", verificationId)
 			}
 
 			// Attempts updated successfully but OTP not valid
 			if errors.Is(err, interrors.IErrNoRowsAffected) { // Max attempts exceeded
-				err = domerrors.ErrMaxAttemptsExceeded
-			} else {
-				err = domerrors.ErrInvalid // VerificationId is not valid (also if IErrNotFound)
+				err = interrors.IErrMaxAttemptsExceeded
 			}
+			// else {
+			// 	err = interrors.IErrInvalid // VerificationId is not valid (also if IErrNotFound)
+			// } // TODO: riattivarlo?
 
 			return err
 		}

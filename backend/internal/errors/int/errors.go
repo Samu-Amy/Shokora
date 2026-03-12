@@ -25,4 +25,5 @@ var (
 	IErrTokenNotFoundOrAlreadyRevoked = internalErr("i_token_not_found_or_already_revoked")
 	IErrInvalidEmailVars              = internalErr("i_invalid_email_vars") // SendEmail called with wrong variables for the template
 	IErrMaxRetriesExceeded            = internalErr("i_max_retries")        // SendEmail called with wrong variables for the template
+	IErrMaxAttemptsExceeded           = internalErr("i_max_attempts")       // SendEmail called with wrong variables for the template
 )

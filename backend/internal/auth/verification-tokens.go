@@ -108,7 +108,7 @@ func (tokenAuthenticator *TokenAuthenticator) VerifyOTP(hashedOtp1 []byte, hashe
 
 // ----- ----- ----- PRIVATES ----- ----- -----
 
-func (tokenAuthenticator *TokenAuthenticator) generateOTP() (string, error) { // TODO RICORDA: per la verifica dell'otp si usa anche lo user_id nella richiesta (l'otp potrebbe non essere unico nel db)
+func (tokenAuthenticator *TokenAuthenticator) generateOTP() (string, error) {
 	length := tokenAuthenticator.OTP.Length
 
 	max := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(length)), nil) // Create a new *big.Int as 10^length (big.NewInt(10) ^ big.NewInt(int64(length)))

@@ -125,16 +125,20 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 	if err != nil {
 
 		if errors.Is(err, interrors.IErrNotVerified) {
+
+			// Not verified
 			verificationType = auth.EmailVerification
 			isVerificationRequired = true
-		}
 
-		if errors.Is(err, interrors.IErrTwoFactorAuthReqired) {
+		} else if errors.Is(err, interrors.IErrTwoFactorAuthReqired) {
+
+			// 2FA required
 			verificationType = auth.TwoFactorAuth
 			isVerificationRequired = true
-		}
 
-		return nil, nil, domerrors.ParseIntError(err)
+		} else {
+			return nil, nil, domerrors.ParseIntError(err)
+		}
 	}
 
 	// If no 2fa required
@@ -157,24 +161,26 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 		}
 
 		// Send email (soft error)
-		err = service.sendVerificationEmail(
-			ctx,
-			verificationType,
-			user.FirstName,
-			user.Email,
-			verificationTokens.PlainMagicLinkToken,
-			verificationTokens.PlainOTP,
-			verificationTokens.MagicLinkTokenExp,
-			verificationTokens.OTPExp,
-		)
-		if err != nil {
-			service.logger.Warnw("Error sending verification email", "error", err)
+		if verificationTokens != nil {
+			err = service.sendVerificationEmail(
+				ctx,
+				verificationType,
+				user.FirstName,
+				user.Email,
+				verificationTokens.PlainMagicLinkToken,
+				verificationTokens.PlainOTP,
+				verificationTokens.MagicLinkTokenExp,
+				verificationTokens.OTPExp,
+			)
+			if err != nil {
+				service.logger.Warnw("Error sending verification email", "error", err)
 
-			// Set email "error" in response
-			loginUserRes.IsEmailSent = false
+				// Set email "error" in response
+				loginUserRes.IsEmailSent = false
+			}
+
+			service.logger.Info("Verification email sent", "userId", user.Id, "verificationType", verificationType)
 		}
-
-		service.logger.Info("Verification email sent", "userId", user.Id, "verificationType", verificationType)
 	}
 
 	// ----- AUTH -----
@@ -230,24 +236,24 @@ Return:
 */
 func (service *AuthService) HandleAuthTokensCheck(ctx context.Context, accessToken, plainRefreshToken string) (*payloads.AuthTokensCheckDto, error) {
 
-	hashedRefreshToken := auth.HashBase64Token(plainRefreshToken)
-
 	// Verify Access Token
 	authTokensCheckDto, err := service.checkAccessToken(accessToken)
 	if err == nil {
 		return authTokensCheckDto, nil // Access Token valid -> return early
-	} else if errors.Is(err, interrors.IErrUnauthorized) {
+	} else if !errors.Is(err, interrors.IErrExpired) {
 		return nil, domerrors.ErrUnauthorized // Tokens doesn't correspond -> something is wrong
 	}
 
 	// Rotate Refresh Token (Access Token not valid)
+	hashedRefreshToken := auth.HashBase64Token(plainRefreshToken)
+
 	authTokensCheckDto, err = service.rotateRefreshToken(ctx, hashedRefreshToken)
 	if err != nil {
 		return nil, domerrors.ParseIntError(err)
 	}
 
 	// Create new Access Token (and update authTokensDto)
-	err = service.addJWTAccessToken(&authTokensCheckDto.TokensDto, authTokensCheckDto.SessionId, authTokensCheckDto.UserId)
+	err = service.addJWTAccessToken(&authTokensCheckDto.TokensDto, authTokensCheckDto.SessionId, authTokensCheckDto.UserId) // TODO: aggiungere tokenId in jwt (UserClaims)
 	if err != nil {
 		return nil, domerrors.ParseIntError(err)
 	}

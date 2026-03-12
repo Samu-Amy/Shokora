@@ -77,7 +77,7 @@ func (store *PostgresRefreshTokenStore) GetByToken(ctx context.Context, transact
 
 func (store *PostgresRefreshTokenStore) GetSessionDataByToken(ctx context.Context, hashedToken []byte) (*session.SessionData, error) {
 	query := `
-		SELECT s.session_id, s.user_id
+		SELECT s.id, s.user_id
 		FROM refresh_tokens r
 		JOIN user_sessions s ON r.session_id = s.id
 		WHERE token_hash = $1

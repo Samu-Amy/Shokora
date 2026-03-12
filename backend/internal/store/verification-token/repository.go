@@ -2,6 +2,7 @@ package vtoken
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
@@ -18,9 +19,9 @@ type IVTokenRepository interface {
 	UpdateMagicLinkTokenFromId(ctx context.Context, verificationId int64, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error
 	UpdateOTPFromId(ctx context.Context, verificationId int64, otpHash []byte, otpExp time.Duration) error
 
-	UpdateOtpAttempts(ctx context.Context, verificationId int64, maxOTPAttempts uint8) error
+	UpdateOtpAttempts(ctx context.Context, transaction *sql.Tx, verificationId int64, maxOTPAttempts uint8) error
 
-	GetOtpData(ctx context.Context, verificationId int64, verificationType auth.VerificationType) (*OTPVerificationData, error)
+	GetOtpData(ctx context.Context, transaction *sql.Tx, verificationId int64, verificationType auth.VerificationType) (*OTPVerificationData, error)
 
 	// Get MagicLinkTokenPayload if magic link token found and is not expired
 	GetValidMagicLinkData(ctx context.Context, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkVerificationData, error)

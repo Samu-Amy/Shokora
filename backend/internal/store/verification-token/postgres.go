@@ -97,7 +97,7 @@ func (store *PostgresVTokenStore) UpdateOTPFromId(ctx context.Context, verificat
 	))
 }
 
-func (store *PostgresVTokenStore) UpdateOtpAttempts(ctx context.Context, verificationId int64, maxOTPAttempts uint8) error {
+func (store *PostgresVTokenStore) UpdateOtpAttempts(ctx context.Context, transaction *sql.Tx, verificationId int64, maxOTPAttempts uint8) error {
 	query := `
 		UPDATE verification_tokens
 		SET otp_attempts = otp_attempts + 1
@@ -107,7 +107,7 @@ func (store *PostgresVTokenStore) UpdateOtpAttempts(ctx context.Context, verific
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
-	return database.HandleExecContextResult(store.db.ExecContext(
+	return database.HandleExecContextResult(transaction.ExecContext(
 		queryCtx,
 		query,
 		verificationId,
@@ -117,7 +117,7 @@ func (store *PostgresVTokenStore) UpdateOtpAttempts(ctx context.Context, verific
 
 // ----- GET -----
 
-func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, verificationId int64, verificationType auth.VerificationType) (*OTPVerificationData, error) {
+func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, transaction *sql.Tx, verificationId int64, verificationType auth.VerificationType) (*OTPVerificationData, error) {
 	query := `
 		SELECT user_id, otp_hash, otp_attempts, otp_expires_at
 		FROM verification_tokens
@@ -130,7 +130,7 @@ func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, verificationId
 
 	var otpPayload OTPVerificationData
 
-	err := store.db.QueryRowContext(
+	err := transaction.QueryRowContext(
 		queryCtx,
 		query,
 		verificationId,

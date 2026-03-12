@@ -15,7 +15,10 @@ Errors
   - ErrInvalid
   - Other db errors
 */
-func (service *AuthService) verifyEmailWithToken(ctx context.Context, hashedToken []byte) error {
+func (service *AuthService) VerifyEmailWithToken(ctx context.Context, plainToken string) error {
+
+	// Hash token
+	hashedToken := auth.HashBase64Token(plainToken)
 
 	// Verify and Get data
 	magicLinkTokenQueryData, err := service.vTokenRepo.GetValidMagicLinkData(ctx, hashedToken, auth.EmailVerification)

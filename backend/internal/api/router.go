@@ -95,9 +95,9 @@ func (app *App) initRouter() *chi.Mux {
 
 			// r.Post("/reset-password/otp", ...) // TODO: versione logged (usa user Id) e versione non logged (la quale richiede l'email per poter verificare l'otp (in questo caso legato a email invece che user Id))
 			// r.Post("/reset-password/{token}", ...)
+			// TODO: per reset password: crea v-tokens -> verifica tokens e crea un reset session token (token univoco di 32 Bytes come il magic link)
 
-			// r.Post("/verify-2fa/otp", app.verify2FAWithOTPHandler) // TODO: come verificare otp e utente (id o email) prima di fa accedere l'utente?
-			// r.Post("/verify-2fa/{token}", app.verify2FAWithTokenHandler)
+			r.Post("/verify-2fa/otp", app.verifyTwoFactorAuthWithOTPHandler) // TODO: come verificare otp e utente (id o email) prima di fa accedere l'utente?
 
 			r.Group(func(r chi.Router) {
 				// TODO: usare (o crearne uno simile) middleware auth per ottenere l'utente (?)
