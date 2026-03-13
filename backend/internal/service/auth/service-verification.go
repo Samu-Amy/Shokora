@@ -6,6 +6,7 @@ import (
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
+	"github.com/google/uuid"
 )
 
 // ----- VERIFY EMAIL  -----
@@ -52,7 +53,7 @@ Errors
   - ErrMaxAttemptsExceeded
   - Other db errors
 */
-func (service *AuthService) verifyEmailWithOTP(ctx context.Context, verificationId int64, hashedOTP []byte, maxAttempts uint8) error {
+func (service *AuthService) verifyEmailWithOTP(ctx context.Context, verificationId uuid.UUID, hashedOTP []byte, maxAttempts uint8) error {
 
 	// Get data
 	otpQueryData, err := service.verifyOtp(ctx, verificationId, hashedOTP, maxAttempts, auth.EmailVerification)

@@ -72,7 +72,11 @@ func (store *PostgresRefreshTokenStore) GetByToken(ctx context.Context, transact
 		&tokenAndSessionData.SessionExpiresAt,
 	)
 
-	return &tokenAndSessionData, database.ParseDbError(err)
+	if err != nil {
+		return nil, database.ParseDbError(err)
+	}
+
+	return &tokenAndSessionData, nil
 }
 
 func (store *PostgresRefreshTokenStore) GetSessionDataByToken(ctx context.Context, hashedToken []byte) (*session.SessionData, error) {
@@ -97,7 +101,11 @@ func (store *PostgresRefreshTokenStore) GetSessionDataByToken(ctx context.Contex
 		&sessionData.UserId,
 	)
 
-	return &sessionData, database.ParseDbError(err)
+	if err != nil {
+		return nil, database.ParseDbError(err)
+	}
+
+	return &sessionData, nil
 }
 
 // ----- UPDATE -----

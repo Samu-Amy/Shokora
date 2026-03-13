@@ -81,14 +81,18 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 		&user.UpdatedAt,
 	)
 
-	return &user, database.ParseDbError(err)
+	if err != nil {
+		return nil, database.ParseDbError(err)
+	}
+
+	return &user, nil
 }
 
 func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
 		SELECT id, first_name, last_name, email, password, image_url, birth_date, is_verified, user_role, permissions, created_at, updated_at
 		FROM users
-		WHERE email = $1 AND is_verified = true
+		WHERE email = $1
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
@@ -125,7 +129,11 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 	// 	}
 	// }
 
-	return &user, database.ParseDbError(err)
+	if err != nil {
+		return nil, database.ParseDbError(err)
+	}
+
+	return &user, nil
 }
 
 // ----- UPDATE -----

@@ -2,16 +2,18 @@ package payloads
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // ----- REGISTER -----
 
 // The response sent to the frontend (with soft failure report)
 type RegisterUserRes struct {
-	User           UserRes `json:"user"`
-	VerificationId *int64  `json:"verification_id,omitempty"`
-	IsEmailSent    bool    `json:"is_email_sent"` // Email for verification
-	HasAuthError   bool    `json:"has_auth_error"`
+	User           UserRes    `json:"user"`
+	VerificationId *uuid.UUID `json:"verification_id,omitempty"`
+	IsEmailSent    bool       `json:"is_email_sent"` // Email for verification
+	HasAuthError   bool       `json:"has_auth_error"`
 }
 
 // Create a new RegisterUserRes with the user data and intializing the other fields
@@ -28,9 +30,9 @@ func NewRegisterUserRes(user UserRes) *RegisterUserRes {
 
 // The response sent to the frontend
 type LoginUserRes struct {
-	User           *UserRes `json:"user,omitempty"`            // If present -> authenticated (no 2fa)
-	VerificationId *int64   `json:"verification_id,omitempty"` // for 2fa (if nil: if user ok -> no verification required, if user nil -> verification error)
-	IsEmailSent    bool     `json:"is_email_sent"`             // Email for verification
+	User           *UserRes   `json:"user,omitempty"`            // If present -> authenticated (no 2fa)
+	VerificationId *uuid.UUID `json:"verification_id,omitempty"` // for 2fa (if nil: if user ok -> no verification required, if user nil -> verification error)
+	IsEmailSent    bool       `json:"is_email_sent"`             // Email for verification
 }
 
 /*

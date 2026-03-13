@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/config"
+	"github.com/google/uuid"
 )
 
 // TODO: forse molti metodi si possono rendere privati (es. quelli per generate e hash tokens)
@@ -23,7 +24,7 @@ type TokenAuthenticator struct {
 
 // Tokens
 type VerificationTokens struct {
-	VerificationId       int64
+	VerificationId       uuid.UUID
 	VerificationType     VerificationType
 	PlainMagicLinkToken  string
 	HashedMagicLinkToken []byte
@@ -75,7 +76,7 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificat
 	hashedOTP := tokenAuthenticator.hashOTP(plainOTP, verificationType)
 
 	return &VerificationTokens{
-		VerificationId:       -1,
+		VerificationId:       uuid.Nil,
 		VerificationType:     verificationType,
 		PlainMagicLinkToken:  plainMagicLinkToken,
 		HashedMagicLinkToken: hashedMagicLinkToken,

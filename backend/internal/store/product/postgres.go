@@ -75,7 +75,11 @@ func (store *PostgresProductStore) GetById(ctx context.Context, productId int64)
 		&product.UpdatedAt,
 	)
 
-	return &product, database.ParseDbError(err)
+	if err != nil {
+		return nil, database.ParseDbError(err)
+	}
+
+	return &product, nil
 }
 
 func (store *PostgresProductStore) GetProducts(ctx context.Context, queryPaginationOptions database.QueryPaginationOptions, productsFilters database.ProductsFilters) ([]Product, error) {

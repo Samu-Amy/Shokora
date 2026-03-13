@@ -7,6 +7,7 @@ import (
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/database"
+	"github.com/google/uuid"
 )
 
 type PostgresVTokenStore struct {
@@ -34,7 +35,7 @@ func (store *PostgresVTokenStore) Create(ctx context.Context, userId int64, veri
 	defer cancel()
 
 	// Fix magic link exp (nil if no magic link)
-	var magicLinkExp any
+	var magicLinkExp any = nil
 	if verificationTokens.HashedMagicLinkToken != nil {
 		magicLinkExp = time.Now().Add(verificationTokens.MagicLinkTokenExp)
 	}
@@ -59,7 +60,7 @@ func (store *PostgresVTokenStore) Create(ctx context.Context, userId int64, veri
 
 // ----- UPDATE -----
 
-func (store *PostgresVTokenStore) UpdateMagicLinkTokenFromId(ctx context.Context, verificationId int64, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error {
+func (store *PostgresVTokenStore) UpdateMagicLinkTokenFromId(ctx context.Context, verificationId uuid.UUID, magicLinkTokenHash []byte, magicLinkTokenExp time.Duration) error {
 	query := `
 		UPDATE verification_tokens
 		SET magic_link_token_hash = $1, magic_link_token_expires_at = $2
@@ -78,7 +79,7 @@ func (store *PostgresVTokenStore) UpdateMagicLinkTokenFromId(ctx context.Context
 	))
 }
 
-func (store *PostgresVTokenStore) UpdateOTPFromId(ctx context.Context, verificationId int64, otpHash []byte, otpExp time.Duration) error {
+func (store *PostgresVTokenStore) UpdateOTPFromId(ctx context.Context, verificationId uuid.UUID, otpHash []byte, otpExp time.Duration) error {
 	query := `
 		UPDATE verification_tokens
 		SET otp_hash = $1, otp_expires_at = $2, otp_attempts = 0
@@ -97,7 +98,7 @@ func (store *PostgresVTokenStore) UpdateOTPFromId(ctx context.Context, verificat
 	))
 }
 
-func (store *PostgresVTokenStore) UpdateOtpAttempts(ctx context.Context, transaction *sql.Tx, verificationId int64, maxOTPAttempts uint8) error {
+func (store *PostgresVTokenStore) IncrementOtpAttempts(ctx context.Context, transaction *sql.Tx, verificationId uuid.UUID, maxOTPAttempts uint8) error {
 	query := `
 		UPDATE verification_tokens
 		SET otp_attempts = otp_attempts + 1
@@ -117,7 +118,7 @@ func (store *PostgresVTokenStore) UpdateOtpAttempts(ctx context.Context, transac
 
 // ----- GET -----
 
-func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, transaction *sql.Tx, verificationId int64, verificationType auth.VerificationType) (*OTPVerificationData, error) {
+func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, transaction *sql.Tx, verificationId uuid.UUID, verificationType auth.VerificationType) (*OTPVerificationData, error) {
 	query := `
 		SELECT user_id, otp_hash, otp_attempts, otp_expires_at
 		FROM verification_tokens
@@ -142,7 +143,11 @@ func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, transaction *s
 		&otpPayload.ExpiresAt,
 	)
 
-	return &otpPayload, database.ParseDbError(err)
+	if err != nil {
+		return nil, database.ParseDbError(err)
+	}
+
+	return &otpPayload, nil
 }
 
 // ----- VERIFY -----
@@ -169,11 +174,15 @@ func (store *PostgresVTokenStore) GetValidMagicLinkData(ctx context.Context, has
 		&magicLinkTokenPayload.UserId,
 	)
 
-	return &magicLinkTokenPayload, database.ParseDbError(err)
+	if err != nil {
+		return nil, database.ParseDbError(err)
+	}
+
+	return &magicLinkTokenPayload, nil
 }
 
 // ----- DELETE -----
-func (store *PostgresVTokenStore) Delete(ctx context.Context, verificationId int64) error {
+func (store *PostgresVTokenStore) Delete(ctx context.Context, verificationId uuid.UUID) error {
 	query := `
 		DELETE from verification_tokens WHERE id = $1
 	`

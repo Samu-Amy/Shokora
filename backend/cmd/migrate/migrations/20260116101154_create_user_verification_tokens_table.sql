@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS verification_tokens(
-  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   
   user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   verification_type smallint NOT NULL,

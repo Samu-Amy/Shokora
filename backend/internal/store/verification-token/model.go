@@ -4,11 +4,12 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
+	"github.com/google/uuid"
 )
 
 // Verification Tokens (Magic Link and OTP)
 type VToken struct {
-	Id                      int64
+	Id                      uuid.UUID
 	UserId                  int64
 	VerificationType        auth.VerificationType
 	MagicLinkTokenHash      []byte

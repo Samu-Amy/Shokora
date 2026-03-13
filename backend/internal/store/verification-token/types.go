@@ -1,9 +1,13 @@
 package vtoken
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type MagicLinkVerificationData struct {
-	VerificationId int64
+	VerificationId uuid.UUID
 	UserId         int64
 }
 

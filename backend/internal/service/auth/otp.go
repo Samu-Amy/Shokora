@@ -9,11 +9,12 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	vtoken "github.com/Samu-Amy/Shokora/internal/store/verification-token"
+	"github.com/google/uuid"
 )
 
 // ----- VERIFY OTP -----
 
-func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64, hashedOTP []byte, maxAttempts uint8, verificationType auth.VerificationType) (*vtoken.OTPVerificationData, error) {
+func (service *AuthService) verifyOtp(ctx context.Context, verificationId uuid.UUID, hashedOTP []byte, maxAttempts uint8, verificationType auth.VerificationType) (*vtoken.OTPVerificationData, error) {
 
 	var otpQueryData *vtoken.OTPVerificationData
 	var err error
@@ -49,7 +50,7 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64,
 		if !isOtpValid {
 
 			// Increment attempts and handle errors
-			err = service.vTokenRepo.UpdateOtpAttempts(ctx, tx, verificationId, maxAttempts)
+			err = service.vTokenRepo.IncrementOtpAttempts(ctx, tx, verificationId, maxAttempts)
 			if err != nil {
 				service.logger.Warnw("Error updating otp attempts", "error", err, "verificationId", verificationId)
 			}
@@ -58,9 +59,6 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId int64,
 			if errors.Is(err, interrors.IErrNoRowsAffected) { // Max attempts exceeded
 				err = interrors.IErrMaxAttemptsExceeded
 			}
-			// else {
-			// 	err = interrors.IErrInvalid // VerificationId is not valid (also if IErrNotFound)
-			// } // TODO: riattivarlo?
 
 			return err
 		}

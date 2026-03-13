@@ -18,6 +18,7 @@ func (service *UserService) GetById(ctx context.Context, userId int64) (*user.Us
 	return user, nil
 }
 
+// TODO: se viene usato, controllare che sia verificato
 func (service *UserService) GetByEmail(ctx context.Context, email string) (*user.User, error) {
 	user, err := service.userRepo.GetByEmail(ctx, email)
 	if err != nil {
