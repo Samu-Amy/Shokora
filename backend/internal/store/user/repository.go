@@ -9,7 +9,7 @@ import (
 
 type IUserRepository interface {
 	// Auth
-	Verify(ctx context.Context, userId int64) error // Set is_verified to true
+	SetIsVerified(ctx context.Context, userId int64) error // Set is_verified to true
 	// SetIsActive(ctx context.Context, userId int64, isActive bool) error // TODO: implementa (per bloccare/sbloccare users)
 
 	// Users

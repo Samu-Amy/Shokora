@@ -138,7 +138,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 
 // ----- UPDATE -----
 
-func (store *PostgresUserStore) Verify(ctx context.Context, userId int64) error {
+func (store *PostgresUserStore) SetIsVerified(ctx context.Context, userId int64) error {
 	query := `
 		UPDATE users
 		SET is_verified = true

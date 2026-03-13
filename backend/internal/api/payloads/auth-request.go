@@ -1,5 +1,7 @@
 package payloads
 
+import "github.com/google/uuid"
+
 // Auth
 type RegisterUserReq struct {
 	UserDataReq
@@ -14,8 +16,8 @@ type LoginUserReq struct {
 
 // Verification
 type OTPVerificationReq struct {
-	VerificationId int64  `json:"verification_id" validate:"gte=0"`
-	OTP            string `json:"otp" validate:"required,min=4,max=10"`
+	VerificationId uuid.UUID `json:"verification_id" validate:"gte=0"`
+	OTP            string    `json:"otp" validate:"required,min=4,max=10"`
 }
 
 // TODO: fare validazione custom (tipo quella sotto)?

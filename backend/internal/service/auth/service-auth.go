@@ -81,17 +81,13 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	// ----- AUTH -----
 
-	// Create Refresh Token (soft error)
-	authTokensDto, sessionId, err := service.createNewSessionAndRefreshToken(ctx, user.Id)
+	// Create Auth Tokens (soft error)
+	authTokensDto, err := service.createAuthTokens(ctx, user.Id)
 	if err != nil {
 		registerUserRes.HasAuthError = true
-		return registerUserRes, nil, nil
-	}
 
-	// Create Access Token (soft error)
-	err = service.addJWTAccessToken(authTokensDto, sessionId, user.Id)
-	if err != nil {
-		registerUserRes.HasAuthError = true
+		service.logger.Info("Only User created", "userId", user.Id)
+
 		return registerUserRes, nil, nil
 	}
 
@@ -186,7 +182,6 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 	// ----- AUTH -----
 
 	var authTokensDto *payloads.AuthTokensDto
-	var sessionId int64
 
 	// If no 2fa required
 	if !(isVerificationRequired && verificationType == auth.TwoFactorAuth) {
@@ -194,16 +189,10 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 		// Delete old sessions
 		_ = service.userSessionRepo.DeleteExpired(ctx, user.Id)
 
-		// Create Refresh Token
-		authTokensDto, sessionId, err = service.createNewSessionAndRefreshToken(ctx, user.Id)
+		// Create Auth Tokens
+		authTokensDto, err = service.createAuthTokens(ctx, user.Id)
 		if err != nil {
 			return nil, nil, domerrors.ParseIntError(err) // TODO: controlla parsing errore
-		}
-
-		// Create Access Token
-		err = service.addJWTAccessToken(authTokensDto, sessionId, user.Id)
-		if err != nil {
-			return nil, nil, domerrors.ParseIntError(err)
 		}
 
 		service.logger.Info("User logged, Tokens created", "userId", user.Id)

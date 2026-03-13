@@ -137,6 +137,7 @@ func main() {
 			FromEmail:    configs.Mail.FromEmail,
 			IsSandboxEnv: configs.Mail.IsSandboxEnv,
 		},
+		Auth: configs.Auth,
 	}
 	service := service.NewService(txManager, store, mailer, logger, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
 

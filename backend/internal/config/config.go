@@ -82,6 +82,7 @@ type AuthServiceConfig struct {
 	PasswordHashingCost int
 	Token               TokenConfig
 	Mail                MailerConfig
+	Auth                AuthConfig
 }
 
 type MailerConfig struct {

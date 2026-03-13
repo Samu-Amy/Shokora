@@ -25,6 +25,7 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId uuid.U
 		otpQueryData, err = service.vTokenRepo.GetOtpData(ctx, tx, verificationId, verificationType)
 		if err != nil {
 			service.logger.Warnw("Error getting otp data", "error", err, "verificationId", verificationId)
+
 			// Not valid (id does not exists or wrong verificationType)
 			if errors.Is(err, interrors.IErrNotFound) {
 				return interrors.IErrInvalid
@@ -35,13 +36,13 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId uuid.U
 
 		// Verify attempts
 		if otpQueryData.Attempts >= maxAttempts {
-			// service.logger.Warn("Max attempts for otp")
+			service.logger.Warn("Max attempts for otp")
 			return interrors.IErrMaxRetriesExceeded
 		}
 
 		// Verify expiry
 		if otpQueryData.ExpiresAt.Before(time.Now()) {
-			// service.logger.Warn("Expired otp")
+			service.logger.Warn("Expired otp")
 			return interrors.IErrExpired
 		}
 

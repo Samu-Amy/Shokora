@@ -2,11 +2,10 @@ package authservice
 
 import (
 	"context"
-	"errors"
 
+	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
-	"github.com/google/uuid"
 )
 
 // ----- VERIFY EMAIL  -----
@@ -17,6 +16,7 @@ Errors
   - Other db errors
 */
 func (service *AuthService) VerifyEmailWithToken(ctx context.Context, plainToken string) error {
+	// TODO: usare FOR UPDATE nel get (per l'eliminazione)? usare transaction?
 
 	// Hash token
 	hashedToken := auth.HashBase64Token(plainToken)
@@ -24,20 +24,15 @@ func (service *AuthService) VerifyEmailWithToken(ctx context.Context, plainToken
 	// Verify and Get data
 	magicLinkTokenQueryData, err := service.vTokenRepo.GetValidMagicLinkData(ctx, hashedToken, auth.EmailVerification)
 	if err != nil {
-		// log.Printf("Verify OTP Error: %v", err)
-		switch {
-		case errors.Is(err, domerrors.ErrNotFound): // Token not valid // TODO: si dovrebbero ottenere solo interrors
-			return domerrors.ErrInvalid
-		default:
-			return err
-		}
+		service.logger.Warnw("Error getting magic link Token", "error", err)
+		return domerrors.ParseIntError(err)
 	}
 
 	// Verify user
-	err = service.userRepo.Verify(ctx, magicLinkTokenQueryData.UserId)
+	err = service.userRepo.SetIsVerified(ctx, magicLinkTokenQueryData.UserId)
 	if err != nil {
-		// log.Printf("Verify User Error: %v", err)
-		return err
+		service.logger.Warnw("Error setting User is_verified", "error", err)
+		return domerrors.ParseIntError(err)
 	}
 
 	// Delete token
@@ -53,24 +48,27 @@ Errors
   - ErrMaxAttemptsExceeded
   - Other db errors
 */
-func (service *AuthService) verifyEmailWithOTP(ctx context.Context, verificationId uuid.UUID, hashedOTP []byte, maxAttempts uint8) error {
+func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, payload payloads.OTPVerificationReq) error {
+
+	// Hash OTP
+	hashedOTP := service.tokenAuthenticator.HashOTP(payload.OTP, auth.EmailVerification)
 
 	// Get data
-	otpQueryData, err := service.verifyOtp(ctx, verificationId, hashedOTP, maxAttempts, auth.EmailVerification)
+	otpQueryData, err := service.verifyOtp(ctx, payload.VerificationId, hashedOTP, service.config.Auth.OTP.MaxAttempts, auth.EmailVerification)
 	if err != nil {
-		// log.Printf("Verify OTP Error: %v", err)
+		service.logger.Warnw("Error getting Otp", "error", err)
 		return err
 	}
 
 	// Verify user
-	err = service.userRepo.Verify(ctx, otpQueryData.UserId)
+	err = service.userRepo.SetIsVerified(ctx, otpQueryData.UserId)
 	if err != nil {
-		// log.Printf("Verify User Error: %v", err)
-		return err
+		service.logger.Warnw("Error setting User is_verified", "error", err)
+		return domerrors.ParseIntError(err)
 	}
 
 	// Delete token
-	_ = service.vTokenRepo.Delete(ctx, verificationId) // If it fails to delete there are no problems
+	_ = service.vTokenRepo.Delete(ctx, payload.VerificationId) // If it fails to delete there are no problems
 
 	return nil
 }

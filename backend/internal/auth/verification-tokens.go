@@ -73,7 +73,7 @@ func (tokenAuthenticator *TokenAuthenticator) CreateVerificationTokens(verificat
 		return nil, err
 	}
 
-	hashedOTP := tokenAuthenticator.hashOTP(plainOTP, verificationType)
+	hashedOTP := tokenAuthenticator.HashOTP(plainOTP, verificationType)
 
 	return &VerificationTokens{
 		VerificationId:       uuid.Nil,
@@ -122,7 +122,7 @@ func (tokenAuthenticator *TokenAuthenticator) generateOTP() (string, error) {
 	return fmt.Sprintf("%0*d", length, otp), nil // Format with [length] numbers/zeros
 }
 
-func (tokenAuthenticator *TokenAuthenticator) hashOTP(plainOTP string, verificationType VerificationType) []byte {
+func (tokenAuthenticator *TokenAuthenticator) HashOTP(plainOTP string, verificationType VerificationType) []byte {
 	mac := hmac.New(sha256.New, []byte(tokenAuthenticator.secret))
 	mac.Write([]byte(plainOTP + tokenAuthenticator.getVerificationTypeString(verificationType)))
 	return mac.Sum(nil)

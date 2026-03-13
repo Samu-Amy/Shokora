@@ -99,18 +99,21 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	// Get sessionId from context (auth middleware)
 	sessionId, ok := r.Context().Value(sessionIdCtx).(int64)
 	if !ok {
 		app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 		return
 	}
 
+	// Logout (delete session)
 	err := app.service.Auth.LogoutUser(ctx, sessionId)
 	if err != nil {
 		app.parseError(w, r, err)
 		return
 	}
 
+	// Delete cookies
 	app.clearAuthCookies(w)
 
 	w.WriteHeader(http.StatusNoContent)
@@ -122,12 +125,10 @@ func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Reque
 	ctx := r.Context()
 
 	// Get "token" param
-	token := chi.URLParam(r, verificationTokenParam)
+	plainToken := chi.URLParam(r, verificationTokenParam)
 
 	// Verify
-	if err := app.service.Auth.VerifyEmailWithToken(ctx, token); err != nil {
-		app.logger.Warnw("Error with Email Verification using Token", "error", err)
-
+	if err := app.service.Auth.VerifyEmailWithToken(ctx, plainToken); err != nil {
 		app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
 		return
 	}
@@ -137,10 +138,10 @@ func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
+	ctx := r.Context()
 
 	// Get payload data
-	var payload payloads.OTPVerificationReq // TODO: nel FRONTEND ricorda di inviare l'otp come stringa
+	var payload payloads.OTPVerificationReq
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
@@ -153,21 +154,11 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// if len(payload.OTP) != int(app.config.Auth.OTP.Length) {
-	// 	app.badRequestError(w, r, domerrors.ErrInvalid) // Invalid token
-	// 	return
-	// }
-
-	// // Hash OTP
-	// hashedOTP := app.tokenAuthenticator.HashOTP(payload.OTP, auth.EmailVerification)
-
-	// // Verify
-	// if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload.VerificationId, hashedOTP, app.config.Auth.OTP.MaxAttempts); err != nil {
-	// 	app.logger.Warnw("Error with Email Verification using OTP", "error", err)
-
-	// 	app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
-	// 	return
-	// }
+	// Verify
+	if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload); err != nil {
+		app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
+		return
+	}
 
 	// //* No content
 	// w.WriteHeader(http.StatusNoContent)
