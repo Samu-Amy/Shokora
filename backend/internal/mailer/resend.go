@@ -65,7 +65,11 @@ func (mailer *ResendMailer) SendVerificationEmail(ctx context.Context, templateF
 	}
 
 	// Generate random verification id
-	verificationId := uuid.New().String() // TODO: fare qualcosa di più efficiente e più "sicuro" (per evitare duplicati e non inviare mail - anche se re-inviando la mail se ne genera uno nuovo)?
+	verificationId, err := uuid.NewRandom() // TODO: fare qualcosa di più efficiente e più "sicuro" (per evitare duplicati e non inviare mail - anche se re-inviando la mail se ne genera uno nuovo)?
+	if err != nil {
+		return err
+	}
+
 	var idepotencyKeyPrefix string
 
 	switch verificationType {
@@ -78,7 +82,7 @@ func (mailer *ResendMailer) SendVerificationEmail(ctx context.Context, templateF
 	}
 
 	options := &resend.SendEmailOptions{
-		IdempotencyKey: idepotencyKeyPrefix + verificationId,
+		IdempotencyKey: idepotencyKeyPrefix + verificationId.String(),
 	}
 
 	var retryErr error
