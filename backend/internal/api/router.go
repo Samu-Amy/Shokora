@@ -85,19 +85,15 @@ func (app *App) initRouter() *chi.Mux {
 			// r.Post("/google", app.googleRegisterUserHandler)
 			// r.Post("/login/google", app.googleLoginUserHandler)
 
-			r.Post("/tokens", app.createTokenHandler)
-			// r.Post("/refresh", ...)
-
-			// Verifications // TODO: implementa routes per login, reset password, ecc.
-			r.Post("/verify-email/otp", app.verifyEmailWithOTPHandler) // TODO: spostare in Auth-Protected Routes (?)
-			r.Post("/verify-email/{token}", app.verifyEmailWithTokenHandler)
+			// Verifications
+			r.Post("/verify-email/otp", app.verifyEmailWithOTPHandler) // TODO: spostare verifiche email in Auth-Protected Routes (?)
+			r.Post("/verify-email/{token}", app.verifyEmailWithMagicLinkHandler)
 			// r.Post("/verify-email/resend", app.resendEmailVerificationHandler) // TODO: fare così?
 
-			// r.Post("/reset-password/otp", ...) // TODO: versione logged (usa user Id) e versione non logged (la quale richiede l'email per poter verificare l'otp (in questo caso legato a email invece che user Id))
-			// r.Post("/reset-password/{token}", ...)
-			// TODO: per reset password: crea v-tokens -> verifica tokens e crea un reset session token (token univoco di 32 Bytes come il magic link)
+			r.Post("/reset-password/otp", app.resetPasswordWithMagicLinkHandler)
+			r.Post("/reset-password/{token}", app.resetPasswordWithOTPHandler)
 
-			r.Post("/verify-2fa/otp", app.verifyTwoFactorAuthWithOTPHandler) // TODO: come verificare otp e utente (id o email) prima di fa accedere l'utente?
+			r.Post("/verify-2fa/otp", app.verifyTwoFactorAuthWithOTPHandler)
 
 			r.Group(func(r chi.Router) {
 				// TODO: usare (o crearne uno simile) middleware auth per ottenere l'utente (?)

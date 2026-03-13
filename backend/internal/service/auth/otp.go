@@ -8,21 +8,22 @@ import (
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
-	vtoken "github.com/Samu-Amy/Shokora/internal/store/verification-token"
 	"github.com/google/uuid"
 )
 
 // ----- VERIFY OTP -----
 
-func (service *AuthService) verifyOtp(ctx context.Context, verificationId uuid.UUID, hashedOTP []byte, maxAttempts uint8, verificationType auth.VerificationType) (*vtoken.OTPVerificationData, error) {
+/*
+Get the OTP from db, validate it and return userId
+*/
+func (service *AuthService) verifyOtp(ctx context.Context, verificationId uuid.UUID, hashedOTP []byte, maxAttempts uint8, verificationType auth.VerificationType) (int64, error) {
 
-	var otpQueryData *vtoken.OTPVerificationData
-	var err error
+	var userId int64
 
-	err = service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
+	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
 		// Get data
-		otpQueryData, err = service.vTokenRepo.GetOtpData(ctx, tx, verificationId, verificationType)
+		otpQueryData, err := service.vTokenRepo.GetOtpData(ctx, tx, verificationId, verificationType)
 		if err != nil {
 			service.logger.Warnw("Error getting otp data", "error", err, "verificationId", verificationId)
 
@@ -64,12 +65,14 @@ func (service *AuthService) verifyOtp(ctx context.Context, verificationId uuid.U
 			return err
 		}
 
+		userId = otpQueryData.UserId
+
 		return nil
 	})
 
 	if err != nil {
-		return nil, err
+		return userId, err
 	}
 
-	return otpQueryData, nil
+	return userId, nil
 }

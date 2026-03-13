@@ -121,14 +121,14 @@ func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
 
 // ----- EMAIL VERIFICATION -----
 
-func (app *App) verifyEmailWithTokenHandler(w http.ResponseWriter, r *http.Request) {
+func (app *App) verifyEmailWithMagicLinkHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get "token" param
 	plainToken := chi.URLParam(r, verificationTokenParam)
 
 	// Verify
-	if err := app.service.Auth.VerifyEmailWithToken(ctx, plainToken); err != nil {
+	if err := app.service.Auth.VerifyEmailWithMagicLink(ctx, plainToken); err != nil {
 		app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
 		return
 	}
@@ -156,87 +156,56 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 
 	// Verify
 	if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload); err != nil {
-		app.parseError(w, r, err) // TODO: nel FRONTEND dire che "non è valido o è scaduto" (non specificare quale dei due)
+		app.parseError(w, r, err)
 		return
 	}
 
 	// //* No content
-	// w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // ----- PASSWORD RESET -----
 
+func (app *App) resetPasswordWithMagicLinkHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO: versione logged (usa user Id) e versione non logged (la quale richiede l'email per poter verificare l'otp (in questo caso legato a email invece che user Id))
+}
+
+func (app *App) resetPasswordWithOTPHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO: versione logged (usa user Id) e versione non logged (la quale richiede l'email per poter verificare l'otp (in questo caso legato a email invece che user Id))
+}
+
 // ----- TWO FACTOR AUTH -----
+
 func (app *App) verifyTwoFactorAuthWithOTPHandler(w http.ResponseWriter, r *http.Request) {
 	// Verifica OTP, poi crea auth tokens e setta cookies per lo user ottenuto dal db (in OTPVerificationData)
+	ctx := r.Context()
+
+	// Get payload data
+	var payload payloads.OTPVerificationReq // TODO: aggiungere userId al payload, per verificare che sia lo stesso del verification token (?)
+
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Validate
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Verify
+	authTokensDto, err := app.service.Auth.TwoFactorAuthWithOTP(ctx, payload)
+	if err != nil {
+		app.parseError(w, r, err)
+		return
+	}
+
+	// Set cookies
+	if authTokensDto != nil {
+		app.setAuthCookies(w, *authTokensDto)
+	}
+
+	// //* No content
+	w.WriteHeader(http.StatusNoContent)
 }
-
-// ----- TOKENS -----
-
-// TODO: da "incorporare" in register, login (se no 2fa) e in 2fa (se attiva)
-func (app *App) createTokenHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: usa service
-
-	// ctx := r.Context()
-
-	// // Get payload data
-	// var payload payloads.LoginUserReq
-
-	// if err := readJSON(w, r, &payload); err != nil {
-	// 	app.badRequestError(w, r, err)
-	// 	return
-	// }
-
-	// // Validate
-	// if err := Validate.Struct(payload); err != nil {
-	// 	app.badRequestError(w, r, err)
-	// 	return
-	// }
-
-	// // Fetch the user (check if the user exist)
-	// user, err := app.service.User.GetByEmail(ctx, payload.Email)
-	// if err != nil {
-	// 	app.parseError(w, r, err) // TODO: FRONTEND - non dire se l'email esiste o meno
-	// 	return
-	// }
-
-	// // Compare password
-	// err = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(payload.Password))
-	// if err != nil {
-	// 	app.unauthorizedError(w, r, err)
-	// 	return
-	// }
-
-	// // Generate tokens (and add claims)
-	// claims := jwt.MapClaims{
-	// 	"sub": user.Id, // subject
-	// 	"exp": time.Now().Add(app.config.Auth.Token.AccessTokenExp).Unix(),
-	// 	"iat": time.Now().Unix(),              // issued at
-	// 	"nbf": time.Now().Unix(),              // not before time
-	// 	"iss": app.config.Auth.Token.Issuer,   // issuer
-	// 	"aud": app.config.Auth.Token.Audience, // audience
-	// }
-
-	// token, err := app.jwtAuthenticator.GenerateJWTToken(claims)
-	// if err != nil {
-	// 	app.internalServerError(w, r, err)
-	// 	return
-	// }
-
-	// // TODO: setta cookie invece che inviarlo come payload
-
-	// //* Send token to the client
-	// if err := app.jsonResponse(w, http.StatusCreated, token); err != nil {
-	// 	app.internalServerError(w, r, err)
-	// }
-}
-
-// func (app *App) refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
-
-// TODO: opzioni per cookie (da verificare)
-
-// HttpOnly: true
-// Secure: true
-// SameSite: Strict (refresh) / Lax (access)
-// Path: /auth/refresh (per refresh token)
-// }
