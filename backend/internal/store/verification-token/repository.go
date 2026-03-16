@@ -21,7 +21,7 @@ type IVTokenRepository interface {
 	GetOtpData(ctx context.Context, transaction *sql.Tx, verificationId uuid.UUID, verificationType auth.VerificationType) (*OTPVerificationData, error)
 
 	// Get MagicLinkTokenPayload if magic link token found and is not expired
-	GetValidMagicLinkData(ctx context.Context, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkVerificationData, error)
+	GetValidMagicLinkData(ctx context.Context, transaction *sql.Tx, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkVerificationData, error)
 
-	Delete(ctx context.Context, verificationId uuid.UUID) error
+	Delete(ctx context.Context, transaction *sql.Tx, verificationId uuid.UUID) error
 }

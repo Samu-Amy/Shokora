@@ -2,6 +2,7 @@ package authservice
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
@@ -13,86 +14,132 @@ import (
 func (service *AuthService) VerifyEmailWithMagicLink(ctx context.Context, plainToken string) error {
 	// TODO: usare FOR UPDATE nel get (per l'eliminazione)? usare transaction?
 
-	// Hash token
-	hashedToken := auth.HashBase64Token(plainToken)
+	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
-	// Verify and get data
-	magicLinkTokenQueryData, err := service.vTokenRepo.GetValidMagicLinkData(ctx, hashedToken, auth.EmailVerification)
-	if err != nil {
-		service.logger.Warnw("Error getting magic link Token", "error", err)
-		return domerrors.ParseIntError(err)
-	}
+		// Hash token
+		hashedToken := auth.HashBase64Token(plainToken)
 
-	// Verify user
-	err = service.userRepo.SetIsVerified(ctx, magicLinkTokenQueryData.UserId)
-	if err != nil {
-		service.logger.Warnw("Error setting User is_verified", "error", err)
-		return domerrors.ParseIntError(err)
-	}
+		// Verify and get data
+		magicLinkTokenQueryData, err := service.vTokenRepo.GetValidMagicLinkData(ctx, tx, hashedToken, auth.EmailVerification)
+		if err != nil {
+			service.logger.Warnw("Error getting magic link Token", "error", err)
+			return domerrors.ParseIntError(err)
+		}
 
-	// Delete token
-	_ = service.vTokenRepo.Delete(ctx, magicLinkTokenQueryData.VerificationId) // If it fails to delete there are no problems
+		// Verify user
+		err = service.userRepo.SetIsVerified(ctx, magicLinkTokenQueryData.UserId)
+		if err != nil {
+			service.logger.Warnw("Error setting User is_verified", "error", err)
+			return domerrors.ParseIntError(err)
+		}
 
-	return nil
+		// Delete token
+		if err = service.vTokenRepo.Delete(ctx, tx, magicLinkTokenQueryData.VerificationId); err != nil { // If it fails to delete there are no problems
+			service.logger.Errorw("failed deleting verification token", "error", err)
+		}
+
+		return nil
+	})
+
+	return err
 }
 
 func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, payload payloads.OTPVerificationReq) error {
 
-	// Hash OTP
-	hashedOTP := service.tokenAuthenticator.HashOTP(payload.OTP, auth.EmailVerification)
+	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
-	// Verify and get data
-	userId, err := service.verifyOtp(ctx, payload.VerificationId, hashedOTP, service.config.Auth.OTP.MaxAttempts, auth.EmailVerification)
-	if err != nil {
-		service.logger.Warnw("Error getting OTP", "error", err)
-		return domerrors.ParseIntError(err)
-	}
+		// Hash OTP
+		hashedOTP := service.tokenAuthenticator.HashOTP(payload.OTP, auth.EmailVerification)
 
-	// Verify user
-	err = service.userRepo.SetIsVerified(ctx, userId)
-	if err != nil {
-		service.logger.Warnw("Error setting User is_verified", "error", err)
-		return domerrors.ParseIntError(err)
-	}
+		// Verify and get data
+		userId, err := service.verifyOtp(ctx, tx, payload.VerificationId, hashedOTP, service.config.Auth.OTP.MaxAttempts, auth.EmailVerification)
+		if err != nil {
+			service.logger.Warnw("Error verifying Otp", "error", err)
+			return domerrors.ParseIntError(err)
+		}
 
-	// Delete token
-	_ = service.vTokenRepo.Delete(ctx, payload.VerificationId) // If it fails to delete there are no problems
+		// Verify user
+		err = service.userRepo.SetIsVerified(ctx, userId)
+		if err != nil {
+			service.logger.Warnw("Error setting User is_verified", "error", err)
+			return domerrors.ParseIntError(err)
+		}
 
-	return nil
+		// Delete token
+		if err = service.vTokenRepo.Delete(ctx, tx, payload.VerificationId); err != nil { // If it fails to delete there are no problems
+			service.logger.Errorw("failed deleting verification token", "error", err)
+		}
+
+		return nil
+	})
+
+	return err
 }
 
 // ----- PASSWORD RESET  -----
 
 func (service *AuthService) ResetPasswordWithMagicLink(ctx context.Context, plainToken string) (string, error) {
-	// TODO: per reset password: crea v-tokens -> verifica tokens e crea un reset session token (token univoco di 32 Bytes come il magic link)
-
-	// Hash token
-	hashedToken := auth.HashBase64Token(plainToken)
-
-	// Verify and get data
-	magicLinkTokenQueryData, err := service.vTokenRepo.GetValidMagicLinkData(ctx, hashedToken, auth.EmailVerification)
-	if err != nil {
-		service.logger.Warnw("Error getting magic link Token", "error", err)
-		return "", domerrors.ParseIntError(err)
-	}
 
 	var resetSessionToken string
+
+	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
+
+		// Hash token
+		hashedToken := auth.HashBase64Token(plainToken)
+
+		// Verify and get data
+		magicLinkTokenQueryData, err := service.vTokenRepo.GetValidMagicLinkData(ctx, tx, hashedToken, auth.PasswordReset)
+		if err != nil {
+			service.logger.Warnw("Error getting magic link Token", "error", err)
+			return domerrors.ParseIntError(err)
+		}
+
+		// TODO: crea reset session token (token univoco di 32 Bytes come il magic link) - imposta scadenza (10min) in app e tokenAuthenticator (?)
+
+		// Delete token
+		if err = service.vTokenRepo.Delete(ctx, tx, magicLinkTokenQueryData.VerificationId); err != nil { // If it fails to delete there are no problems
+			service.logger.Errorw("failed deleting verification token", "error", err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return "", err
+	}
 
 	return resetSessionToken, nil
 }
 
 func (service *AuthService) ResetPasswordWithOTP(ctx context.Context, payload payloads.OTPVerificationReq) (string, error) {
 
-	// Hash OTP
-	hashedOTP := service.tokenAuthenticator.HashOTP(payload.OTP, auth.EmailVerification)
-
-	// Verify and get data
-	userId, err := service.verifyOtp(ctx, payload.VerificationId, hashedOTP, service.config.Auth.OTP.MaxAttempts, auth.EmailVerification)
-	if err != nil {
-		service.logger.Warnw("Error getting Otp", "error", err)
-		return "", domerrors.ParseIntError(err)
-	}
 	var resetSessionToken string
+
+	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
+
+		// Hash OTP
+		hashedOTP := service.tokenAuthenticator.HashOTP(payload.OTP, auth.PasswordReset)
+
+		// Verify and get data
+		userId, err := service.verifyOtp(ctx, tx, payload.VerificationId, hashedOTP, service.config.Auth.OTP.MaxAttempts, auth.PasswordReset)
+		if err != nil {
+			service.logger.Warnw("Error verifying Otp", "error", err)
+			return domerrors.ParseIntError(err)
+		}
+
+		// TODO: crea reset session token (token univoco di 32 Bytes come il magic link) - imposta scadenza (10min) in app e tokenAuthenticator (?)
+
+		// Delete token
+		if err = service.vTokenRepo.Delete(ctx, tx, payload.VerificationId); err != nil { // If it fails to delete there are no problems
+			service.logger.Errorw("failed deleting verification token", "error", err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return "", err
+	}
 
 	return resetSessionToken, nil
 }
@@ -101,23 +148,40 @@ func (service *AuthService) ResetPasswordWithOTP(ctx context.Context, payload pa
 
 func (service *AuthService) TwoFactorAuthWithOTP(ctx context.Context, payload payloads.OTPVerificationReq) (*payloads.AuthTokensDto, error) {
 
-	// Hash OTP
-	hashedOTP := service.tokenAuthenticator.HashOTP(payload.OTP, auth.EmailVerification)
+	var authTokensDto *payloads.AuthTokensDto
+	var err error
 
-	// Verify and get data
-	userId, err := service.verifyOtp(ctx, payload.VerificationId, hashedOTP, service.config.Auth.OTP.MaxAttempts, auth.EmailVerification)
+	err = service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
+
+		// Hash OTP
+		hashedOTP := service.tokenAuthenticator.HashOTP(payload.OTP, auth.TwoFactorAuth)
+
+		// Verify and get data
+		userId, err := service.verifyOtp(ctx, tx, payload.VerificationId, hashedOTP, service.config.Auth.OTP.MaxAttempts, auth.TwoFactorAuth)
+		if err != nil {
+			service.logger.Warnw("Error verifying Otp", "error", err)
+			return domerrors.ParseIntError(err)
+		}
+
+		// Delete old sessions
+		_ = service.userSessionRepo.DeleteExpired(ctx, userId)
+
+		// Create Auth Tokens
+		authTokensDto, err = service.createNewAuthTokens(ctx, userId)
+		if err != nil {
+			return domerrors.ParseIntError(err)
+		}
+
+		// Delete token
+		if err = service.vTokenRepo.Delete(ctx, tx, payload.VerificationId); err != nil { // If it fails to delete there are no problems
+			service.logger.Errorw("failed deleting verification token", "error", err)
+		}
+
+		return nil
+	})
+
 	if err != nil {
-		service.logger.Warnw("Error getting Otp", "error", err)
-		return nil, domerrors.ParseIntError(err)
-	}
-
-	// Delete old sessions
-	_ = service.userSessionRepo.DeleteExpired(ctx, userId)
-
-	// Create Auth Tokens
-	authTokensDto, err := service.createAuthTokens(ctx, userId)
-	if err != nil {
-		return nil, domerrors.ParseIntError(err)
+		return nil, err
 	}
 
 	return authTokensDto, nil

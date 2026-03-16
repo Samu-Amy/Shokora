@@ -42,10 +42,14 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set cookies
-	if authTokensDto != nil {
-		app.setAuthCookies(w, *authTokensDto)
+	// Check cookies data
+	if authTokensDto == nil {
+		app.internalServerError(w, r, domerrors.ErrInternalError)
+		return
 	}
+
+	// Set cookies
+	app.setAuthCookies(w, *authTokensDto)
 
 	// TODO: ricordati di scrivere di controllare nello spam (aggiungere timer al tasto per reinviare la mail (?))
 	// TODO: se mail non inviata, dire di riprovare più tardi? -> l'utente può accedere ma non può ordinare (ha come opzioni di re-inviare la mail di verifica oppure eliminare l'account (e il token))
@@ -83,9 +87,9 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set cookies if no verification required
-	if loginUserRes.User != nil && loginUserRes.VerificationId == nil && authTokensDto != nil {
-		app.setAuthCookies(w, *authTokensDto) // TODO: solo se 2fa non attiva (altimenti va fatta dopo la verifica dell'otp)
+	// Set cookies if no 2fa
+	if loginUserRes.User != nil && authTokensDto != nil {
+		app.setAuthCookies(w, *authTokensDto)
 	}
 
 	//* Return user
@@ -177,11 +181,10 @@ func (app *App) resetPasswordWithOTPHandler(w http.ResponseWriter, r *http.Reque
 // ----- TWO FACTOR AUTH -----
 
 func (app *App) verifyTwoFactorAuthWithOTPHandler(w http.ResponseWriter, r *http.Request) {
-	// Verifica OTP, poi crea auth tokens e setta cookies per lo user ottenuto dal db (in OTPVerificationData)
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payloads.OTPVerificationReq // TODO: aggiungere userId al payload, per verificare che sia lo stesso del verification token (?)
+	var payload payloads.OTPVerificationReq
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
@@ -201,10 +204,14 @@ func (app *App) verifyTwoFactorAuthWithOTPHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	// Set cookies
-	if authTokensDto != nil {
-		app.setAuthCookies(w, *authTokensDto)
+	// Check cookies data
+	if authTokensDto == nil {
+		app.internalServerError(w, r, domerrors.ErrInternalError)
+		return
 	}
+
+	// Set cookies
+	app.setAuthCookies(w, *authTokensDto)
 
 	// //* No content
 	w.WriteHeader(http.StatusNoContent)

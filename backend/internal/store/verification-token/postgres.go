@@ -152,11 +152,12 @@ func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, transaction *s
 
 // ----- VERIFY -----
 
-func (store *PostgresVTokenStore) GetValidMagicLinkData(ctx context.Context, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkVerificationData, error) {
+func (store *PostgresVTokenStore) GetValidMagicLinkData(ctx context.Context, transaction *sql.Tx, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkVerificationData, error) {
 	query := `
 		SELECT id, user_id
 		FROM verification_tokens
 		WHERE magic_link_token_hash = $1 AND verification_type = $2 AND magic_link_token_expires_at > NOW()
+		FOR UPDATE
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
@@ -164,7 +165,7 @@ func (store *PostgresVTokenStore) GetValidMagicLinkData(ctx context.Context, has
 
 	var magicLinkTokenPayload MagicLinkVerificationData
 
-	err := store.db.QueryRowContext(
+	err := transaction.QueryRowContext(
 		queryCtx,
 		query,
 		hashedToken,
@@ -182,7 +183,7 @@ func (store *PostgresVTokenStore) GetValidMagicLinkData(ctx context.Context, has
 }
 
 // ----- DELETE -----
-func (store *PostgresVTokenStore) Delete(ctx context.Context, verificationId uuid.UUID) error {
+func (store *PostgresVTokenStore) Delete(ctx context.Context, transaction *sql.Tx, verificationId uuid.UUID) error {
 	query := `
 		DELETE from verification_tokens WHERE id = $1
 	`
@@ -190,7 +191,7 @@ func (store *PostgresVTokenStore) Delete(ctx context.Context, verificationId uui
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
-	return database.HandleExecContextResult(store.db.ExecContext(
+	return database.HandleExecContextResult(transaction.ExecContext(
 		queryCtx,
 		query,
 		verificationId,

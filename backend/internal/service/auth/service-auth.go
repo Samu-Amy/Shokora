@@ -82,7 +82,7 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	// ----- AUTH -----
 
 	// Create Auth Tokens (soft error)
-	authTokensDto, err := service.createAuthTokens(ctx, user.Id)
+	authTokensDto, err := service.createNewAuthTokens(ctx, user.Id)
 	if err != nil {
 		registerUserRes.HasAuthError = true
 
@@ -190,7 +190,7 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 		_ = service.userSessionRepo.DeleteExpired(ctx, user.Id)
 
 		// Create Auth Tokens
-		authTokensDto, err = service.createAuthTokens(ctx, user.Id)
+		authTokensDto, err = service.createNewAuthTokens(ctx, user.Id)
 		if err != nil {
 			return nil, nil, domerrors.ParseIntError(err) // TODO: controlla parsing errore
 		}

@@ -35,13 +35,14 @@ CREATE TABLE IF NOT EXISTS verification_tokens(
 
 -- Avoid replaces same id multiple times with partial unique
 CREATE UNIQUE INDEX v_tokens_magic_link_token_hash_unique
-ON verification_tokens(magic_link_token_hash)
+ON verification_tokens(magic_link_token_hash, verification_type)
 WHERE magic_link_token_hash IS NOT NULL;
 
 -- Updated At
 CREATE TRIGGER update_verification_tokens_updated_at
 BEFORE UPDATE ON verification_tokens
 FOR EACH ROW
+-- WHEN (OLD.* IS DISTINCT FROM NEW.*) -- TODO: usare questa riga (anche su altre tabelle)?
 EXECUTE FUNCTION set_updated_at();
 -- +goose StatementEnd
 

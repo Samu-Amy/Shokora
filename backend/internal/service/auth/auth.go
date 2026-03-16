@@ -9,7 +9,7 @@ import (
 /*
 Create Session, Refresh Token and Access Token, return the AuthTokensDto for setting the cookies
 */
-func (service *AuthService) createAuthTokens(ctx context.Context, userId int64) (*payloads.AuthTokensDto, error) {
+func (service *AuthService) createNewAuthTokens(ctx context.Context, userId int64) (*payloads.AuthTokensDto, error) {
 
 	// Create Refresh Token
 	authTokensDto, sessionId, err := service.createNewSessionAndRefreshToken(ctx, userId)

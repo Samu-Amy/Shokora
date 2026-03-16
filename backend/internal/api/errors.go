@@ -15,7 +15,9 @@ import (
 // - Internal Errors (fixed message) -
 
 func (app *App) internalServerError(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Errorw("internal server error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	if err != nil {
+		app.logger.Errorw("internal server error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	}
 
 	writeJSONError(w, http.StatusInternalServerError, "the server encountered a problem")
 }
@@ -29,13 +31,17 @@ func (app *App) rateLimitExceededError(w http.ResponseWriter, r *http.Request, r
 }
 
 func (app *App) requestTimeoutError(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Warnf("request timeout error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	if err != nil {
+		app.logger.Warnf("request timeout error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	}
 
 	writeJSONError(w, http.StatusRequestTimeout, "failed to process request in time")
 }
 
 func (app *App) conflictError(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Errorf("conflict error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	if err != nil {
+		app.logger.Errorf("conflict error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	}
 
 	writeJSONError(w, http.StatusConflict, "conflict")
 }
@@ -43,7 +49,9 @@ func (app *App) conflictError(w http.ResponseWriter, r *http.Request, err error)
 // - Dynamic Errors (message from error) -
 
 func (app *App) badRequestError(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Warnf("bad request error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	if err != nil {
+		app.logger.Warnf("bad request error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	}
 
 	errorMessage := "bad_request"
 
@@ -55,13 +63,17 @@ func (app *App) badRequestError(w http.ResponseWriter, r *http.Request, err erro
 }
 
 func (app *App) notFoundError(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Warnf("not found error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	if err != nil {
+		app.logger.Warnf("not found error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	}
 
 	writeJSONError(w, http.StatusNotFound, "not_found")
 }
 
 func (app *App) unauthorizedError(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Warnf("unauthorized error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	if err != nil {
+		app.logger.Warnf("unauthorized error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	}
 
 	errorMessage := "unauthorized"
 
@@ -73,7 +85,9 @@ func (app *App) unauthorizedError(w http.ResponseWriter, r *http.Request, err er
 }
 
 func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Warnf("forbidden error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	if err != nil {
+		app.logger.Warnf("forbidden error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	}
 
 	errorMessage := "forbidden"
 
