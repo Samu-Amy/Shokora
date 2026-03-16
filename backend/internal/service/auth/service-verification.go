@@ -96,6 +96,8 @@ func (service *AuthService) ResetPasswordWithMagicLink(ctx context.Context, plai
 
 		// TODO: crea reset session token (token univoco di 32 Bytes come il magic link) - imposta scadenza (10min) in app e tokenAuthenticator (?)
 
+		// TODO: usa userId da magicLinkTokenQueryData per la creazione del reset session token
+
 		// Delete token
 		if err = service.vTokenRepo.Delete(ctx, tx, magicLinkTokenQueryData.VerificationId); err != nil { // If it fails to delete there are no problems
 			service.logger.Errorw("failed deleting verification token", "error", err)
@@ -128,6 +130,8 @@ func (service *AuthService) ResetPasswordWithOTP(ctx context.Context, payload pa
 		}
 
 		// TODO: crea reset session token (token univoco di 32 Bytes come il magic link) - imposta scadenza (10min) in app e tokenAuthenticator (?)
+
+		// TODO: usa userId per la creazione del reset session token
 
 		// Delete token
 		if err = service.vTokenRepo.Delete(ctx, tx, payload.VerificationId); err != nil { // If it fails to delete there are no problems

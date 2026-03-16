@@ -86,6 +86,7 @@ func (app *App) initRouter() *chi.Mux {
 			// r.Post("/login/google", app.googleLoginUserHandler)
 
 			// Verifications
+			// TODO: aggiungere route per il reset della password (con email nel payload, ottiene userId dall'email, crea verification tokens (con anche userId) ed invia email con i token)
 			r.Post("/verify-email/otp", app.verifyEmailWithOTPHandler) // TODO: spostare verifiche email in Auth-Protected Routes (?)
 			r.Post("/verify-email/{token}", app.verifyEmailWithMagicLinkHandler)
 			// r.Post("/verify-email/resend", app.resendEmailVerificationHandler) // TODO: fare così?
