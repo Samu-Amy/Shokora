@@ -42,21 +42,23 @@ type ResendConfig struct {
 
 type AuthConfig struct {
 	PasswordHashingCost         int
-	Token                       TokenConfig
+	Token                       TokensConfig
 	MagicLink                   MagicLinkConfig
 	OTP                         OTPConfig
 	VerficationTokensMaxRetries uint8 // Counting the first attempt
 	VerficationTokensSecret     string
 }
 
-type TokenConfig struct {
-	Secret               string
-	Audience             string
-	Issuer               string
-	AccessTokenExp       time.Duration
-	RefreshTokenByteSize int
-	RefreshTokenExp      time.Duration
-	SessionExp           time.Duration // How long the refresh tokens expiration can be extended for
+type TokensConfig struct {
+	Secret                    string
+	Audience                  string
+	Issuer                    string
+	ResetSessionTokenByteSize uint8
+	ResetSessionTokenExp      time.Duration
+	AccessTokenExp            time.Duration
+	RefreshTokenByteSize      uint8
+	RefreshTokenExp           time.Duration
+	SessionExp                time.Duration // How long the refresh tokens expiration can be extended for
 }
 
 // - Verification -
@@ -80,7 +82,7 @@ type OTPConfig struct {
 
 type AuthServiceConfig struct {
 	PasswordHashingCost int
-	Token               TokenConfig
+	Token               TokensConfig
 	Mail                MailerConfig
 	Auth                AuthConfig
 }

@@ -14,5 +14,6 @@ type IUserRepository interface {
 	Create(ctx context.Context, transaction *sql.Tx, user *User) error
 	GetById(ctx context.Context, userId int64) (*User, error)
 	GetByEmail(ctx context.Context, email string) (*User, error)
+	GetIdByEmail(ctx context.Context, transaction *sql.Tx, email string) (int64, error)
 	Delete(ctx context.Context, userId int64) error
 }

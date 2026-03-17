@@ -91,6 +91,7 @@ func (app *App) initRouter() *chi.Mux {
 			r.Post("/verify-email/{token}", app.verifyEmailWithMagicLinkHandler)
 			// r.Post("/verify-email/resend", app.resendEmailVerificationHandler) // TODO: fare così?
 
+			r.Post("/reset-password", app.requestPasswordResetHandler)
 			r.Post("/reset-password/otp", app.resetPasswordWithMagicLinkHandler)
 			r.Post("/reset-password/{token}", app.resetPasswordWithOTPHandler)
 

@@ -18,9 +18,9 @@ It is divided in Repositories (one for every db table) and it is used by the Ser
 */
 type Storage struct {
 	VToken            vtoken.IVTokenRepository
-	UserSession       session.IUserSessionRepository
-	RefreshToken      refreshtoken.IRefreshTokenRepository
 	ResetSessionToken rstoken.IResetSessionTokenRepository
+	RefreshToken      refreshtoken.IRefreshTokenRepository
+	UserSession       session.IUserSessionRepository
 	User              user.IUserRepository
 	UserSettings      usersettings.IUserSettingsRepository
 	Product           product.IProductRepository
@@ -29,9 +29,9 @@ type Storage struct {
 func NewPostgresStorage(db *sql.DB) *Storage {
 	return &Storage{
 		VToken:            vtoken.NewPostgresStore(db),
-		UserSession:       session.NewPostgresStore(db),
-		RefreshToken:      refreshtoken.NewPostgresStore(db),
 		ResetSessionToken: rstoken.NewPostgresStore(db),
+		RefreshToken:      refreshtoken.NewPostgresStore(db),
+		UserSession:       session.NewPostgresStore(db),
 		User:              user.NewPostgresStore(db),
 		UserSettings:      usersettings.NewPostgresStore(db),
 		Product:           product.NewPostgresStore(db),

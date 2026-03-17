@@ -136,6 +136,34 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 	return &user, nil
 }
 
+func (store *PostgresUserStore) GetIdByEmail(ctx context.Context, transaction *sql.Tx, email string) (int64, error) {
+	query := `
+		SELECT id
+		FROM users
+		WHERE email = $1
+		FOR UPDATE
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
+	defer cancel()
+
+	var userId int64
+
+	err := transaction.QueryRowContext(
+		queryCtx,
+		query,
+		email,
+	).Scan(
+		&userId,
+	)
+
+	if err != nil {
+		return 0, database.ParseDbError(err)
+	}
+
+	return userId, nil
+}
+
 // ----- UPDATE -----
 
 func (store *PostgresUserStore) SetIsVerified(ctx context.Context, userId int64) error {

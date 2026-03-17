@@ -57,14 +57,16 @@ func main() {
 		},
 		Auth: config.AuthConfig{
 			PasswordHashingCost: 12, // bcrypt.DefaultCost = 10
-			Token: config.TokenConfig{
-				Secret:               env.GetString("AUTH_TOKEN_SECRET", "4a4c345b5064c9a85fff749313ff25310085a606a47232c94e9d898470c6e854"), // TODO: cambia quello di default (oppure dai errore se non lo trova dall'env) e usa "openssl rand -hex 32" per generare token
-				Audience:             "shokora",
-				Issuer:               "shokora",
-				AccessTokenExp:       15 * time.Minute, // 15 min (suggested: 15-60 min) //TODO: alza a 30 (?)
-				RefreshTokenByteSize: 32,
-				RefreshTokenExp:      30 * 24 * time.Hour, // 30 days (suggested: 7-30 days)
-				SessionExp:           90 * 24 * time.Hour, // 90 days (suggested: max 90 days)
+			Token: config.TokensConfig{
+				Secret:                    env.GetString("AUTH_TOKEN_SECRET", "4a4c345b5064c9a85fff749313ff25310085a606a47232c94e9d898470c6e854"), // TODO: cambia quello di default (oppure dai errore se non lo trova dall'env) e usa "openssl rand -hex 32" per generare token
+				Audience:                  "shokora",
+				Issuer:                    "shokora",
+				ResetSessionTokenByteSize: 32,
+				ResetSessionTokenExp:      10 * time.Minute,
+				AccessTokenExp:            15 * time.Minute, // 15 min (suggested: 15-60 min) //TODO: alza a 30 (?)
+				RefreshTokenByteSize:      32,
+				RefreshTokenExp:           30 * 24 * time.Hour, // 30 days (suggested: 7-30 days)
+				SessionExp:                90 * 24 * time.Hour, // 90 days (suggested: max 90 days)
 			},
 			MagicLink: config.MagicLinkConfig{
 				ByteSize: 32,

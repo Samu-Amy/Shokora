@@ -20,6 +20,10 @@ type OTPVerificationReq struct {
 	OTP            string    `json:"otp" validate:"required,min=4,max=10"`
 }
 
+type PasswordResetReq struct {
+	EmailFieldReq
+}
+
 // TODO: fare validazione custom (tipo quella sotto)?
 
 // validate := validator.New()

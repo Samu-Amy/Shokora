@@ -17,7 +17,7 @@ func NewPostgresStore(db *sql.DB) *PostgresRSTokenStore {
 
 // ----- CREATE -----
 
-func (store *PostgresRSTokenStore) Create(ctx context.Context, token *RSToken) error {
+func (store *PostgresRSTokenStore) Create(ctx context.Context, transaction *sql.Tx, rsToken *RSToken) error {
 	query := `
 		INSERT INTO reset_session_tokens (token_hash, user_id, expires_at)
 		VALUES ($1, $2, $3)
@@ -27,14 +27,14 @@ func (store *PostgresRSTokenStore) Create(ctx context.Context, token *RSToken) e
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
-	err := store.db.QueryRowContext(
+	err := transaction.QueryRowContext(
 		queryCtx,
 		query,
-		token.TokenHash,
-		token.UserId,
-		token.ExpiresAt,
+		rsToken.TokenHash,
+		rsToken.UserId,
+		rsToken.ExpiresAt,
 	).Scan(
-		&token.CreatedAt,
+		&rsToken.CreatedAt,
 	)
 
 	return database.ParseDbError(err)

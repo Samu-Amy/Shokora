@@ -159,7 +159,7 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	// Verify
-	if err := app.service.Auth.VerifyEmailWithOTP(ctx, payload); err != nil {
+	if err := app.service.Auth.VerifyEmailWithOTP(ctx, &payload); err != nil {
 		app.parseError(w, r, err)
 		return
 	}
@@ -169,6 +169,37 @@ func (app *App) verifyEmailWithOTPHandler(w http.ResponseWriter, r *http.Request
 }
 
 // ----- PASSWORD RESET -----
+
+func (app *App) requestPasswordResetHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Get payload data
+	var payload payloads.PasswordResetReq
+
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Validate
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Request pasword reset (create and get reset session token)
+	plainToken, err := app.service.Auth.RequestPasswordReset(ctx, payload.Email)
+	if err != nil {
+		app.parseError(w, r, err)
+		return
+	}
+
+	//* Return plain token
+	if err := app.jsonResponse(w, http.StatusCreated, plainToken); err != nil { // TODO: Status Created?
+		app.internalServerError(w, r, err)
+		return
+	}
+}
 
 func (app *App) resetPasswordWithMagicLinkHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: versione logged (usa user Id) e versione non logged (la quale richiede l'email per poter verificare l'otp (in questo caso legato a email invece che user Id))
@@ -198,7 +229,7 @@ func (app *App) verifyTwoFactorAuthWithOTPHandler(w http.ResponseWriter, r *http
 	}
 
 	// Verify
-	authTokensDto, err := app.service.Auth.TwoFactorAuthWithOTP(ctx, payload)
+	authTokensDto, err := app.service.Auth.TwoFactorAuthWithOTP(ctx, &payload)
 	if err != nil {
 		app.parseError(w, r, err)
 		return
