@@ -31,11 +31,11 @@ type OTPVerificationReq struct {
 //     }
 
 //     // Non può essere nel futuro
-//     if date.After(time.Now()) {
+//     if date.After(time.Now().UTC()) {
 //         return false
 //     }
 
 //     // Età minima 13 anni (esempio)
-//     minAge := time.Now().AddDate(-13, 0, 0)
+//     minAge := time.Now().AddDate(-13, 0, 0).UTC()
 //     return date.Before(minAge)
 // })

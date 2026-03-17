@@ -37,7 +37,7 @@ func (store *PostgresVTokenStore) Create(ctx context.Context, userId int64, veri
 	// Fix magic link exp (nil if no magic link)
 	var magicLinkExp any = nil
 	if verificationTokens.HashedMagicLinkToken != nil {
-		magicLinkExp = time.Now().Add(verificationTokens.MagicLinkTokenExp)
+		magicLinkExp = time.Now().Add(verificationTokens.MagicLinkTokenExp).UTC()
 	}
 
 	// Create tokens
@@ -50,7 +50,7 @@ func (store *PostgresVTokenStore) Create(ctx context.Context, userId int64, veri
 		verificationTokens.HashedMagicLinkToken,
 		magicLinkExp,
 		verificationTokens.HashedOTP,
-		time.Now().Add(verificationTokens.OTPExp),
+		time.Now().Add(verificationTokens.OTPExp).UTC(),
 	).Scan(
 		&verificationTokens.VerificationId,
 	)
@@ -74,7 +74,7 @@ func (store *PostgresVTokenStore) UpdateMagicLinkTokenFromId(ctx context.Context
 		queryCtx,
 		query,
 		magicLinkTokenHash,
-		time.Now().Add(magicLinkTokenExp),
+		time.Now().Add(magicLinkTokenExp).UTC(),
 		verificationId,
 	))
 }
@@ -93,7 +93,7 @@ func (store *PostgresVTokenStore) UpdateOTPFromId(ctx context.Context, verificat
 		queryCtx,
 		query,
 		otpHash,
-		time.Now().Add(otpExp),
+		time.Now().Add(otpExp).UTC(),
 		verificationId,
 	))
 }

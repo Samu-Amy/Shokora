@@ -59,7 +59,7 @@ func (service *AuthService) checkAccessToken(accessToken string) (*payloads.Auth
 func (service *AuthService) addJWTAccessToken(authTokensDto *payloads.AuthTokensDto, sessionId int64, userId int64) error {
 
 	// Set expiration
-	timeNow := time.Now()
+	timeNow := time.Now().UTC()
 	accessTokenExpiresAt := timeNow.Add(service.config.Token.AccessTokenExp)
 
 	// Create Claims

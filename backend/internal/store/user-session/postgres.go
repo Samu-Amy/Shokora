@@ -34,7 +34,7 @@ func (store *PostgresUserSessionStore) Create(ctx context.Context, transaction *
 		queryCtx,
 		query,
 		userId,
-		time.Now().Add(sessionExp),
+		time.Now().Add(sessionExp).UTC(),
 	).Scan(
 		&sessionId,
 	)

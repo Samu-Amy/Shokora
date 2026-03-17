@@ -80,7 +80,7 @@ func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedTok
 		userId = oldTokenAndSessionData.UserId
 
 		// Validate token and session - Expired (token.ExpiresAt should be <= session.ExpiresAt, but better to check both)
-		if oldTokenAndSessionData.TokenExpiresAt.Before(time.Now()) || oldTokenAndSessionData.SessionExpiresAt.Before(time.Now()) {
+		if oldTokenAndSessionData.TokenExpiresAt.Before(time.Now().UTC()) || oldTokenAndSessionData.SessionExpiresAt.Before(time.Now().UTC()) {
 			service.logger.Warnw("Old refresh token or session expired", "tokenId", oldTokenAndSessionData.Id)
 			return interrors.IErrExpired
 		}
@@ -123,7 +123,7 @@ func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedTok
 		// Validate data for revoked_at
 		newTokenCreatedAt := newRefreshToken.CreatedAt
 		if newTokenCreatedAt.IsZero() {
-			newTokenCreatedAt = time.Now()
+			newTokenCreatedAt = time.Now().UTC()
 		}
 
 		// Revoke (update) old token
@@ -172,7 +172,7 @@ func (service *AuthService) generateRefreshToken(sessionId int64, replaces *int6
 	hashedToken := auth.HashBase64Token(plainToken)
 
 	// ExpiresAt
-	tokenExpiresAt := time.Now().Add(service.config.Token.RefreshTokenExp)
+	tokenExpiresAt := time.Now().Add(service.config.Token.RefreshTokenExp).UTC()
 	if expiresAtOverride != nil {
 		tokenExpiresAt = *expiresAtOverride
 	}
