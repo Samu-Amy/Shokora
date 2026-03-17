@@ -1,12 +1,11 @@
-package rstokens
+package rstoken
 
 import (
 	"context"
-	"time"
 )
 
-type IRSTokenRepository interface {
-	Create(ctx context.Context, token *RSToken, tokenExp time.Duration) error
+type IResetSessionTokenRepository interface {
+	Create(ctx context.Context, token *RSToken) error
 
 	Get(ctx context.Context, hashedToken []byte) (*RSToken, error)
 
