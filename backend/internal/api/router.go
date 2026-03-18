@@ -87,15 +87,16 @@ func (app *App) initRouter() *chi.Mux {
 
 			// Verifications
 			// TODO: aggiungere route per il reset della password (con email nel payload, ottiene userId dall'email, crea verification tokens (con anche userId) ed invia email con i token)
-			r.Post("/verify-email/otp", app.verifyEmailWithOTPHandler) // TODO: spostare verifiche email in Auth-Protected Routes (?)
+			r.Post("/verify-email/otp", app.verifyEmailWithOtpHandler) // TODO: spostare verifiche email in Auth-Protected Routes (?)
 			r.Post("/verify-email/{token}", app.verifyEmailWithMagicLinkHandler)
-			// r.Post("/verify-email/resend", app.resendEmailVerificationHandler) // TODO: fare così?
+			// r.Post("/verify-email/resend", app.resendEmailVerificationHandler) // TODO: fare così (anche per altri)? - fai unico service che invia la mail giusta (?)
 
-			r.Post("/reset-password", app.requestPasswordResetHandler)
-			r.Post("/reset-password/otp", app.resetPasswordWithMagicLinkHandler)
-			r.Post("/reset-password/{token}", app.resetPasswordWithOTPHandler)
+			r.Post("/reset-password/request", app.requestPasswordResetHandler)
+			r.Post("/reset-password/otp", app.verifyPasswordResetWithMagicLinkHandler)
+			r.Post("/reset-password/{token}", app.verifyPasswordResetWithOtpHandler)
+			r.Post("/reset-password", app.resetPasswordHandler)
 
-			r.Post("/verify-2fa/otp", app.verifyTwoFactorAuthWithOTPHandler)
+			r.Post("/verify-2fa/otp", app.verifyTwoFactorAuthWithOtpHandler)
 
 			r.Group(func(r chi.Router) {
 				// TODO: usare (o crearne uno simile) middleware auth per ottenere l'utente (?)

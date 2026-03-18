@@ -20,8 +20,13 @@ type OTPVerificationReq struct {
 	OTP            string    `json:"otp" validate:"required,min=4,max=10"`
 }
 
-type PasswordResetReq struct {
+type RequestPasswordResetReq struct {
 	EmailFieldReq
+}
+
+type ResetPasswordReq struct {
+	PlainResetSessionToken string
+	PasswordFieldReq
 }
 
 // TODO: fare validazione custom (tipo quella sotto)?

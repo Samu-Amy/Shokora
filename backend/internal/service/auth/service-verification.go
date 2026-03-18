@@ -3,10 +3,12 @@ package authservice
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
+	rstoken "github.com/Samu-Amy/Shokora/internal/store/reset-session-tokens"
 )
 
 // ----- VERIFY EMAIL  -----
@@ -35,7 +37,7 @@ func (service *AuthService) VerifyEmailWithMagicLink(ctx context.Context, plainT
 
 		// Delete token
 		if err = service.vTokenRepo.Delete(ctx, tx, magicLinkTokenQueryData.VerificationId); err != nil { // If it fails to delete there are no problems
-			service.logger.Errorw("failed deleting verification token", "error", err)
+			service.logger.Warnw("failed deleting verification token", "error", err)
 		}
 
 		return nil
@@ -67,7 +69,7 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, payload *pay
 
 		// Delete token
 		if err = service.vTokenRepo.Delete(ctx, tx, payload.VerificationId); err != nil { // If it fails to delete there are no problems
-			service.logger.Errorw("failed deleting verification token", "error", err)
+			service.logger.Warnw("failed deleting verification token", "error", err)
 		}
 
 		return nil
@@ -78,44 +80,50 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, payload *pay
 
 // ----- PASSWORD RESET  -----
 
-func (service *AuthService) RequestPasswordReset(ctx context.Context, email string) (string, error) {
+// - Request -
 
-	var plainResetSessionToken string
+func (service *AuthService) RequestPasswordReset(ctx context.Context, email string) error {
 
 	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
 		// Get user from email
-		userId, err := service.userRepo.GetIdByEmail(ctx, tx, email)
+		userData, err := service.userRepo.GetUserVerificationDataByEmail(ctx, tx, email)
 		if err != nil {
+			service.logger.Warnw("Error getting user verifica data", "error", err)
 			return err
 		}
 
-		// TODO: Check user?
-
-		// Generate reset session token
-		plainToken, err := auth.GenerateBase64Token(int(service.config.Auth.Token.ResetSessionTokenByteSize))
-		if err != nil {
-			return err
-		}
-
-		// Hash token and create row in db (with userId)
+		// TODO: Check user (il controllo su active dovrebbe essere fatto dopo, il resto non dovrebbe servire)?
 
 		// Create verification tokens
+		verificationTokens, err := service.createVerificationTokensWithRetries(ctx, userData.Id, auth.PasswordReset)
+		if err != nil {
+			return err
+		}
 
-		// Send email with verification tokens
+		// Send email
+		err = service.sendVerificationEmail(
+			ctx,
+			auth.PasswordReset,
+			userData.FirstName,
+			email,
+			verificationTokens.PlainMagicLinkToken,
+			verificationTokens.PlainOTP,
+		)
+		if err != nil {
+			service.logger.Warnw("Error sending password reset email", "error", err)
+			return err
+		}
 
 		return nil
 	})
 
-	if err != nil {
-		return "", domerrors.ParseIntError(err)
-	}
-
-	// Return plain reset session token
-	return plainResetSessionToken, nil
+	return domerrors.ParseIntError(err)
 }
 
-func (service *AuthService) ResetPasswordWithMagicLink(ctx context.Context, plainToken string) (string, error) {
+// - Verification -
+
+func (service *AuthService) VerifyPasswordResetWithMagicLink(ctx context.Context, plainToken string) (string, error) {
 
 	var resetSessionToken string
 
@@ -131,13 +139,28 @@ func (service *AuthService) ResetPasswordWithMagicLink(ctx context.Context, plai
 			return err
 		}
 
-		// TODO: crea reset session token (token univoco di 32 Bytes come il magic link) - imposta scadenza (10min) in app e tokenAuthenticator (?)
+		// Generate reset session token
+		plainResetSessionToken, err := auth.GenerateBase64Token(service.config.Auth.Token.ResetSessionTokenByteSize)
+		if err != nil {
+			return err
+		}
 
-		// TODO: usa userId da magicLinkTokenQueryData per la creazione del reset session token
+		// Hash token and create token struct
+		rsToken := rstoken.RSToken{
+			UserId:    magicLinkTokenQueryData.UserId,
+			TokenHash: auth.HashBase64Token(plainResetSessionToken),
+			ExpiresAt: time.Now().Add(service.config.Token.ResetSessionTokenExp).UTC(),
+		}
+
+		// Create token in db
+		err = service.rsTokenRepo.Create(ctx, tx, &rsToken)
+		if err != nil {
+			return err
+		}
 
 		// Delete token
 		if err = service.vTokenRepo.Delete(ctx, tx, magicLinkTokenQueryData.VerificationId); err != nil { // If it fails to delete there are no problems
-			service.logger.Errorw("failed deleting verification token", "error", err)
+			service.logger.Warnw("failed deleting verification token", "error", err)
 		}
 
 		return nil
@@ -150,7 +173,7 @@ func (service *AuthService) ResetPasswordWithMagicLink(ctx context.Context, plai
 	return resetSessionToken, nil
 }
 
-func (service *AuthService) ResetPasswordWithOTP(ctx context.Context, payload *payloads.OTPVerificationReq) (string, error) {
+func (service *AuthService) VerifyPasswordResetWithOTP(ctx context.Context, payload *payloads.OTPVerificationReq) (string, error) {
 
 	var resetSessionToken string
 
@@ -172,7 +195,7 @@ func (service *AuthService) ResetPasswordWithOTP(ctx context.Context, payload *p
 
 		// Delete token
 		if err = service.vTokenRepo.Delete(ctx, tx, payload.VerificationId); err != nil { // If it fails to delete there are no problems
-			service.logger.Errorw("failed deleting verification token", "error", err)
+			service.logger.Warnw("failed deleting verification token", "error", err)
 		}
 
 		return nil
@@ -183,6 +206,23 @@ func (service *AuthService) ResetPasswordWithOTP(ctx context.Context, payload *p
 	}
 
 	return resetSessionToken, nil
+}
+
+// - Reset -
+func (service *AuthService) ResetPassword(ctx context.Context, payload *payloads.ResetPasswordReq) error {
+
+	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
+
+		// Verify token
+
+		// Update password
+
+		// Delete token
+
+		return nil
+	})
+
+	return nil
 }
 
 // ----- TWO FACTOR AUTH  -----
@@ -215,7 +255,7 @@ func (service *AuthService) TwoFactorAuthWithOTP(ctx context.Context, payload *p
 
 		// Delete token
 		if err = service.vTokenRepo.Delete(ctx, tx, payload.VerificationId); err != nil { // If it fails to delete there are no problems
-			service.logger.Errorw("failed deleting verification token", "error", err)
+			service.logger.Warnw("failed deleting verification token", "error", err)
 		}
 
 		return nil

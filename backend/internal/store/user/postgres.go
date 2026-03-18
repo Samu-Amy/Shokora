@@ -136,9 +136,9 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 	return &user, nil
 }
 
-func (store *PostgresUserStore) GetIdByEmail(ctx context.Context, transaction *sql.Tx, email string) (int64, error) {
+func (store *PostgresUserStore) GetUserVerificationDataByEmail(ctx context.Context, transaction *sql.Tx, email string) (*UserVerificationData, error) {
 	query := `
-		SELECT id
+		SELECT id, first_name
 		FROM users
 		WHERE email = $1
 		FOR UPDATE
@@ -147,21 +147,22 @@ func (store *PostgresUserStore) GetIdByEmail(ctx context.Context, transaction *s
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
-	var userId int64
+	var userData UserVerificationData
 
 	err := transaction.QueryRowContext(
 		queryCtx,
 		query,
 		email,
 	).Scan(
-		&userId,
+		&userData.Id,
+		&userData.FirstName,
 	)
 
 	if err != nil {
-		return 0, database.ParseDbError(err)
+		return nil, database.ParseDbError(err)
 	}
 
-	return userId, nil
+	return &userData, nil
 }
 
 // ----- UPDATE -----

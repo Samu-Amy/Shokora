@@ -2,7 +2,6 @@ package authservice
 
 import (
 	"context"
-	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
@@ -28,7 +27,7 @@ verificationType: enum in auth package (TokenEmailVerification, TokenPasswordRes
 
 return: error (from SendEmail method in mailer Client)
 */
-func (service *AuthService) sendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, userName, email string, plainMagicLinkToken string, plainOTP string, magicLinkTokenExp, otpExp time.Duration) error {
+func (service *AuthService) sendVerificationEmail(ctx context.Context, verificationType auth.VerificationType, userName, email string, plainMagicLinkToken string, plainOTP string) error {
 
 	isSandbox := service.config.Mail.IsSandboxEnv
 

@@ -69,8 +69,6 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		user.Email,
 		verificationTokens.PlainMagicLinkToken,
 		verificationTokens.PlainOTP,
-		verificationTokens.MagicLinkTokenExp,
-		verificationTokens.OTPExp,
 	)
 	if err != nil {
 		service.logger.Warnw("Error sending verification email", "error", err)
@@ -165,8 +163,6 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 				user.Email,
 				verificationTokens.PlainMagicLinkToken,
 				verificationTokens.PlainOTP,
-				verificationTokens.MagicLinkTokenExp,
-				verificationTokens.OTPExp,
 			)
 			if err != nil {
 				service.logger.Warnw("Error sending verification email", "error", err)

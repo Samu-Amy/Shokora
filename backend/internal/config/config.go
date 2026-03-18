@@ -53,10 +53,10 @@ type TokensConfig struct {
 	Secret                    string
 	Audience                  string
 	Issuer                    string
-	ResetSessionTokenByteSize uint8
+	ResetSessionTokenByteSize int
 	ResetSessionTokenExp      time.Duration
 	AccessTokenExp            time.Duration
-	RefreshTokenByteSize      uint8
+	RefreshTokenByteSize      int
 	RefreshTokenExp           time.Duration
 	SessionExp                time.Duration // How long the refresh tokens expiration can be extended for
 }

@@ -30,6 +30,9 @@ func NewResendMailer(apiKey, fromEmail string) *ResendMailer {
 	}
 }
 
+/*
+Send email with retries
+*/
 func (mailer *ResendMailer) SendVerificationEmail(ctx context.Context, templateFile TemplateFile, verificationType auth.VerificationType, name, email string, data any, isSandbox bool) error {
 
 	if isSandbox {
