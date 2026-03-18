@@ -33,13 +33,13 @@ func (service *AuthService) verifyOtp(ctx context.Context, tx *sql.Tx, verificat
 
 	// Verify attempts
 	if otpQueryData.Attempts >= maxAttempts {
-		// service.logger.Warn("Max attempts for otp")
+		service.logger.Warn("Max attempts for otp")
 		return 0, interrors.IErrMaxRetriesExceeded
 	}
 
 	// Verify expiry
-	if otpQueryData.ExpiresAt.Before(time.Now().UTC()) { // TODO: usare UTC in tutti i check (almeno quelli con i dati da postgres)?
-		// service.logger.Warn("Expired otp")
+	if otpQueryData.ExpiresAt.Before(time.Now().UTC()) {
+		service.logger.Warn("Expired otp")
 		return 0, interrors.IErrExpired
 	}
 
@@ -49,9 +49,9 @@ func (service *AuthService) verifyOtp(ctx context.Context, tx *sql.Tx, verificat
 
 		// Increment attempts and handle errors
 		err = service.vTokenRepo.IncrementOtpAttempts(ctx, tx, verificationId, maxAttempts)
-		// if err != nil {
-		// 	service.logger.Warnw("Error updating otp attempts", "error", err, "verificationId", verificationId)
-		// }
+		if err != nil {
+			service.logger.Warnw("Error updating otp attempts", "error", err, "verificationId", verificationId)
+		}
 
 		// Attempts updated successfully but OTP not valid
 		if errors.Is(err, interrors.IErrNoRowsAffected) { // Max attempts exceeded

@@ -8,6 +8,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
+	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	rstoken "github.com/Samu-Amy/Shokora/internal/store/reset-session-tokens"
 )
 
@@ -189,9 +190,24 @@ func (service *AuthService) VerifyPasswordResetWithOTP(ctx context.Context, payl
 			return err
 		}
 
-		// TODO: crea reset session token (token univoco di 32 Bytes come il magic link) - imposta scadenza (10min) in app e tokenAuthenticator (?)
+		// Generate reset session token
+		plainResetSessionToken, err := auth.GenerateBase64Token(service.config.Auth.Token.ResetSessionTokenByteSize)
+		if err != nil {
+			return err
+		}
 
-		// TODO: usa userId per la creazione del reset session token
+		// Hash token and create token struct
+		rsToken := rstoken.RSToken{
+			UserId:    userId,
+			TokenHash: auth.HashBase64Token(plainResetSessionToken),
+			ExpiresAt: time.Now().Add(service.config.Token.ResetSessionTokenExp).UTC(),
+		}
+
+		// Create token in db
+		err = service.rsTokenRepo.Create(ctx, tx, &rsToken)
+		if err != nil {
+			return err
+		}
 
 		// Delete token
 		if err = service.vTokenRepo.Delete(ctx, tx, payload.VerificationId); err != nil { // If it fails to delete there are no problems
@@ -213,14 +229,43 @@ func (service *AuthService) ResetPassword(ctx context.Context, payload *payloads
 
 	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
-		// Verify token
+		// Hash and get token
+		hashedToken := auth.HashBase64Token(payload.PlainResetSessionToken)
+
+		resetSessionToken, err := service.rsTokenRepo.Get(ctx, tx, hashedToken)
+		if err != nil {
+			return err
+		}
+
+		// Validate token
+		if resetSessionToken.ExpiresAt.Before(time.Now().UTC()) {
+			return interrors.IErrExpired
+		}
+
+		// Hash password
+		hashedPassword, err := service.hashPassword(payload.Password)
+		if err != nil {
+			return err
+		}
 
 		// Update password
+		err = service.userRepo.UpdatePassword(ctx, tx, resetSessionToken.UserId, hashedPassword)
+		if err != nil {
+			return err
+		}
 
 		// Delete token
+		err = service.rsTokenRepo.Delete(ctx, tx, hashedToken)
+		if err != nil {
+			return err
+		}
 
 		return nil
 	})
+
+	if err != nil {
+		return domerrors.ParseIntError(err)
+	}
 
 	return nil
 }

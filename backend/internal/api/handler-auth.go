@@ -22,7 +22,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payloads.RegisterUserReq
+	var payload payloads.RegisterUserReq // TODO: mettere doppia password per controllo (che lo user abbia messo la password che vuole mettendola giusta due volte)?
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
@@ -99,7 +99,6 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: verifica che funzioni correttamente
 func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -277,9 +276,16 @@ func (app *App) resetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := app.service.Auth.ResetPassword(ctx, &payload)
+	// Reset password
+	if err := app.service.Auth.ResetPassword(ctx, &payload); err != nil {
+		app.parseError(w, r, err)
+		return
+	}
 
 	// TODO: loggare l'utente se non loggato (?)
+
+	//* No content
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // ----- TWO FACTOR AUTH -----
@@ -317,6 +323,6 @@ func (app *App) verifyTwoFactorAuthWithOtpHandler(w http.ResponseWriter, r *http
 	// Set cookies
 	app.setAuthCookies(w, *authTokensDto)
 
-	// //* No content
+	//* No content
 	w.WriteHeader(http.StatusNoContent)
 }

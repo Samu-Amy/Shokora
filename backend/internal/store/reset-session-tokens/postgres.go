@@ -42,7 +42,7 @@ func (store *PostgresRSTokenStore) Create(ctx context.Context, transaction *sql.
 
 // ----- GET -----
 
-func (store *PostgresRSTokenStore) Get(ctx context.Context, hashedToken []byte) (*RSToken, error) {
+func (store *PostgresRSTokenStore) Get(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*RSToken, error) {
 	query := `
 		SELECT user_id, expires_at, created_at
 		FROM reset_session_tokens
@@ -54,7 +54,7 @@ func (store *PostgresRSTokenStore) Get(ctx context.Context, hashedToken []byte) 
 
 	var rsToken RSToken
 
-	err := store.db.QueryRowContext(
+	err := transaction.QueryRowContext(
 		queryCtx,
 		query,
 		hashedToken,
@@ -73,11 +73,11 @@ func (store *PostgresRSTokenStore) Get(ctx context.Context, hashedToken []byte) 
 
 // ----- DELETE -----
 
-func (store *PostgresRSTokenStore) Delete(ctx context.Context, hashedToken []byte) error {
+func (store *PostgresRSTokenStore) Delete(ctx context.Context, transaction *sql.Tx, hashedToken []byte) error {
 	query := `DELETE FROM user_sessions WHERE token_hash = $1`
 
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
-	return database.HandleExecContextResult(store.db.ExecContext(queryCtx, query, hashedToken))
+	return database.HandleExecContextResult(transaction.ExecContext(queryCtx, query, hashedToken))
 }

@@ -167,6 +167,19 @@ func (store *PostgresUserStore) GetUserVerificationDataByEmail(ctx context.Conte
 
 // ----- UPDATE -----
 
+func (store *PostgresUserStore) UpdatePassword(ctx context.Context, transaction *sql.Tx, userId int64, hashedPassword []byte) error {
+	query := `
+		UPDATE users
+		SET password = &1
+		WHERE id = $2
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
+	defer cancel()
+
+	return database.HandleExecContextResult(transaction.ExecContext(queryCtx, query, hashedPassword, userId))
+}
+
 func (store *PostgresUserStore) SetIsVerified(ctx context.Context, userId int64) error {
 	query := `
 		UPDATE users
