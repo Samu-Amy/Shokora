@@ -35,6 +35,11 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if payloads.IsCommonPassword(payload.Password) {
+		app.badRequestError(w, r, domerrors.ErrCommonPassword)
+		return
+	}
+
 	// Register user
 	registerUserRes, authTokensDto, err := app.service.Auth.RegisterUser(ctx, payload)
 	if err != nil {

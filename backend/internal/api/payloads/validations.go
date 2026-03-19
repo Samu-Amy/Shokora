@@ -1,39 +1,46 @@
 package payloads
 
-// validate := validator.New(validator.WithRequiredStructEnabled())
-var validate = validator.New()
+// import "github.com/go-playground/validator/v10"
+
+// var Validate *validator.Validate //! andrebbe usato come payloads.Validate (oppure salvato come "Validator" dentro app ed usato come app.Validator)
+
+// func InitValidators() {
+// 	Validate = validator.New(validator.WithRequiredStructEnabled())
+
+// 	Validate.RegisterValidation("password", passwordValidator)
+// }
 
 // - Auth -
 
 // Password
 var commonPasswords = map[string]struct{}{
-    "password": {},
-    "12345678": {},
-    "qwerty":   {},
+	"password": {},
+	"12345678": {},
+	"qwerty":   {},
 }
 
-validate.RegisterValidation("password", func(fl validator.FieldLevel) bool {
-    pwd := fl.Field().String()
+func IsCommonPassword(password string) bool {
+	_, found := commonPasswords[password]
+	return found
+}
 
-	hasLength := len(pwd) >= 12 && len(pwd) <= 72
-	
-	_, isCommon := commonPasswords[pwd]
-	
-    return hasLength && !isCommon
-})
+// func passwordValidator(fl validator.FieldLevel) bool {
+// 	pwd := fl.Field().String()
 
-// hasUpper := regexp.MustCompile(`[A-Z]`).MatchString(pwd)
-// hasLower := regexp.MustCompile(`[a-z]`).MatchString(pwd)
-// hasNumber := regexp.MustCompile(`[0-9]`).MatchString(pwd)
-// hasSpecial := regexp.MustCompile(`[!@#~$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]`).MatchString(pwd)
+// 	hasLength := len(pwd) >= 12 && len(pwd) <= 72
+
+// 	_, isCommon := commonPasswords[pwd]
+
+// 	return hasLength && !isCommon
+// }
 
 // Birthdate
 
 // TODO: fare validazione custom (tipo quella sotto)?
 
 // validate.RegisterValidation("birthdate", func(fl validator.FieldLevel) bool {
-	//     date, ok := fl.Field().Interface().(time.Time)
-	//     if !ok || date.IsZero() {
+//     date, ok := fl.Field().Interface().(time.Time)
+//     if !ok || date.IsZero() {
 //         return true // omitempty
 //     }
 

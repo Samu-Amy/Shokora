@@ -17,11 +17,12 @@ var (
 
 	// Auth
 	ErrDuplicateEmail      = domainErr("duplicate_email")
-	ErrInvalid             = domainErr("invalid")      // Invalid data (form data, tokens)
-	ErrMaxAttemptsExceeded = domainErr("max_attempts") // Too much attempts (otp)
-	ErrUnauthorized        = domainErr("unauthorized") // User does not exists or is not verified
-	ErrForbidden           = domainErr("forbidden")    // User does not have the necessary permissions
-	ErrNotVerified         = domainErr("not_verified") // User must verify email
+	ErrInvalid             = domainErr("invalid")         // Invalid data (form data, tokens)
+	ErrMaxAttemptsExceeded = domainErr("max_attempts")    // Too much attempts (otp)
+	ErrUnauthorized        = domainErr("unauthorized")    // User does not exists or is not verified
+	ErrForbidden           = domainErr("forbidden")       // User does not have the necessary permissions
+	ErrNotVerified         = domainErr("not_verified")    // User must verify email
+	ErrCommonPassword      = domainErr("common_password") // The password is too weak
 )
 
 // CAUTION: does not work with wrapping (fmt.Errorf("...%w...", err))

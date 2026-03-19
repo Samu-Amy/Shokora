@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
+	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
@@ -51,7 +52,7 @@ func (app *App) updatePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payloads.OTPVerificationReq
+	var payload payloads.UpdatePasswordReq
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
@@ -61,6 +62,11 @@ func (app *App) updatePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	// Validate
 	if err := Validate.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
+		return
+	}
+
+	if payloads.IsCommonPassword(payload.NewPassword) {
+		app.badRequestError(w, r, domerrors.ErrCommonPassword)
 		return
 	}
 
