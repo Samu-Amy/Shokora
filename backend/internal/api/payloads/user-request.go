@@ -2,6 +2,8 @@ package payloads
 
 import "time"
 
+// - Basics -
+
 type UserDataReq struct {
 	FirstName string    `json:"first_name" validate:"required,max=125"`
 	LastName  string    `json:"last_name" validate:"omitempty,max=125"`       // TODO: opzionale (?)
@@ -14,5 +16,12 @@ type EmailFieldReq struct {
 }
 
 type PasswordFieldReq struct {
-	Password string `json:"password" validate:"required,min=8,max=72"` // TODO: aggiungere altri controlli?
+	Password string `json:"password" validate:"required,min=8,max=72,notcommon"` // TODO: aggiungere altri controlli?
+}
+
+// - Others -
+
+type UpdatePasswordReq struct {
+	OldPassword string `json:"password" validate:"required,min=8,max=72"` // TODO: mettere controllo password diverse
+	NewPassword string `json:"password" validate:"required,min=8,max=72"`
 }

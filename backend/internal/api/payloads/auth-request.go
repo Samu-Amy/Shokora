@@ -28,23 +28,3 @@ type ResetPasswordReq struct {
 	PlainResetSessionToken string
 	PasswordFieldReq
 }
-
-// TODO: fare validazione custom (tipo quella sotto)?
-
-// validate := validator.New()
-
-// validate.RegisterValidation("birthdate", func(fl validator.FieldLevel) bool {
-//     date, ok := fl.Field().Interface().(time.Time)
-//     if !ok || date.IsZero() {
-//         return true // omitempty
-//     }
-
-//     // Non può essere nel futuro
-//     if date.After(time.Now().UTC()) {
-//         return false
-//     }
-
-//     // Età minima 13 anni (esempio)
-//     minAge := time.Now().AddDate(-13, 0, 0).UTC()
-//     return date.Before(minAge)
-// })

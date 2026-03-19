@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
@@ -44,6 +45,37 @@ func (app *App) updateUserDataHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: modificabile solo per chi non la ha (non messa in registrazione o registrato con OAuth e per qualche motivo manca))
 
 	log.Print("\n\nUpdate User...\n\n")
+}
+
+func (app *App) updatePasswordHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Get payload data
+	var payload payloads.OTPVerificationReq
+
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Validate
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Verify
+	plainResetSessionToken, err := app.service.Auth.VerifyPasswordResetWithOTP(ctx, &payload)
+	if err != nil {
+		app.parseError(w, r, err)
+		return
+	}
+
+	//* Return reset session token
+	if err := app.jsonResponse(w, http.StatusCreated, plainResetSessionToken); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 }
 
 // ----- UTILS -----

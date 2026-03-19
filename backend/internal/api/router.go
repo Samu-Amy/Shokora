@@ -94,7 +94,7 @@ func (app *App) initRouter() *chi.Mux {
 			r.Post("/reset-password/request", app.requestPasswordResetHandler)
 			r.Post("/reset-password/otp", app.verifyPasswordResetWithMagicLinkHandler)
 			r.Post("/reset-password/{token}", app.verifyPasswordResetWithOtpHandler)
-			r.Post("/reset-password", app.resetPasswordHandler)
+			r.Patch("/reset-password", app.resetPasswordHandler)
 
 			r.Post("/verify-2fa/otp", app.verifyTwoFactorAuthWithOtpHandler)
 
@@ -119,8 +119,10 @@ func (app *App) initRouter() *chi.Mux {
 
 			// - Basic User Routes -
 
+			r.Patch("/update-password", app.updatePasswordHandler)
+
 			// User Data
-			r.Route("/user", func(r chi.Router) {
+			r.Route("/user", func(r chi.Router) { // TODO: cambia nome route (?)
 				// r.Use(app.userDataOwnershipMiddleware) // User Data Ownerhip Middleware
 
 				// TODO: aggiungi metodo per ottenere user (direttamente dal middleware, non dal db) (con middleware -> solo se è lo stesso di quello autenticato (cioè ottiene il suo profilo))

@@ -201,9 +201,6 @@ func (app *App) requestPasswordResetHandler(w http.ResponseWriter, r *http.Reque
 // - Verification -
 
 func (app *App) verifyPasswordResetWithMagicLinkHandler(w http.ResponseWriter, r *http.Request) {
-
-	// TODO: versione logged (usa user Id e magari richiede la password "vecchia") e versione non logged (la quale richiede l'email per poter verificare l'otp (in questo caso legato a email invece che user Id))
-
 	ctx := r.Context()
 
 	// Get "token" param
@@ -224,9 +221,6 @@ func (app *App) verifyPasswordResetWithMagicLinkHandler(w http.ResponseWriter, r
 }
 
 func (app *App) verifyPasswordResetWithOtpHandler(w http.ResponseWriter, r *http.Request) {
-
-	// TODO: versione logged (usa user Id e magari richiede la password "vecchia") e versione non logged (la quale richiede l'email per poter verificare l'otp (in questo caso legato a email invece che user Id))
-
 	ctx := r.Context()
 
 	// Get payload data
@@ -282,7 +276,7 @@ func (app *App) resetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: loggare l'utente se non loggato (?)
+	// TODO: loggare l'utente (?)
 
 	//* No content
 	w.WriteHeader(http.StatusNoContent)
