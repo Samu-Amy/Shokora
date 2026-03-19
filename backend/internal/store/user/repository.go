@@ -12,7 +12,10 @@ type IUserRepository interface {
 
 	GetById(ctx context.Context, userId int64) (*User, error)
 	GetByEmail(ctx context.Context, email string) (*User, error)
+
 	GetUserVerificationDataByEmail(ctx context.Context, transaction *sql.Tx, email string) (*UserVerificationData, error)
+
+	GetPassword(ctx context.Context, transaction *sql.Tx, userId int64) ([]byte, error)
 
 	UpdatePassword(ctx context.Context, transaction *sql.Tx, userId int64, hashedPassword []byte) error
 

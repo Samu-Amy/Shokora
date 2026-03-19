@@ -23,17 +23,9 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// - Validation -
-
-	// Basic validation
+	// Validate
 	if err := Validate.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
-		return
-	}
-
-	// Password must not be common
-	if payloads.IsCommonPassword(payload.Password) {
-		app.badRequestError(w, r, domerrors.ErrCommonPassword)
 		return
 	}
 

@@ -165,12 +165,40 @@ func (store *PostgresUserStore) GetUserVerificationDataByEmail(ctx context.Conte
 	return &userData, nil
 }
 
+func (store *PostgresUserStore) GetPassword(ctx context.Context, transaction *sql.Tx, userId int64) ([]byte, error) {
+	query := `
+		SELECT password
+		FROM users
+		WHERE id = $1
+		FOR UPDATE
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
+	defer cancel()
+
+	var hashedPassword []byte
+
+	err := transaction.QueryRowContext(
+		queryCtx,
+		query,
+		userId,
+	).Scan(
+		&hashedPassword,
+	)
+
+	if err != nil {
+		return nil, database.ParseDbError(err)
+	}
+
+	return hashedPassword, nil
+}
+
 // ----- UPDATE -----
 
 func (store *PostgresUserStore) UpdatePassword(ctx context.Context, transaction *sql.Tx, userId int64, hashedPassword []byte) error {
 	query := `
 		UPDATE users
-		SET password = &1
+		SET password = $1
 		WHERE id = $2
 	`
 

@@ -103,33 +103,40 @@ func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error
 // TODO: aggiorna con tutti i domerrors (e ricontrolla assegnazioni)
 func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
+
+	// - Internal -
 	case !domerrors.IsDomainErr(err):
 		app.internalServerError(w, r, err)
 
+	case errors.Is(err, domerrors.ErrMaxRetriesExceeded): // Better to handle this case by case
+		app.internalServerError(w, r, err)
+
+	// - Timeout -
 	case errors.Is(err, context.DeadlineExceeded):
 		app.requestTimeoutError(w, r, err)
 
+	// - Not Found -
 	case errors.Is(err, domerrors.ErrNotFound):
 		app.notFoundError(w, r, err)
 
+	// - Conflict -
 	case errors.Is(err, domerrors.ErrConflict):
 		app.conflictError(w, r, err)
+
+	// - Bad Request -
+	case errors.Is(err, domerrors.ErrSamePassword), errors.Is(err, domerrors.ErrCommonPassword):
+		app.badRequestError(w, r, err)
 
 	case errors.Is(err, domerrors.ErrDuplicateEmail), errors.Is(err, domerrors.ErrInvalid):
 		app.badRequestError(w, r, err)
 
+	// - Unauthorized -
 	case errors.Is(err, domerrors.ErrUnauthorized), errors.Is(err, domerrors.ErrNotVerified):
 		app.unauthorizedError(w, r, err)
 
+	// - Forbidden -
 	case errors.Is(err, domerrors.ErrMaxAttemptsExceeded):
 		app.forbiddenError(w, r, err)
-
-	case errors.Is(err, domerrors.ErrCommonPassword), errors.Is(err, domerrors.ErrSamePassword):
-		app.badRequestError(w, r, err)
-
-	// Better to handle these case by case
-	case errors.Is(err, domerrors.ErrMaxRetriesExceeded):
-		app.internalServerError(w, r, err)
 
 	default:
 		app.internalServerError(w, r, err)

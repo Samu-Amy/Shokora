@@ -27,6 +27,11 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	// ----- USER -----
 
+	// Validate password
+	if payloads.IsCommonPassword(payload.Password) {
+		return nil, nil, domerrors.ErrCommonPassword
+	}
+
 	// Hash password
 	hashedPassword, err := service.hashPassword(payload.Password)
 	if err != nil {

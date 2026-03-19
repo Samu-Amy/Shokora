@@ -66,28 +66,25 @@ func (app *App) updatePasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// - Validation -
-
-	// Basic validation
+	// Validate
 	if err := Validate.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}
 
-	// Passwords must be different
-	if payload.NewPassword == payload.OldPassword {
-		app.badRequestError(w, r, domerrors.ErrSamePassword)
-		return
-	}
+	// Get sessionId from context (auth middleware)
+	var sessionId int64
 
-	// Password must not be common
-	if payloads.IsCommonPassword(payload.NewPassword) {
-		app.badRequestError(w, r, domerrors.ErrCommonPassword)
-		return
+	if payload.InvalidateOtherSessions {
+		sessionId, ok = r.Context().Value(sessionIdCtx).(int64)
+		if !ok {
+			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
+			return
+		}
 	}
 
 	// Update password
-	if err := app.service.Auth.UpdatePassword(ctx, user.Id, &payload); err != nil {
+	if err := app.service.Auth.UpdatePassword(ctx, user.Id, sessionId, &payload); err != nil {
 		app.parseError(w, r, err)
 		return
 	}

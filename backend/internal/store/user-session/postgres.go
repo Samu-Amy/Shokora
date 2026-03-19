@@ -44,6 +44,8 @@ func (store *PostgresUserSessionStore) Create(ctx context.Context, transaction *
 
 // ----- DELETE -----
 
+// - Delete a session by its id -
+
 func (store *PostgresUserSessionStore) Delete(ctx context.Context, sessionId int64) error {
 	query := `DELETE FROM user_sessions WHERE id = $1`
 
@@ -52,6 +54,8 @@ func (store *PostgresUserSessionStore) Delete(ctx context.Context, sessionId int
 
 	return database.HandleExecContextResult(store.db.ExecContext(queryCtx, query, sessionId))
 }
+
+// - Delete expired session -
 
 func (store *PostgresUserSessionStore) DeleteExpired(ctx context.Context, userId int64) error {
 	query := `
@@ -63,4 +67,18 @@ func (store *PostgresUserSessionStore) DeleteExpired(ctx context.Context, userId
 	defer cancel()
 
 	return database.HandleExecContextResult(store.db.ExecContext(queryCtx, query, userId))
+}
+
+// - Delete all sessions for one user by the userId -
+
+func (store *PostgresUserSessionStore) DeleteOtherUserSessions(ctx context.Context, transaction *sql.Tx, userId, sessionId int64) error {
+	query := `
+		DELETE FROM user_sessions
+		WHERE user_id = $1 AND id != $2
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
+	defer cancel()
+
+	return database.HandleExecContextResult(transaction.ExecContext(queryCtx, query, userId, sessionId))
 }

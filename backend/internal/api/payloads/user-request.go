@@ -22,6 +22,7 @@ type PasswordFieldReq struct {
 // - Others -
 
 type UpdatePasswordReq struct {
-	OldPassword string `json:"old_password" validate:"required,min=12,max=72"`
-	NewPassword string `json:"new_password" validate:"required,min=12,max=72"`
+	OldPassword             string `json:"old_password" validate:"required,min=12,max=72"`
+	NewPassword             string `json:"new_password" validate:"required,min=12,max=72"`
+	InvalidateOtherSessions bool
 }
