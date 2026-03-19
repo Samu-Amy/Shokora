@@ -229,9 +229,10 @@ func (service *AuthService) ResetPassword(ctx context.Context, payload *payloads
 
 	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
-		// Hash and get token
+		// Hash token
 		hashedToken := auth.HashBase64Token(payload.PlainResetSessionToken)
 
+		// Get token data from db
 		resetSessionToken, err := service.rsTokenRepo.Get(ctx, tx, hashedToken)
 		if err != nil {
 			return err

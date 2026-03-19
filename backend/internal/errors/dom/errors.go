@@ -23,6 +23,7 @@ var (
 	ErrForbidden           = domainErr("forbidden")       // User does not have the necessary permissions
 	ErrNotVerified         = domainErr("not_verified")    // User must verify email
 	ErrCommonPassword      = domainErr("common_password") // The password is too weak
+	ErrSamePassword        = domainErr("same_password")   // The new password is equal to the old one
 )
 
 // CAUTION: does not work with wrapping (fmt.Errorf("...%w...", err))

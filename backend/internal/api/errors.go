@@ -116,7 +116,6 @@ func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 		app.conflictError(w, r, err)
 
 	case errors.Is(err, domerrors.ErrDuplicateEmail), errors.Is(err, domerrors.ErrInvalid):
-		// , errors.Is(err, domerrors.InternalErrExpired):
 		app.badRequestError(w, r, err)
 
 	case errors.Is(err, domerrors.ErrUnauthorized), errors.Is(err, domerrors.ErrNotVerified):
@@ -124,6 +123,9 @@ func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 
 	case errors.Is(err, domerrors.ErrMaxAttemptsExceeded):
 		app.forbiddenError(w, r, err)
+
+	case errors.Is(err, domerrors.ErrCommonPassword), errors.Is(err, domerrors.ErrSamePassword):
+		app.badRequestError(w, r, err)
 
 	// Better to handle these case by case
 	case errors.Is(err, domerrors.ErrMaxRetriesExceeded):

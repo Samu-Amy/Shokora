@@ -112,8 +112,10 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 
 // - Authorization - User Verified -
 
-// Verify that the user's email is verified.
-// Must be called after the authMiddleware
+/*
+Verify that the user's email is verified.
+Must be called after the authMiddleware
+*/
 func (app *App) userVerifiedMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -136,8 +138,10 @@ func (app *App) userVerifiedMiddleware(next http.Handler) http.Handler {
 
 // - Authorization - Roles -
 
-// Verify that the user's role is >= requiredRole.
-// Must be called after the authMiddleware
+/*
+Verify that the user's role is >= requiredRole.
+Must be called after the authMiddleware
+*/
 func (app *App) roleMiddleware(requiredRole user_repo.Role) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -168,8 +172,10 @@ func (app *App) roleMiddleware(requiredRole user_repo.Role) func(http.Handler) h
 
 // - Authorization - Permissions -
 
-// Verify that the user's role is > requiredRole or it is == to requiredRole but with requiredPermissions.
-// Must be called after the authMiddleware
+/*
+Verify that the user's role is > requiredRole or it is == to requiredRole but with required permission.
+Must be called after the authMiddleware
+*/
 func (app *App) permissionMiddleware(requiredRole user_repo.Role, requiredPermission user_repo.Permission) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

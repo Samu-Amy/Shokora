@@ -8,16 +8,10 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// ----- REGISTER -----
-
 // TODO: l'accesso con google (fai handler apposta) sostituisce solo la parte di autenticazione (login e register (in questo caso fornisce già la verifica della mail, settata a true)), poi la gestione di accesso e sessione è gestita dal mio sistema (?)
 
-/*
-Registers the user:
-  - creates user account in db
-  - handles email verification (creating tokens and sending email)
-  - handles auth (creating tokens and setting cookies)
-*/
+// ----- REGISTER -----
+
 func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -29,12 +23,15 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate
+	// - Validation -
+
+	// Basic validation
 	if err := Validate.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}
 
+	// Password must not be common
 	if payloads.IsCommonPassword(payload.Password) {
 		app.badRequestError(w, r, domerrors.ErrCommonPassword)
 		return
@@ -66,7 +63,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ----- LOGIN/LOGOUT -----
+// ----- LOGIN -----
 
 func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -104,6 +101,8 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ----- LOGOUT -----
+
 func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -124,6 +123,7 @@ func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Delete cookies
 	app.clearAuthCookies(w)
 
+	//* No content
 	w.WriteHeader(http.StatusNoContent)
 }
 

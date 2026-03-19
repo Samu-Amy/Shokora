@@ -16,12 +16,12 @@ type EmailFieldReq struct {
 }
 
 type PasswordFieldReq struct {
-	Password string `json:"password" validate:"required,min=12,max=72"` // TODO: aggiungere altri controlli?
+	Password string `json:"password" validate:"required,min=12,max=72"`
 }
 
 // - Others -
 
 type UpdatePasswordReq struct {
-	OldPassword string `json:"old_password" validate:"required,min=12,max=72"` // TODO: mettere controllo password diverse
+	OldPassword string `json:"old_password" validate:"required,min=12,max=72"`
 	NewPassword string `json:"new_password" validate:"required,min=12,max=72"`
 }

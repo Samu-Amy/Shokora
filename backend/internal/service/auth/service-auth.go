@@ -115,7 +115,7 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 	// ----- USER -----
 
 	// Get user
-	user, err := service.getUser(ctx, payload.Email, []byte(payload.Password)) // TODO: aggiungi controllo compleanno (per non farlo lato frontend) e two factor auth check (magari join con settings table?)
+	user, err := service.getUser(ctx, payload.Email, payload.Password) // TODO: aggiungi controllo compleanno (per non farlo lato frontend) e two factor auth check (magari join con settings table?)
 	if err != nil {
 
 		if errors.Is(err, interrors.IErrNotVerified) {

@@ -10,6 +10,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// - Create -
+
 // Create user and related tables (e.g. settings, stats, achievements, copons)
 func (service *AuthService) createUser(ctx context.Context, user *user.User) error {
 	return service.txManager.WithTx(ctx, func(tx *sql.Tx) error { // TODO: usare transaction oppure creare solo user e creare le righe nelle altre tabelle a parte (e se falliscono si creano quando vengono usate (però non si possono ottenere))
@@ -33,7 +35,9 @@ func (service *AuthService) createUser(ctx context.Context, user *user.User) err
 
 }
 
-func (service *AuthService) getUser(ctx context.Context, email string, plainPasswordBytes []byte) (*user.User, error) {
+// - Get -
+
+func (service *AuthService) getUser(ctx context.Context, email string, plainPassword string) (*user.User, error) {
 
 	// Get user from db
 	user, err := service.userRepo.GetByEmail(ctx, email)
@@ -47,7 +51,7 @@ func (service *AuthService) getUser(ctx context.Context, email string, plainPass
 	}
 
 	// Check password
-	if err = bcrypt.CompareHashAndPassword(user.PasswordHash, plainPasswordBytes); err != nil {
+	if err = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(plainPassword)); err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) { // TODO: aggiungere numero massimo di tentativi (?)
 			return nil, interrors.IErrInvalid
 		}
