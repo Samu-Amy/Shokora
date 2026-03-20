@@ -81,47 +81,6 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, payload *pay
 
 // ----- PASSWORD RESET  -----
 
-// - Request -
-
-func (service *AuthService) RequestPasswordReset(ctx context.Context, email string) error {
-
-	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
-
-		// Get user from email
-		userData, err := service.userRepo.GetUserVerificationDataByEmail(ctx, tx, email)
-		if err != nil {
-			service.logger.Warnw("Error getting user verifica data", "error", err)
-			return err
-		}
-
-		// TODO: Check user (il controllo su active dovrebbe essere fatto dopo, il resto non dovrebbe servire)?
-
-		// Create verification tokens
-		verificationTokens, err := service.createVerificationTokensWithRetries(ctx, userData.Id, auth.PasswordReset)
-		if err != nil {
-			return err
-		}
-
-		// Send email
-		err = service.sendVerificationEmail(
-			ctx,
-			auth.PasswordReset,
-			userData.FirstName,
-			email,
-			verificationTokens.PlainMagicLinkToken,
-			verificationTokens.PlainOTP,
-		)
-		if err != nil {
-			service.logger.Warnw("Error sending password reset email", "error", err)
-			return err
-		}
-
-		return nil
-	})
-
-	return domerrors.ParseIntError(err)
-}
-
 // - Verification -
 
 func (service *AuthService) VerifyPasswordResetWithMagicLink(ctx context.Context, plainToken string) (string, error) {
@@ -312,4 +271,43 @@ func (service *AuthService) TwoFactorAuthWithOTP(ctx context.Context, payload *p
 	}
 
 	return authTokensDto, nil
+}
+
+// ----- RESEND VERIFICATION -----
+
+func (service *AuthService) SendVerification(ctx context.Context, verificationType auth.VerificationType, email string) error {
+
+	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
+
+		// Get user from email
+		userData, err := service.userRepo.GetUserVerificationDataByEmail(ctx, tx, email)
+		if err != nil {
+			service.logger.Warnw("Error getting user verifica data in send verification", "verificationType", verificationType, "error", err)
+			return err
+		}
+
+		// Create verification tokens
+		verificationTokens, err := service.createVerificationTokensWithRetries(ctx, userData.Id, verificationType)
+		if err != nil {
+			return err
+		}
+
+		// Send email
+		err = service.sendVerificationEmail(
+			ctx,
+			verificationType,
+			userData.FirstName,
+			email,
+			verificationTokens.PlainMagicLinkToken,
+			verificationTokens.PlainOTP,
+		)
+		if err != nil {
+			service.logger.Warnw("Error sending verification email", "verificationType", verificationType, "error", err)
+			return err
+		}
+
+		return nil
+	})
+
+	return domerrors.ParseIntError(err)
 }

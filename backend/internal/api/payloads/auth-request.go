@@ -20,7 +20,7 @@ type OTPVerificationReq struct {
 	OTP            string    `json:"otp" validate:"required,min=4,max=10"`
 }
 
-type RequestPasswordResetReq struct {
+type SendVerificationReq struct {
 	EmailFieldReq
 }
 

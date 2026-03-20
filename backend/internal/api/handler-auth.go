@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
+	"github.com/Samu-Amy/Shokora/internal/auth"
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 	"github.com/go-chi/chi/v5"
 )
@@ -166,35 +167,6 @@ func (app *App) verifyEmailWithOtpHandler(w http.ResponseWriter, r *http.Request
 
 // ----- PASSWORD RESET -----
 
-// - Request -
-
-func (app *App) requestPasswordResetHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	// Get payload data
-	var payload payloads.RequestPasswordResetReq
-
-	if err := readJSON(w, r, &payload); err != nil {
-		app.badRequestError(w, r, err)
-		return
-	}
-
-	// Validate
-	if err := Validate.Struct(payload); err != nil {
-		app.badRequestError(w, r, err)
-		return
-	}
-
-	// Request pasword reset
-	if err := app.service.Auth.RequestPasswordReset(ctx, payload.Email); err != nil {
-		app.parseError(w, r, err)
-		return
-	}
-
-	//* No content
-	w.WriteHeader(http.StatusNoContent)
-}
-
 // - Verification -
 
 func (app *App) verifyPasswordResetWithMagicLinkHandler(w http.ResponseWriter, r *http.Request) {
@@ -313,6 +285,98 @@ func (app *App) verifyTwoFactorAuthWithOtpHandler(w http.ResponseWriter, r *http
 
 	// Set cookies
 	app.setAuthCookies(w, *authTokensDto)
+
+	//* No content
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// ------ RESEND VERIFICATION -----
+
+// - Email verification -
+
+func (app *App) resendEmailVerificationHandler(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	// Get payload data
+	var payload payloads.SendVerificationReq
+
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Validate
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Request pasword reset
+	if err := app.service.Auth.SendVerification(ctx, auth.EmailVerification, payload.Email); err != nil {
+		app.parseError(w, r, err)
+		return
+	}
+
+	//* No content
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// - Password Reset -
+
+func (app *App) sendPasswordResetHandler(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	// Get payload data
+	var payload payloads.SendVerificationReq
+
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Validate
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Request pasword reset
+	if err := app.service.Auth.SendVerification(ctx, auth.PasswordReset, payload.Email); err != nil {
+		app.parseError(w, r, err)
+		return
+	}
+
+	//* No content
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// - Two Factor Authentication -
+
+func (app *App) resendTwoFactorAuthHandler(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	// Get payload data
+	var payload payloads.SendVerificationReq
+
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Validate
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Request pasword reset
+	if err := app.service.Auth.SendVerification(ctx, auth.TwoFactorAuth, payload.Email); err != nil {
+		app.parseError(w, r, err)
+		return
+	}
 
 	//* No content
 	w.WriteHeader(http.StatusNoContent)
