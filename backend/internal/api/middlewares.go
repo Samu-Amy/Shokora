@@ -47,15 +47,15 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 		plainRefreshToken := refreshCookie.Value
 
 		// Check Tokens
-		authTokensCheckDto, err := app.service.Auth.HandleAuthTokensCheck(ctx, accessToken, plainRefreshToken)
+		authTokensCheckDto, isAccessTokenValid, err := app.service.Auth.HandleAuthTokensCheck(ctx, accessToken, plainRefreshToken)
 		if err != nil {
 			app.unauthorizedError(w, r, err)
 			return
 		}
 
 		// Set cookies (if tokens are updated)
-		if !authTokensCheckDto.IsAccessTokenValid {
-			app.setAuthCookies(w, authTokensCheckDto.TokensDto)
+		if !isAccessTokenValid {
+			app.setAuthCookies(w, authTokensCheckDto.AuthTokensDto)
 		}
 
 		// Get user
@@ -73,9 +73,9 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 
 		//* Save user and sessionId in context
 		ctxWithUser := context.WithValue(ctx, userCtx, user)
-		ctxWithSessionData := context.WithValue(ctxWithUser, sessionIdCtx, authTokensCheckDto.SessionId)
+		ctxWithSessionId := context.WithValue(ctxWithUser, sessionIdCtx, authTokensCheckDto.SessionId)
 
-		next.ServeHTTP(w, r.WithContext(ctxWithSessionData))
+		next.ServeHTTP(w, r.WithContext(ctxWithSessionId))
 	})
 }
 

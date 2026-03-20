@@ -17,16 +17,16 @@ import (
 /*
 Create a new session and refresh token, return AuthTokensDto, sessionId and error
 */
-func (service *AuthService) createNewSessionAndRefreshToken(ctx context.Context, userId int64) (*payloads.AuthTokensDto, int64, error) {
+func (service *AuthService) createNewSessionAndRefreshToken(ctx context.Context, userId int64) (*payloads.AuthTokensCheckDto, error) {
 
-	var createRefreshTokenDto = &payloads.AuthTokensDto{}
-	var sessionId int64
-	var err error // Used to avoid shadowing sessionId with ":="
+	var authTokensCheckDto = &payloads.AuthTokensCheckDto{
+		UserId: userId,
+	}
 
-	err = service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
+	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
 		// Create session
-		sessionId, err = service.userSessionRepo.Create(ctx, tx, userId, service.config.Token.SessionExp)
+		sessionId, err := service.userSessionRepo.Create(ctx, tx, userId, service.config.Token.SessionExp)
 		if err != nil {
 			service.logger.Warnw("Error creating session in db", "error", err)
 			return err
@@ -38,18 +38,19 @@ func (service *AuthService) createNewSessionAndRefreshToken(ctx context.Context,
 			return err
 		}
 
-		// Update refresh token dto
-		createRefreshTokenDto.PlainRefreshToken = plainRefreshToken
-		createRefreshTokenDto.RefreshTokenExpiresAt = refreshToken.ExpiresAt
+		// Update auth tokens check dto
+		authTokensCheckDto.SessionId = sessionId
+		authTokensCheckDto.AuthTokensDto.PlainRefreshToken = plainRefreshToken
+		authTokensCheckDto.AuthTokensDto.RefreshTokenExpiresAt = refreshToken.ExpiresAt
 
 		return nil
 	})
 
 	if err != nil {
-		return nil, sessionId, err
+		return nil, err
 	}
 
-	return createRefreshTokenDto, sessionId, nil
+	return authTokensCheckDto, nil
 }
 
 /*
@@ -62,7 +63,8 @@ Returns:
 */
 func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedToken []byte) (*payloads.AuthTokensCheckDto, error) {
 
-	var authTokensCheckDto = &payloads.AuthTokensCheckDto{IsAccessTokenValid: false}
+	// var authTokensCheckDto = &payloads.AuthTokensCheckDto{IsAccessTokenValid: false}
+	var authTokensCheckDto = &payloads.AuthTokensCheckDto{}
 	var sessionId int64
 	var userId int64
 
@@ -117,8 +119,8 @@ func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedTok
 		}
 
 		// Update refresh token dto
-		authTokensCheckDto.TokensDto.PlainRefreshToken = newPlainRefreshToken
-		authTokensCheckDto.TokensDto.RefreshTokenExpiresAt = newTokenExpiresAt
+		authTokensCheckDto.AuthTokensDto.PlainRefreshToken = newPlainRefreshToken
+		authTokensCheckDto.AuthTokensDto.RefreshTokenExpiresAt = newTokenExpiresAt
 
 		// Validate data for revoked_at
 		newTokenCreatedAt := newRefreshToken.CreatedAt

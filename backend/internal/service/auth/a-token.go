@@ -47,16 +47,16 @@ func (service *AuthService) checkAccessToken(accessToken string) (*payloads.Auth
 
 	// Create payload with data
 	authTokensCheckDto := payloads.AuthTokensCheckDto{
-		IsAccessTokenValid: true,
-		UserId:             userId,
-		SessionId:          sessionId,
+		// IsAccessTokenValid: true,
+		UserId:    userId,
+		SessionId: sessionId,
 	}
 
 	return &authTokensCheckDto, nil
 }
 
 // Generate an Access Token (JWT) with expiration and add them to authTokensTdo
-func (service *AuthService) addJWTAccessToken(authTokensDto *payloads.AuthTokensDto, sessionId int64, userId int64) error {
+func (service *AuthService) addJWTAccessToken(authTokensCheckDto *payloads.AuthTokensCheckDto) error {
 
 	// Set expiration
 	timeNow := time.Now().UTC()
@@ -64,8 +64,8 @@ func (service *AuthService) addJWTAccessToken(authTokensDto *payloads.AuthTokens
 
 	// Create Claims
 	claims := auth.UserClaims{
-		UserId:    userId,
-		SessionId: sessionId,
+		UserId:    authTokensCheckDto.UserId,
+		SessionId: authTokensCheckDto.SessionId,
 		RegisteredClaims: jwt.RegisteredClaims{
 			// Subject:   strconv.FormatInt(userId, 10),
 			ExpiresAt: jwt.NewNumericDate(accessTokenExpiresAt),
@@ -84,8 +84,8 @@ func (service *AuthService) addJWTAccessToken(authTokensDto *payloads.AuthTokens
 	}
 
 	// Add token and expiration to authTokenDto
-	authTokensDto.AccessToken = accessToken
-	authTokensDto.AccessTokenExpiresAt = accessTokenExpiresAt
+	authTokensCheckDto.AuthTokensDto.AccessToken = accessToken
+	authTokensCheckDto.AuthTokensDto.AccessTokenExpiresAt = accessTokenExpiresAt
 
 	return nil
 }

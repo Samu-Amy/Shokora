@@ -54,8 +54,8 @@ type AuthTokensDto struct {
 Contains AuthTokensDto plus data for the middleware
 */
 type AuthTokensCheckDto struct {
-	IsAccessTokenValid bool
-	UserId             int64
-	SessionId          int64
-	TokensDto          AuthTokensDto
+	// IsAccessTokenValid bool
+	UserId        int64
+	SessionId     int64
+	AuthTokensDto AuthTokensDto
 }

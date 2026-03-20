@@ -222,16 +222,20 @@ Takes Access and Refresh Tokens, verifies and updates them (if necessary)
 
 Return:
   - *payloads.AuthTokensCheckDto: auth tokens data required so set auth cookies (AuthTokensDto) + IsAccessTokenValid, UserId and SessionId
+  - bool: isAccessTokenValid (if true -> auth without setting new cookies, else tokens are rotated -> set new cookies)
   - error: domerrors (safe to send to the frontend)
 */
-func (service *AuthService) HandleAuthTokensCheck(ctx context.Context, accessToken, plainRefreshToken string) (*payloads.AuthTokensCheckDto, error) {
+func (service *AuthService) HandleAuthTokensCheck(ctx context.Context, accessToken, plainRefreshToken string) (*payloads.AuthTokensCheckDto, bool /* isAccessTokenValid */, error) {
+
+	isAccessTokenValid := false
 
 	// Verify Access Token
 	authTokensCheckDto, err := service.checkAccessToken(accessToken)
 	if err == nil {
-		return authTokensCheckDto, nil // Access Token valid -> return early
+		isAccessTokenValid = true
+		return authTokensCheckDto, isAccessTokenValid, nil // Access Token valid -> return early
 	} else if !errors.Is(err, interrors.IErrExpired) {
-		return nil, domerrors.ErrUnauthorized // Tokens doesn't correspond -> something is wrong
+		return nil, isAccessTokenValid, domerrors.ErrUnauthorized // Tokens doesn't correspond -> something is wrong
 	}
 
 	// Rotate Refresh Token (Access Token not valid)
@@ -239,14 +243,14 @@ func (service *AuthService) HandleAuthTokensCheck(ctx context.Context, accessTok
 
 	authTokensCheckDto, err = service.rotateRefreshToken(ctx, hashedRefreshToken)
 	if err != nil {
-		return nil, domerrors.ParseIntError(err)
+		return nil, isAccessTokenValid, domerrors.ParseIntError(err)
 	}
 
-	// Create new Access Token (and update authTokensDto)
-	err = service.addJWTAccessToken(&authTokensCheckDto.TokensDto, authTokensCheckDto.SessionId, authTokensCheckDto.UserId) // TODO: aggiungere tokenId in jwt (UserClaims)
+	// Create and add new Access Token (and update authTokensDto)
+	err = service.addJWTAccessToken(authTokensCheckDto) // TODO: aggiungere tokenId in jwt (UserClaims)?
 	if err != nil {
-		return nil, domerrors.ParseIntError(err)
+		return nil, isAccessTokenValid, domerrors.ParseIntError(err)
 	}
 
-	return authTokensCheckDto, nil
+	return authTokensCheckDto, isAccessTokenValid, nil
 }
