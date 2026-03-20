@@ -40,10 +40,12 @@ func (app *App) getUserHandler(w http.ResponseWriter, r *http.Request) {
 
 // - Update User data -
 
-func (app *App) updateUserDataHandler(w http.ResponseWriter, r *http.Request) {
+func (app *App) updateUserHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: implementa (per modificare i dati dell'utente -
 	// TODO: attenzione a evitare modifica data di nascita per avere offerte più volte all'anno (magari durante la registrazione si sottolinea che non è modificabile) -
 	// TODO: modificabile solo per chi non la ha (non messa in registrazione o registrato con OAuth e per qualche motivo manca))
+
+	// TODO: ritornare statusCreated?
 }
 
 // - Update Password -
@@ -52,7 +54,7 @@ func (app *App) updatePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get user from context (auth middleware)
-	user, ok := r.Context().Value(userCtx).(*user_repo.User)
+	user, ok := ctx.Value(userCtx).(*user_repo.User)
 	if !ok {
 		app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 		return
@@ -76,7 +78,7 @@ func (app *App) updatePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	var sessionId int64
 
 	if payload.InvalidateOtherSessions {
-		sessionId, ok = r.Context().Value(sessionIdCtx).(int64)
+		sessionId, ok = ctx.Value(sessionIdCtx).(int64)
 		if !ok {
 			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 			return

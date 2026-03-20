@@ -6,6 +6,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
+	user_repo "github.com/Samu-Amy/Shokora/internal/store/user"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -100,7 +101,7 @@ func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get sessionId from context (auth middleware)
-	sessionId, ok := r.Context().Value(sessionIdCtx).(int64)
+	sessionId, ok := ctx.Value(sessionIdCtx).(int64)
 	if !ok {
 		app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 		return
@@ -118,6 +119,27 @@ func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	//* No content
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// ----- GET USER -----
+
+func (app *App) getCurrentUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Get user from context (auth middleware)
+	user, ok := ctx.Value(userCtx).(*user_repo.User)
+	if !ok {
+		app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
+		return
+	}
+
+	userRes := payloads.ToUserRes(*user)
+
+	//* Return user
+	if err := app.jsonResponse(w, http.StatusOK, userRes); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 }
 
 // ----- EMAIL VERIFICATION -----

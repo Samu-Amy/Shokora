@@ -119,14 +119,14 @@ func (app *App) initRouter() *chi.Mux {
 
 			// - Basic User Routes -
 
+			r.Get("/me", app.getCurrentUser)
 			r.Patch("/update-password", app.updatePasswordHandler)
 
 			// User Data
 			r.Route("/user", func(r chi.Router) { // TODO: cambia nome route (?)
-				// r.Use(app.userDataOwnershipMiddleware) // User Data Ownerhip Middleware
+				// r.Use(app.userDataOwnershipMiddleware) // User Data Ownerhip Middleware // TODO: serve (uso i cookie per l'auth e quindi ottenere i dati dell'utente)?
 
-				// TODO: aggiungi metodo per ottenere user (direttamente dal middleware, non dal db) (con middleware -> solo se è lo stesso di quello autenticato (cioè ottiene il suo profilo))
-				r.Patch("/", app.updateUserDataHandler)
+				r.Patch("/", app.updateUserHandler)
 
 				r.Group(func(r chi.Router) {
 					// TODO: fai handlers per otterene le stats (con achievements), coupons ed altro
