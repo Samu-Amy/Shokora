@@ -18,7 +18,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payloads.RegisterUserReq // TODO: mettere doppia password per controllo (che lo user abbia messo la password che vuole mettendola giusta due volte)?
+	var payload payloads.RegisterUserReq // TODO: fai controllo (che lo user abbia messo la password che vuole mettendola giusta due volte)?
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)

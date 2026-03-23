@@ -30,11 +30,30 @@ func makeRequestWithPayload(t *testing.T, router http.Handler, method, route str
 	return w
 }
 
-func checkResponseCode(t *testing.T, expected int, w *httptest.ResponseRecorder) {
+func checkResponseCode(t *testing.T, w *httptest.ResponseRecorder, expected int) {
 	t.Helper()
 
 	if expected != w.Code {
 		t.Fatalf("expected 201, got %d, body: %s", w.Code, w.Body.String())
+	}
+}
+
+func checkErrorMessage(t *testing.T, w *httptest.ResponseRecorder, expected string) {
+	t.Helper()
+
+	type errorPayload struct {
+		Error string `json:"error"`
+	}
+
+	var res errorPayload
+
+	err := json.Unmarshal(w.Body.Bytes(), &res)
+	if err != nil {
+		t.Fatalf("failed to unmarshal response body: %v", err)
+	}
+
+	if res.Error != expected {
+		t.Fatalf("expected error message %q, got %q", expected, res.Error)
 	}
 }
 

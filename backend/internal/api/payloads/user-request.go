@@ -19,6 +19,11 @@ type PasswordFieldReq struct {
 	Password string `json:"password" validate:"required,min=12,max=72"`
 }
 
+type DoublePasswordFieldReq struct {
+	Password             string `json:"password" validate:"required,min=12,max=72"`
+	PasswordConfirmation string `json:"password_confirmation" validate:"required,min=12,max=72"`
+}
+
 // - Others -
 
 type UpdatePasswordReq struct {

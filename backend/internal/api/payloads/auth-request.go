@@ -6,7 +6,7 @@ import "github.com/google/uuid"
 type RegisterUserReq struct {
 	UserDataReq
 	EmailFieldReq
-	PasswordFieldReq
+	DoublePasswordFieldReq
 }
 
 type LoginUserReq struct {
