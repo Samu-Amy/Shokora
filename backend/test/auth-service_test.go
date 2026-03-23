@@ -13,6 +13,8 @@ func TestRegisterUser(t *testing.T) {
 	})
 
 	t.Run("should give badRequest errors because of wrong payload", func(t *testing.T) {
+		logRes := false
+
 		registerUserRequest := payloads.RegisterUserReq{
 			UserDataReq: payloads.UserDataReq{
 				FirstName: "John",
@@ -32,7 +34,9 @@ func TestRegisterUser(t *testing.T) {
 		checkResponseCode(t, http.StatusBadRequest, w)
 
 		// Log response body
-		// t.Logf("Response body: %v", w.Body)
+		if logRes {
+			logResBody(t, w)
+		}
 	})
 }
 

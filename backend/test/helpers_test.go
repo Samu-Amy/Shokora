@@ -37,3 +37,9 @@ func checkResponseCode(t *testing.T, expected int, w *httptest.ResponseRecorder)
 		t.Fatalf("expected 201, got %d, body: %s", w.Code, w.Body.String())
 	}
 }
+
+func logResBody(t *testing.T, w *httptest.ResponseRecorder) {
+	if w.Body.Len() > 0 {
+		t.Logf("response body: %s", w.Body.String())
+	}
+}
