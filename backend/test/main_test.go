@@ -1,31 +1,29 @@
 package main
 
 import (
-	"expvar"
-	"runtime"
+	"os"
+	"testing"
 
 	"github.com/Samu-Amy/Shokora/internal/api"
 	"github.com/Samu-Amy/Shokora/internal/appconfig"
 	"github.com/Samu-Amy/Shokora/internal/database"
 	"github.com/Samu-Amy/Shokora/internal/service"
 	"github.com/Samu-Amy/Shokora/internal/store"
+	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
-// TODO: JWT in HTTP only cookies (no in local storage per evitare XSS) -> attenzione a CSRF (cross origin requests)
+var testService *service.Service
 
-// TODO: fai test con/senza redis (sia con dati in cache che non in cache) calcolando il tempo impiegato (?)
+var testRouter *chi.Mux
 
-// DB Connection string
-
-func main() {
+func TestMain(m *testing.M) {
 
 	// - App and DB Config -
-	configs := appconfig.NewDefaultConfig()
+	configs := appconfig.NewTestConfig()
 
 	// - Logger -
-	logger := zap.Must(zap.NewProduction()).Sugar()
-	defer logger.Sync()
+	logger := zap.NewNop().Sugar()
 
 	// - Mailer -
 	mailer := appconfig.GetMailerFromConfig(configs)
@@ -37,12 +35,10 @@ func main() {
 
 	// - DB Connection -
 	db, err := appconfig.GetDbFromConfig(configs)
-
 	if err != nil {
-		logger.Fatal(err)
+		panic(err)
 	}
 
-	defer db.Close()
 	logger.Info("DB Connected")
 
 	// - Transaction Manager -
@@ -53,37 +49,27 @@ func main() {
 
 	// - Service -
 	authServiceConfig := appconfig.GetAuthServiceConfig(configs)
-	service := service.NewService(txManager, store, mailer, logger, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
+	testService = service.NewService(txManager, store, mailer, logger, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
 
 	// - Rate Limiter -
 	rateLimiter := appconfig.GetFixedWindowLimiterFromConfig(configs)
 
-	// - Metrics -
-
-	// Version
-	// expvar.NewString("backend_version").Set("1.0")
-
-	// DB Stats
-	expvar.Publish("database", expvar.Func(func() any {
-		return db.Stats()
-	}))
-
-	// Goroutines
-	expvar.Publish("goroutines", expvar.Func(func() any {
-		return runtime.NumGoroutine()
-	}))
-
 	// - App -
-	app := api.NewApp(
+	testApp := api.NewApp(
 		configs,
-		service,
+		testService,
 		logger,
 		rateLimiter,
 	)
 
-	err = app.Run()
+	// - Router -
+	testRouter = testApp.InitRouter() // Useful for http tests
 
-	if err != nil {
-		logger.Error(err)
-	}
+	code := m.Run()
+
+	// os.Exit skip defer, so we must clean up here
+	db.Close()
+	logger.Sync()
+
+	os.Exit(code)
 }

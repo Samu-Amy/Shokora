@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/cors"
 )
 
-func (app *App) initRouter() *chi.Mux {
+func (app *App) InitRouter() *chi.Mux {
 	router := chi.NewRouter()
 
 	//* - Middlewares - *

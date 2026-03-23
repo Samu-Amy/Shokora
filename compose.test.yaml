@@ -1,0 +1,34 @@
+name: shokora-dev
+
+services:
+  db:
+    container_name: postgres-test
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${POSTGRES_TEST_DB}
+      POSTGRES_USER: ${POSTGRES_TEST_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_TEST_PASSWORD}
+      # POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # - ./db/init:/docker-entrypoint-initdb.d # copy files from "db/init" into "docker-entrypoint-initdb.d"
+      # - ./db/init/create_db.sql:/docker-entrypoint-initdb.d/create_db.sql
+    ports:
+      - "5434:5432" #! ATTENZIONE alla porta (potrebbe non funzionare se mappata su una porta esterna a cui accede già postgres locale, ma all'interno dei container non dovrebbero esserci problemi)
+    # healthcheck:
+    #   test: [
+    #       "CMD-SHELL",
+    #       "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}",
+    #     ] # command to execute to test service -> if it exits with 0 is ok
+    #   interval: 10s #1m30s
+    #   timeout: 5s #30s
+    #   retries: 5
+    #   start_period: 10s # wait for db to start before checking
+    # restart: unless-stopped
+
+volumes:
+  pgdata:
+# TODO: per avviare usa "docker compose -f compose.dev.yaml up [-d]"
+# TODO: per fermare usa "docker compose -f compose.dev.yaml down [-v]"
+# TODO: per accedere usa "docker compose -f compose.dev.yaml exec db psql -U ${DEV_POSTGRES_USER} -d ${DEV_POSTGRES_DB}" -> poi comandi (es. "\l", "\dt", "\q")

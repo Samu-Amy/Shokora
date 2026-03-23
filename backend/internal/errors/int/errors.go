@@ -27,3 +27,8 @@ var (
 	IErrMaxRetriesExceeded            = internalErr("i_max_retries")        // SendEmail called with wrong variables for the template
 	IErrMaxAttemptsExceeded           = internalErr("i_max_attempts")       // SendEmail called with wrong variables for the template
 )
+
+func IsInternalErr(err error) bool {
+	_, ok := err.(internalErr)
+	return ok
+}

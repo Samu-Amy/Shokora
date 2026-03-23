@@ -1,6 +1,18 @@
 Test da fare:
-- singole query (metodi dello store)
+- service layer methods
 - fetch API (con modifiche al db, e middlewares (auth e ruoli/permessi))
+- singole query (metodi dello store) se serve
 
 Ricorda:
-- Testa anche concurrent updates (goroutines per modificare lo stesso prodotto nello stesso momento)
+- Testa anche concurrent updates (goroutines per modificare lo stesso prodotto nello stesso momento) !!!
+
+Users con dati validi:
+- test funzionamento routes pubbliche
+- test auth (users non autenticati/users autenticati)
+- test ownership (users richiedono/modificano dati propri/di altri)
+- test ruoli (ok/unauthenticated/unauthorized)
+- test permessi (ok/unauthenticated/unauthorized)
+
+Tests:
+- Service layer -> input (validation) and output/return values (es. dati: payload di registrazione/login con dati giusti, errori: domain or default errors, no internal errors -> check !isInternalErr)
+- API (come fare senza far partire l'app?) -> middleware (authentication, authorization (roles, permissions))
