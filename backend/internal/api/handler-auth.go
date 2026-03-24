@@ -12,13 +12,15 @@ import (
 
 // TODO: l'accesso con google (fai handler apposta) sostituisce solo la parte di autenticazione (login e register (in questo caso fornisce già la verifica della mail, settata a true)), poi la gestione di accesso e sessione è gestita dal mio sistema (?)
 
+//! TODO: nelle condizioni da accettare indica che l'utente dichiara di avere l'età minima per potersi registrare (e per poter fare acquisti)
+
 // ----- REGISTER -----
 
 func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payloads.RegisterUserReq
+	var payload payloads.RegisterUserReq // TODO: nel FRONTEND chiedi solo giorno e mese (compleanno) e non anno (non data di nascita)
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)

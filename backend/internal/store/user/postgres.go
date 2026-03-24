@@ -37,7 +37,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 		user.Email,
 		user.PasswordHash,
 		// user.ImageUrl,
-		user.BirthDate.UTC(),
+		user.Birthday,
 	).Scan(
 		&user.Id,
 		&user.CreatedAt,
@@ -51,7 +51,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 
 func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*User, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password, birth_date, is_verified, user_role, permissions, created_at, updated_at
+		SELECT id, first_name, last_name, email, password, birthday, is_verified, user_role, permissions, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
@@ -72,7 +72,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 		&user.Email,
 		&user.PasswordHash,
 		// &user.ImageUrl,
-		&user.BirthDate,
+		&user.Birthday,
 		&user.IsVerified,
 		&user.Role,
 		&user.Permissions,
@@ -90,7 +90,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 
 func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password, birth_date, is_verified, user_role, permissions, created_at, updated_at
+		SELECT id, first_name, last_name, email, password, birthday, is_verified, user_role, permissions, created_at, updated_at
 		FROM users
 		WHERE email = $1
 	`
@@ -111,7 +111,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 		&user.Email,
 		&user.PasswordHash,
 		// &user.ImageUrl,
-		&user.BirthDate,
+		&user.Birthday,
 		&user.IsVerified,
 		&user.Role,
 		&user.Permissions,

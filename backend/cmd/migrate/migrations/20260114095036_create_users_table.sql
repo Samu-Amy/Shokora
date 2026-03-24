@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users(
   email citext NOT NULL,
   password bytea NOT NULL,
   -- image_url text,
-  birth_date date,
+  birthday date,
 
   is_verified boolean NOT NULL DEFAULT FALSE,
   is_active boolean NOT NULL DEFAULT TRUE,

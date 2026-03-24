@@ -12,7 +12,7 @@ type UserRes struct {
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
 	// ImageUrl    string          `json:"image_url"`
-	BirthDate   time.Time       `json:"birth_date"`
+	Birthday    time.Time       `json:"birthday"`
 	IsVerified  bool            `json:"is_verified"`
 	Role        user.Role       `json:"role"`
 	Permissions user.Permission `json:"permissions"`
@@ -27,7 +27,7 @@ func ToUserRes(user user.User) UserRes {
 		LastName:  user.LastName,
 		Email:     user.Email,
 		// ImageUrl:    user.ImageUrl,
-		BirthDate:   user.BirthDate,
+		Birthday:    user.Birthday,
 		IsVerified:  user.IsVerified,
 		Role:        user.Role,
 		Permissions: user.Permissions,
