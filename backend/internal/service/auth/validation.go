@@ -1,5 +1,7 @@
 package authservice
 
+import "regexp"
+
 // import "time"
 
 // const minAge = 16
@@ -20,3 +22,15 @@ package authservice
 
 // 	return !time.Now().UTC().Before(birthday)
 // }
+
+func isNameValid(password string) bool {
+	// No symbols
+}
+
+func isStrinValid(text string) bool {
+	// TODO: controlla emojii
+}
+
+func isPasswordValid(password string) bool {
+	var passwordRegexp = regexp.MustCompile(`^[\x21-\x7E]+$`) // TODO: attenzione non sono accettati caratteri tipo 'ò'
+}

@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 )
@@ -27,6 +26,8 @@ func TestRegisterUser(t *testing.T) {
 			},
 		}
 
+		// TODO: test anche senza birthday e/o cognome
+
 		// Request
 		w := makeRequestWithPayload(t, testRouter, "POST", "/api/v1/auth/user", registerUserRequest)
 
@@ -42,8 +43,6 @@ func TestRegisterUser(t *testing.T) {
 	t.Run("should give badRequest errors because of invalid data in payload", func(t *testing.T) {
 		logRes := false
 
-		// TODO: sistema validazione request payloads
-
 		// TODO: fai payloads con field non validi
 
 		// Payload
@@ -51,7 +50,6 @@ func TestRegisterUser(t *testing.T) {
 			UserDataReq: payloads.UserDataReq{
 				FirstName: "John&", // Symbols in first/last name
 				LastName:  "%Snow",
-				Birthday:  time.Now(), // Date not valid
 			},
 			EmailFieldReq: payloads.EmailFieldReq{
 				Email: "john.snow@gmail.doc", // Invalid email

@@ -20,7 +20,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payloads.RegisterUserReq // TODO: nel FRONTEND chiedi solo giorno e mese (compleanno) e non anno (non data di nascita)
+	var payload payloads.RegisterUserReq // TODO: nel FRONTEND chiedi solo giorno e mese (compleanno) e non anno (non data di nascita) - evita anche emoji ed altro (nonostante i controlli qua)
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)

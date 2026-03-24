@@ -30,10 +30,12 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	// - Validation -
 
+	// First and last name
+	if !isNameValid(payload.FirstName) { // TODO: implementa
+		return nil, nil, domerrors.ErrInvalidName
+	}
+
 	// Birthday
-	// if !isAgeValid(payload.BirthDate) {
-	// 	return nil, nil, domerrors.ErrInvalidDate
-	// }
 	payload.Birthday = time.Date(2000, payload.Birthday.Month(), payload.Birthday.Day(), 0, 0, 0, 0, time.UTC) // The year is set to a default value (2000 in this case)
 
 	// Password
