@@ -11,9 +11,10 @@ type User struct {
 	Email        string
 	PasswordHash []byte
 	// ImageUrl     string
-	BirthDate   time.Time
+	BirthDate time.Time
+	// ParentalConsent bool // TODO: implementa per i minori di 14 (solo italia) o 16 anni (GDPR) (i genitori devono verificare tramite la loro email (va modificato il funzionamento della verifica email, però i genitori devono quindi registrarsi?) e devono poter revocare il consenso, quindi può servire una tabella che lega id genitori a id figli per poter avere accesso ai loro dati (e poter collegare id di uno o più genitoria uno o più figli (dalle impostazioni?) - però una volta che superano i 16 anni dovrebbero poter "scollegare" l'account da quello dei genitori)
 	IsVerified  bool
-	IsActive    bool
+	IsActive    bool // TODO: usare IsActive per abilitare/disabilitare account (l'utente e/o genitrore dell'utente) e fare IsBlocked per bloccare l'account (gestito da admin)
 	Role        Role
 	Permissions Permission
 	CreatedAt   time.Time

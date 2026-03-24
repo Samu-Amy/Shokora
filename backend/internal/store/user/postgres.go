@@ -37,7 +37,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 		user.Email,
 		user.PasswordHash,
 		// user.ImageUrl,
-		user.BirthDate,
+		user.BirthDate.UTC(),
 	).Scan(
 		&user.Id,
 		&user.CreatedAt,

@@ -17,14 +17,17 @@ var (
 
 	// Auth
 	ErrDuplicateEmail      = domainErr("duplicate_email")
-	ErrInvalid             = domainErr("invalid")            // Invalid data (form data, tokens)
-	ErrMaxAttemptsExceeded = domainErr("max_attempts")       // Too much attempts (otp)
-	ErrUnauthorized        = domainErr("unauthorized")       // User does not exists or is not verified
-	ErrForbidden           = domainErr("forbidden")          // User does not have the necessary permissions
-	ErrNotVerified         = domainErr("not_verified")       // User must verify email
-	ErrCommonPassword      = domainErr("common_password")    // The password is too weak
-	ErrSamePassword        = domainErr("same_password")      // The new password is equal to the old one
-	ErrDifferentPassword   = domainErr("different_password") // The passwords does not correspond
+	ErrInvalid             = domainErr("invalid")      // Invalid data (form data, tokens)
+	ErrMaxAttemptsExceeded = domainErr("max_attempts") // Too much attempts (otp)
+	ErrUnauthorized        = domainErr("unauthorized") // User does not exists or is not verified
+	ErrForbidden           = domainErr("forbidden")    // User does not have the necessary permissions
+	ErrNotVerified         = domainErr("not_verified") // User must verify email
+
+	// Validation
+	ErrInvalidDate       = domainErr("invalid_date")       // The date (e.g. birthdate) is invalid
+	ErrCommonPassword    = domainErr("common_password")    // The password is too weak
+	ErrSamePassword      = domainErr("same_password")      // The new password is equal to the old one
+	ErrDifferentPassword = domainErr("different_password") // The passwords does not correspond
 )
 
 // CAUTION: does not work with wrapping (fmt.Errorf("...%w...", err))

@@ -124,10 +124,10 @@ func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 		app.conflictError(w, r, err)
 
 	// - Bad Request -
-	case errors.Is(err, domerrors.ErrSamePassword), errors.Is(err, domerrors.ErrCommonPassword):
-		app.badRequestError(w, r, err)
 
-	case errors.Is(err, domerrors.ErrDuplicateEmail), errors.Is(err, domerrors.ErrInvalid):
+	// Password
+	case errors.Is(err, domerrors.ErrCommonPassword), errors.Is(err, domerrors.ErrSamePassword), errors.Is(err, domerrors.ErrDifferentPassword),
+		errors.Is(err, domerrors.ErrDuplicateEmail), errors.Is(err, domerrors.ErrInvalid), errors.Is(err, domerrors.ErrInvalidDate):
 		app.badRequestError(w, r, err)
 
 	// - Unauthorized -

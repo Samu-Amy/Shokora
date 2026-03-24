@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 )
@@ -50,6 +51,7 @@ func TestRegisterUser(t *testing.T) {
 			UserDataReq: payloads.UserDataReq{
 				FirstName: "John&", // Symbols in first/last name
 				LastName:  "%Snow",
+				BirthDate: time.Now(), // Date not valid
 			},
 			EmailFieldReq: payloads.EmailFieldReq{
 				Email: "john.snow@gmail.doc", // Invalid email

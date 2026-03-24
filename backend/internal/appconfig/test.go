@@ -27,7 +27,7 @@ func NewTestConfig() config.Config {
 		Db: config.DbConfig{
 			// Addr: fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=%s", env.GetString("POSTGRES_USER", "user"), env.GetString("POSTGRES_PASSWORD", "password"), env.GetString("POSTGRES_DB", "db"), env.GetString("POSTGRES_PORT", "5432"), env.GetString("POSTGRES_SSL_MODE", "disable")),
 			// TODO: attivare modalità ssl (?)
-			Addr:         fmt.Sprintf("host=localhost port=%s user=%s password=%s dbname=%s sslmode=disable", env.GetString("POSTGRES_PORT", "5432"), env.GetString("POSTGRES_TEST_USER", ""), env.GetString("POSTGRES_TEST_PASSWORD", ""), env.GetString("POSTGRES_TEST_DB", "")),
+			Addr:         fmt.Sprintf("host=localhost port=%s user=%s password=%s dbname=%s sslmode=disable", env.GetString("POSTGRES_TEST_PORT", "5432"), env.GetString("POSTGRES_TEST_USER", ""), env.GetString("POSTGRES_TEST_PASSWORD", ""), env.GetString("POSTGRES_TEST_DB", "")),
 			MaxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30), // TODO: usare questi valori o lasciare quelli di base?
 			MaxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			MaxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),

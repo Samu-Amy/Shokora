@@ -140,7 +140,7 @@ func (app *App) InitRouter() *chi.Mux {
 
 			// Shop Orders
 			r.Group(func(r chi.Router) {
-				r.Use(app.userVerifiedMiddleware)
+				r.Use(app.userVerifiedMiddleware) // TODO: usalo anche per proteggere altre route tipo per raccolta punti, coupon, ecc. (serve anche per chi ha meno di 14/16 anni, che deve avere il consenso dei genitori)
 				// r.Post("/orders", app.createOrderHandler)
 			})
 
