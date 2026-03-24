@@ -1,4 +1,4 @@
-name: shokora-dev
+name: shokora-test
 
 services:
   db:
@@ -10,9 +10,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_TEST_PASSWORD}
       PGDATA: /var/lib/postgresql/data
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata_test:/var/lib/postgresql/data
     ports:
-      - "5434:5432" #! ATTENZIONE alla porta (potrebbe non funzionare se mappata su una porta esterna a cui accede già postgres locale, ma all'interno dei container non dovrebbero esserci problemi)
+      - "5432:5432" #! ATTENZIONE alla porta (potrebbe non funzionare se mappata su una porta esterna a cui accede già postgres locale, ma all'interno dei container non dovrebbero esserci problemi)
 
 volumes:
-  pgdata:
+  pgdata_test:
