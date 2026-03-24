@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users(
   last_name varchar(125) NOT NULL,
   email citext NOT NULL,
   password bytea NOT NULL,
-  image_url text,
+  -- image_url text,
   birth_date date,
 
   is_verified boolean NOT NULL DEFAULT FALSE,

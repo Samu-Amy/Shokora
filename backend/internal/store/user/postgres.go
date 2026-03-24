@@ -21,7 +21,7 @@ func NewPostgresStore(db *sql.DB) *PostgresUserStore {
 
 func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx, user *User) error {
 	query := `
-		INSERT INTO users (first_name, last_name, email, password, image_url, birth_date)
+		INSERT INTO users (first_name, last_name, email, password, birth_date)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at, updated_at
 	`
@@ -36,7 +36,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 		user.LastName,
 		user.Email,
 		user.PasswordHash,
-		user.ImageUrl,
+		// user.ImageUrl,
 		user.BirthDate,
 	).Scan(
 		&user.Id,
@@ -51,7 +51,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 
 func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*User, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password, image_url, birth_date, is_verified, user_role, permissions, created_at, updated_at
+		SELECT id, first_name, last_name, email, password, birth_date, is_verified, user_role, permissions, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
@@ -71,7 +71,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 		&user.LastName,
 		&user.Email,
 		&user.PasswordHash,
-		&user.ImageUrl,
+		// &user.ImageUrl,
 		&user.BirthDate,
 		&user.IsVerified,
 		&user.Role,
@@ -90,7 +90,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 
 func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password, image_url, birth_date, is_verified, user_role, permissions, created_at, updated_at
+		SELECT id, first_name, last_name, email, password, birth_date, is_verified, user_role, permissions, created_at, updated_at
 		FROM users
 		WHERE email = $1
 	`
@@ -110,7 +110,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 		&user.LastName,
 		&user.Email,
 		&user.PasswordHash,
-		&user.ImageUrl,
+		// &user.ImageUrl,
 		&user.BirthDate,
 		&user.IsVerified,
 		&user.Role,

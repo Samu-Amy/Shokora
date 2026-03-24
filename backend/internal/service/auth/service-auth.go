@@ -45,8 +45,8 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		LastName:     payload.LastName,
 		Email:        payload.Email,
 		PasswordHash: hashedPassword,
-		ImageUrl:     payload.ImageUrl,
-		BirthDate:    payload.BirthDate,
+		// ImageUrl:     payload.ImageUrl,
+		BirthDate: payload.BirthDate,
 	}
 
 	// Create User in db and update its struct

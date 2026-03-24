@@ -38,7 +38,7 @@ func NewApp(
 		logger:      logger,
 		rateLimiter: rateLimiter,
 	}
-	app.router = app.initRouter()
+	app.router = app.InitRouter()
 
 	return app
 }

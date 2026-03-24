@@ -10,14 +10,14 @@ type User struct {
 	LastName     string
 	Email        string
 	PasswordHash []byte
-	ImageUrl     string
-	BirthDate    time.Time
-	IsVerified   bool
-	IsActive     bool
-	Role         Role
-	Permissions  Permission
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	// ImageUrl     string
+	BirthDate   time.Time
+	IsVerified  bool
+	IsActive    bool
+	Role        Role
+	Permissions Permission
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 // - Role -
