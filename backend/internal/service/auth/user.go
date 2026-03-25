@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
@@ -74,4 +75,12 @@ func (service *AuthService) getUser(ctx context.Context, email string, plainPass
 	// }
 
 	return user, nil
+}
+
+// ----- UTILS -----
+
+// Birthday conversion
+func convertBirthdayToTime(birthdayStr string) (time.Time, error) {
+	// The layout is "02" -> day, "01" -> month, "2006" -> year, using 2000 because is a leap year (to avoid errors in the case of February 29)
+	return time.Parse("02-01-2006", birthdayStr+"-2000")
 }

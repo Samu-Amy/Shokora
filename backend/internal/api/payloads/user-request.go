@@ -1,15 +1,13 @@
 package payloads
 
-import "time"
-
 // - Basics -
 
 // TODO: finisci validazione (fai anche per stringhe generiche, tipo nomi prodotti e descrizioni), togli validazione da service
 
 type UserDataReq struct {
-	FirstName string    `json:"first_name" validate:"required,max=125,valid-name"`
-	LastName  string    `json:"last_name" validate:"omitempty,max=125,valid-name"`
-	Birthday  time.Time `json:"birthday,omitempty" validate:"omitempty"`
+	FirstName string `json:"first_name" validate:"required,max=125,valid-name"`
+	LastName  string `json:"last_name" validate:"omitempty,max=125,valid-name"`
+	Birthday  string `json:"birthday,omitempty" validate:"omitempty,valid-birthday"`
 	// ImageUrl  string    `json:"image_url,omitempty" validate:"omitempty,url"` // usare url (se l'url sarà conforme al controllo)?
 }
 

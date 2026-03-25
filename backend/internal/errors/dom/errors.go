@@ -23,12 +23,8 @@ var (
 	ErrForbidden           = domainErr("forbidden")    // User does not have the necessary permissions
 	ErrNotVerified         = domainErr("not_verified") // User must verify email
 
-	// Validation // TODO: eliminare ed usare errori del validator (?)
-	ErrInvalidName       = domainErr("invalid_name")       // The first or last name is invalid
-	ErrInvalidDate       = domainErr("invalid_date")       // The date (e.g. birthdate) is invalid
-	ErrCommonPassword    = domainErr("common_password")    // The password is too weak
-	ErrSamePassword      = domainErr("same_password")      // The new password is equal to the old one
-	ErrDifferentPassword = domainErr("different_password") // The passwords does not correspond
+	// Validation
+	ErrInvalidDate = domainErr("invalid_date") // The date (e.g. birthdate) is invalid
 )
 
 // CAUTION: does not work with wrapping (fmt.Errorf("...%w...", err))

@@ -3,7 +3,6 @@ package authservice
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
@@ -28,29 +27,11 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	// ----- USER -----
 
-	// - Validation -
-
-	// First and last name
-	// if !isNameValid(payload.FirstName) { // TODO: implementa
-	// 	return nil, nil, domerrors.ErrInvalidName
-	// }
-
-	// TODO: usare validator (?)
-
-	// Birthday
-	payload.Birthday = time.Date(2000, payload.Birthday.Month(), payload.Birthday.Day(), 0, 0, 0, 0, time.UTC) // The year is set to a default value (2000 in this case)
-
-	// Password
-	if payload.Password != payload.PasswordConfirmation {
-		return nil, nil, domerrors.ErrDifferentPassword
+	// Convert birthday to time.Time
+	birthday, err := convertBirthdayToTime(payload.Birthday)
+	if err != nil {
+		return nil, nil, domerrors.ErrInvalidDate
 	}
-
-	// Validate password
-	if payloads.IsCommonPassword(payload.Password) {
-		return nil, nil, domerrors.ErrCommonPassword
-	}
-
-	// - Creation -
 
 	// Hash password
 	hashedPassword, err := service.hashPassword(payload.Password)
@@ -65,8 +46,8 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 		LastName:     payload.LastName,
 		Email:        payload.Email,
 		PasswordHash: hashedPassword,
+		Birthday:     birthday,
 		// ImageUrl:     payload.ImageUrl,
-		Birthday: payload.Birthday,
 	}
 
 	// Create User in db and update its struct

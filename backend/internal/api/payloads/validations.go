@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -12,6 +13,7 @@ import (
 var (
 	regName     = regexp.MustCompile(`^[A-Za-zÀ-ÖØ-öø-ÿ' \-]+$`)
 	regPassword = regexp.MustCompile(`^[A-Za-z\d!@#$%^&*()\-_=+\[\]{};:'",.<>?/\\|` + "`" + ` ~]+$`)
+	regBirthday = regexp.MustCompile(`^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])$`)
 )
 
 // - Validator -
@@ -32,9 +34,12 @@ func NewValidator() *validator.Validate {
 
 	// Register custom validation functions
 	v.RegisterValidation("valid-name", validName)
+
 	v.RegisterValidation("no-edge-spaces", noEdgeSpaces)
 	v.RegisterValidation("valid-password", validPassword)
 	v.RegisterValidation("no-common-password", noCommonPassword)
+
+	v.RegisterValidation("valid-birthday", validBirthday)
 
 	return v
 }
@@ -100,22 +105,15 @@ func validPassword(fl validator.FieldLevel) bool {
 	return regPassword.MatchString(fl.Field().String())
 }
 
-// Birthdate
+func validBirthday(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
 
-// TODO: fare validazione custom (tipo quella sotto)?
+	// Verify string format (regex)
+	if !regBirthday.MatchString(value) {
+		return false
+	}
 
-// validate.RegisterValidation("birthdate", func(fl validator.FieldLevel) bool {
-//     date, ok := fl.Field().Interface().(time.Time)
-//     if !ok || date.IsZero() {
-//         return true // omitempty
-//     }
-
-//     // Non può essere nel futuro
-//     if date.After(time.Now().UTC()) {
-//         return false
-//     }
-
-//     // Età minima 13 anni (esempio)
-//     minAge := time.Now().AddDate(-13, 0, 0).UTC()
-//     return date.Before(minAge)
-// })
+	// Verify date
+	_, err := time.Parse("02-01-2006", value+"-2000") // 02-01-2006 means format the date as DD-MM-YYYY (and then using the value (with format "DD-MM") with "-2000" -> leap year, so 29-02 is valid)
+	return err == nil
+}

@@ -92,26 +92,12 @@ var mockValidPasswords = []string{
 }
 
 var mockBirthdays = []time.Time{
-	time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(2000, 1, 5, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 1, 10, 0, 0, 0, 0, time.UTC), time.Date(2000, 1, 15, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 1, 20, 0, 0, 0, 0, time.UTC), time.Date(2000, 1, 25, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 2, 1, 0, 0, 0, 0, time.UTC), time.Date(2000, 2, 5, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 2, 10, 0, 0, 0, 0, time.UTC), time.Date(2000, 2, 15, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 2, 20, 0, 0, 0, 0, time.UTC), time.Date(2000, 2, 25, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 3, 1, 0, 0, 0, 0, time.UTC), time.Date(2000, 3, 5, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 3, 10, 0, 0, 0, 0, time.UTC), time.Date(2000, 3, 15, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 3, 20, 0, 0, 0, 0, time.UTC), time.Date(2000, 3, 25, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 4, 1, 0, 0, 0, 0, time.UTC), time.Date(2000, 4, 5, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 4, 10, 0, 0, 0, 0, time.UTC), time.Date(2000, 4, 15, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 4, 20, 0, 0, 0, 0, time.UTC), time.Date(2000, 4, 25, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 5, 1, 0, 0, 0, 0, time.UTC), time.Date(2000, 5, 5, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 5, 10, 0, 0, 0, 0, time.UTC), time.Date(2000, 5, 15, 0, 0, 0, 0, time.UTC),
-	time.Date(2000, 5, 20, 0, 0, 0, 0, time.UTC), time.Date(2000, 5, 25, 0, 0, 0, 0, time.UTC),
+	// TODO: fai date casuali come string "DD-MM"
 }
 
 // ----- FUNCTIONS -----
 
-func makeRegisterUserReq(firstName, lastName, email, password, passwordConfirmation string, birthday time.Time) payloads.RegisterUserReq {
+func makeRegisterUserReq(firstName, lastName, email, password, passwordConfirmation, birthday string) payloads.RegisterUserReq {
 	return payloads.RegisterUserReq{
 		UserDataReq: payloads.UserDataReq{
 			FirstName: firstName,

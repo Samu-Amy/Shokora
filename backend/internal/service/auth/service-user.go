@@ -15,16 +15,6 @@ import (
 
 func (service *AuthService) UpdatePassword(ctx context.Context, userId, sessionId int64, payload *payloads.UpdatePasswordReq) error {
 
-	// - Validate password -
-
-	if payload.NewPassword == payload.OldPassword {
-		return domerrors.ErrSamePassword
-	}
-
-	if payloads.IsCommonPassword(payload.NewPassword) {
-		return domerrors.ErrCommonPassword
-	}
-
 	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
 		// Get old password from userId
