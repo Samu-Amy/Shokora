@@ -20,7 +20,7 @@ func (app *App) createProductHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// // Validate
-	// if err := Validate.Struct(payload); err != nil {
+	// if err := app.dataValidator.Struct(payload); err != nil {
 	// 	app.badRequestError(w, r, err)
 	// 	return
 	// }
@@ -100,7 +100,7 @@ func (app *App) updateProductHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// // Validate
-	// if err := Validate.Struct(payload); err != nil {
+	// if err := app.dataValidator.Struct(payload); err != nil {
 	// 	app.badRequestError(w, r, err)
 	// 	return
 	// }

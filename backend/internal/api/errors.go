@@ -57,12 +57,14 @@ func (app *App) badRequestError(w http.ResponseWriter, r *http.Request, err erro
 	// Validator error
 	var ve validator.ValidationErrors
 	if errors.As(err, &ve) {
-		writeJSON(w, http.StatusBadRequest, err)
+		writeValidatorJSONError(w, http.StatusBadRequest, ve)
+		return
 	}
 
 	// Domain (custom) error
 	if domerrors.IsDomainErr(err) {
 		writeJSONError(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	// Fallback

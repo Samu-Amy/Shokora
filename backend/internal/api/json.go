@@ -5,18 +5,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/go-playground/validator/v10"
 )
 
 // - JSON Validator -
-type ValidationError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-}
-
-func formatValidationErrors(vErr validator.ValidationErrors) map[string]ValidationError {
-	out := make(map[string]ValidationError)
+func formatValidationErrors(vErr validator.ValidationErrors) map[string]string {
+	out := make(map[string]string)
 
 	for _, fieldError := range vErr {
 		field := strings.ToLower(fieldError.Field())
@@ -26,10 +20,7 @@ func formatValidationErrors(vErr validator.ValidationErrors) map[string]Validati
 			continue
 		}
 
-		out[field] = ValidationError{
-			Code:    fieldError.Tag(),
-			Message: payloads.GetValidationErrorMessage(fieldError),
-		}
+		out[field] = fieldError.Tag()
 	}
 
 	return out
@@ -66,7 +57,7 @@ func writeJSONError(w http.ResponseWriter, status int, message string) error {
 // Used to return error in a {"error": error} JSON
 func writeValidatorJSONError(w http.ResponseWriter, status int, vErr validator.ValidationErrors) error {
 
-	return writeJSON(w, status)
+	return writeJSON(w, status, formatValidationErrors(vErr))
 }
 
 // Used to return data in a {"data": data} JSON

@@ -26,7 +26,7 @@ func (app *App) getMenuProductsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate
-	if err := Validate.Struct(queryPaginationOptions); err != nil {
+	if err := app.dataValidator.Struct(queryPaginationOptions); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}
@@ -47,7 +47,7 @@ func (app *App) getMenuProductsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate
-	if err := Validate.Struct(menuFilters); err != nil {
+	if err := app.dataValidator.Struct(menuFilters); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}

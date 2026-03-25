@@ -73,7 +73,7 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate
-	if err := Validate.Struct(payload); err != nil {
+	if err := app.dataValidator.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}
@@ -174,7 +174,7 @@ func (app *App) verifyEmailWithOtpHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	// Validate
-	if err := Validate.Struct(payload); err != nil {
+	if err := app.dataValidator.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}
@@ -225,7 +225,7 @@ func (app *App) verifyPasswordResetWithOtpHandler(w http.ResponseWriter, r *http
 	}
 
 	// Validate
-	if err := Validate.Struct(payload); err != nil {
+	if err := app.dataValidator.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}
@@ -258,7 +258,7 @@ func (app *App) resetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate
-	if err := Validate.Struct(payload); err != nil {
+	if err := app.dataValidator.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}
@@ -289,7 +289,7 @@ func (app *App) verifyTwoFactorAuthWithOtpHandler(w http.ResponseWriter, r *http
 	}
 
 	// Validate
-	if err := Validate.Struct(payload); err != nil {
+	if err := app.dataValidator.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}
@@ -331,7 +331,7 @@ func (app *App) resendEmailVerificationHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	// Validate
-	if err := Validate.Struct(payload); err != nil {
+	if err := app.dataValidator.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}
@@ -361,7 +361,7 @@ func (app *App) sendPasswordResetHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Validate
-	if err := Validate.Struct(payload); err != nil {
+	if err := app.dataValidator.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}
@@ -391,7 +391,7 @@ func (app *App) resendTwoFactorAuthHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Validate
-	if err := Validate.Struct(payload); err != nil {
+	if err := app.dataValidator.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}

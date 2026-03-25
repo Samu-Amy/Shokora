@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Samu-Amy/Shokora/internal/api"
+	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/appconfig"
 	"github.com/Samu-Amy/Shokora/internal/database"
 	"github.com/Samu-Amy/Shokora/internal/service"
@@ -47,6 +48,9 @@ func TestMain(m *testing.M) {
 	// - Store -
 	store := store.NewPostgresStorage(db)
 
+	// - Validator -
+	dataValidator := payloads.NewValidator()
+
 	// - Service -
 	authServiceConfig := appconfig.GetAuthServiceConfig(configs)
 	testService = service.NewService(txManager, store, mailer, logger, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
@@ -57,6 +61,7 @@ func TestMain(m *testing.M) {
 	// - App -
 	testApp := api.NewApp(
 		configs,
+		dataValidator,
 		testService,
 		logger,
 		rateLimiter,
