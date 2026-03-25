@@ -1,6 +1,7 @@
 package payloads
 
 import (
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -18,6 +19,18 @@ var (
 func NewValidator() *validator.Validate {
 	v := validator.New(validator.WithRequiredStructEnabled())
 
+	// Set the field name to the one used in the json (for request (data) - response (error) json matching)
+	v.RegisterTagNameFunc(func(field reflect.StructField) string {
+		name := strings.SplitN(field.Tag.Get("json"), ",", 2)[0] // Get the first value of the json tag (the field name)
+
+		if name == "-" { // Ignore field
+			return ""
+		}
+
+		return name
+	})
+
+	// Register custom validation functions
 	v.RegisterValidation("valid-name", validName)
 	v.RegisterValidation("no-edge-spaces", noEdgeSpaces)
 	v.RegisterValidation("valid-password", validPassword)

@@ -14,7 +14,7 @@ type UserDataReq struct {
 }
 
 type EmailFieldReq struct {
-	Email string `json:"email" validate:"required,email,max=255"`
+	Email string `json:"email" validate:"required,email,max=255"` // TODO: migliora controllo sull'email
 }
 
 type PasswordFieldReq struct {
