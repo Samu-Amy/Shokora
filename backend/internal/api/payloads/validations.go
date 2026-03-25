@@ -1,16 +1,30 @@
 package payloads
 
-import "strings"
+import (
+	"regexp"
+	"strings"
 
-// import "github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10"
+)
 
-// var Validate *validator.Validate //! andrebbe usato come payloads.Validate (oppure salvato come "Validator" dentro app ed usato come app.Validator)
+// - Regex -
+var (
+	regName     = regexp.MustCompile(`^[A-Za-zÀ-ÖØ-öø-ÿ' \-]+$`)
+	regPassword = regexp.MustCompile(`^[A-Za-z\d!@#$%^&*()\-_=+\[\]{};:'",.<>?/\\|` + "`" + ` ~]+$`)
+)
 
-// func InitValidators() {
-// 	Validate = validator.New(validator.WithRequiredStructEnabled())
+// - Validator -
 
-// 	Validate.RegisterValidation("password", passwordValidator)
-// }
+func NewValidator() *validator.Validate {
+	v := validator.New(validator.WithRequiredStructEnabled())
+
+	v.RegisterValidation("valid-name", validName)
+	v.RegisterValidation("no-edge-spaces", noEdgeSpaces)
+	v.RegisterValidation("valid-password", validPassword)
+	v.RegisterValidation("no-common-password", noCommonPassword)
+
+	return v
+}
 
 // - Auth -
 
@@ -54,15 +68,24 @@ func IsCommonPassword(password string) bool {
 	return found
 }
 
-// func passwordValidator(fl validator.FieldLevel) bool {
-// 	pwd := fl.Field().String()
+func noCommonPassword(fl validator.FieldLevel) bool {
+	return !IsCommonPassword(fl.Field().String())
+}
 
-// 	hasLength := len(pwd) >= 12 && len(pwd) <= 72
+func validName(fl validator.FieldLevel) bool {
+	return regName.MatchString(fl.Field().String())
+}
 
-// 	_, isCommon := commonPasswords[pwd]
+func noEdgeSpaces(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
 
-// 	return hasLength && !isCommon
-// }
+	// Do not accept spaces at start or end
+	return strings.TrimSpace(value) == value
+}
+
+func validPassword(fl validator.FieldLevel) bool {
+	return regPassword.MatchString(fl.Field().String())
+}
 
 // Birthdate
 

@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	"github.com/Samu-Amy/Shokora/internal/api"
+	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/appconfig"
 	"github.com/Samu-Amy/Shokora/internal/database"
 	"github.com/Samu-Amy/Shokora/internal/service"
@@ -51,6 +52,9 @@ func main() {
 	// - Store -
 	store := store.NewPostgresStorage(db)
 
+	// - Validator -
+	dataValidator := payloads.NewValidator()
+
 	// - Service -
 	authServiceConfig := appconfig.GetAuthServiceConfig(configs)
 	service := service.NewService(txManager, store, mailer, logger, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
@@ -76,6 +80,7 @@ func main() {
 	// - App -
 	app := api.NewApp(
 		configs,
+		dataValidator,
 		service,
 		logger,
 		rateLimiter,

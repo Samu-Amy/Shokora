@@ -23,7 +23,7 @@ var (
 	ErrForbidden           = domainErr("forbidden")    // User does not have the necessary permissions
 	ErrNotVerified         = domainErr("not_verified") // User must verify email
 
-	// Validation
+	// Validation // TODO: eliminare ed usare errori del validator (?)
 	ErrInvalidName       = domainErr("invalid_name")       // The first or last name is invalid
 	ErrInvalidDate       = domainErr("invalid_date")       // The date (e.g. birthdate) is invalid
 	ErrCommonPassword    = domainErr("common_password")    // The password is too weak

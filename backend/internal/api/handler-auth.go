@@ -28,7 +28,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate
-	if err := Validate.Struct(payload); err != nil {
+	if err := app.dataValidator.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}

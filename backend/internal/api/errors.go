@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
+	"github.com/go-playground/validator/v10"
 )
 
 // TODO: qua devono esserci solo domerrors (il service deve gestire gli interrors e tradurli in domerrors) - evita comunque di inviare interrors se dovessero esserci per sbaglio (controlla manualmente gli errori com'è già adesso)
@@ -53,13 +54,19 @@ func (app *App) badRequestError(w http.ResponseWriter, r *http.Request, err erro
 		app.logger.Warnf("bad request error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 	}
 
-	errorMessage := "bad_request"
-
-	if domerrors.IsDomainErr(err) {
-		errorMessage = err.Error()
+	// Validator error
+	var ve validator.ValidationErrors
+	if errors.As(err, &ve) {
+		writeJSON(w, http.StatusBadRequest, err)
 	}
 
-	writeJSONError(w, http.StatusBadRequest, errorMessage)
+	// Domain (custom) error
+	if domerrors.IsDomainErr(err) {
+		writeJSONError(w, http.StatusBadRequest, err.Error())
+	}
+
+	// Fallback
+	writeJSONError(w, http.StatusBadRequest, "bad_request")
 }
 
 func (app *App) notFoundError(w http.ResponseWriter, r *http.Request, err error) {
@@ -75,13 +82,13 @@ func (app *App) unauthorizedError(w http.ResponseWriter, r *http.Request, err er
 		app.logger.Warnf("unauthorized error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 	}
 
-	errorMessage := "unauthorized"
-
+	// Domain (custom) error
 	if domerrors.IsDomainErr(err) {
-		errorMessage = err.Error()
+		writeJSONError(w, http.StatusBadRequest, err.Error())
 	}
 
-	writeJSONError(w, http.StatusUnauthorized, errorMessage)
+	// Fallback
+	writeJSONError(w, http.StatusBadRequest, "unauthorized")
 }
 
 func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error) {
@@ -89,13 +96,13 @@ func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error
 		app.logger.Warnf("forbidden error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 	}
 
-	errorMessage := "forbidden"
-
+	// Domain (custom) error
 	if domerrors.IsDomainErr(err) {
-		errorMessage = err.Error()
+		writeJSONError(w, http.StatusBadRequest, err.Error())
 	}
 
-	writeJSONError(w, http.StatusForbidden, errorMessage)
+	// Fallback
+	writeJSONError(w, http.StatusBadRequest, "forbidden")
 }
 
 // ----- PARSE ERROR -----

@@ -13,31 +13,36 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/config"
 	"github.com/Samu-Amy/Shokora/internal/service"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 )
 
 // - Structs -
 type App struct {
-	config      config.Config
-	router      *chi.Mux
-	service     *service.Service
-	logger      *zap.SugaredLogger
-	rateLimiter ratelimiter.RateLimiterI
+	config        config.Config
+	router        *chi.Mux
+	dataValidator *validator.Validate
+	service       *service.Service
+	logger        *zap.SugaredLogger
+	rateLimiter   ratelimiter.RateLimiterI
 }
 
 // - Functions/Methods -
 func NewApp(
 	config config.Config,
+	dataValidator *validator.Validate,
 	service *service.Service,
 	logger *zap.SugaredLogger,
 	rateLimiter ratelimiter.RateLimiterI,
 ) *App {
 	app := &App{
-		config:      config,
-		service:     service,
-		logger:      logger,
-		rateLimiter: rateLimiter,
+		config:        config,
+		dataValidator: dataValidator,
+		service:       service,
+		logger:        logger,
+		rateLimiter:   rateLimiter,
 	}
+
 	app.router = app.InitRouter()
 
 	return app
