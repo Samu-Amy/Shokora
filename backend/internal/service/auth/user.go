@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"time"
 
 	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
@@ -39,6 +40,9 @@ func (service *AuthService) createUser(ctx context.Context, user *user.User) err
 // - Get -
 
 func (service *AuthService) getUser(ctx context.Context, email string, plainPassword string) (*user.User, error) {
+
+	email = strings.TrimSpace(email)
+	plainPassword = strings.TrimSpace(plainPassword)
 
 	// Get user from db
 	user, err := service.userRepo.GetByEmail(ctx, email)

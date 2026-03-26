@@ -8,8 +8,10 @@ import (
 	"testing"
 )
 
+// - Routes -
+
 func makeRequestWithPayload(t *testing.T, router http.Handler, method, route string, payload any) *httptest.ResponseRecorder {
-	t.Helper() // indica che è un helper, utile per errori
+	t.Helper() // When calling t.Fatal, t.Error, ecc. it reports the line in the test instead of the one in this function
 
 	// Marshal in JSON
 	bodyBytes, err := json.Marshal(payload)

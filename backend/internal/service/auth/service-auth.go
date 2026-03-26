@@ -3,6 +3,7 @@ package authservice
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
@@ -28,13 +29,13 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	// ----- USER -----
 
 	// Convert birthday to time.Time
-	birthday, err := convertBirthdayToTime(payload.Birthday)
+	birthday, err := convertBirthdayToTime(strings.TrimSpace(payload.Birthday))
 	if err != nil {
 		return nil, nil, domerrors.ErrInvalidDate
 	}
 
 	// Hash password
-	hashedPassword, err := service.hashPassword(payload.Password)
+	hashedPassword, err := service.hashPassword(strings.TrimSpace(payload.Password))
 	if err != nil {
 		service.logger.Warnw("Error hashing password", "error", err)
 		return nil, nil, domerrors.ParseIntError(err)
@@ -42,12 +43,12 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	// Build User struct from payload data
 	user := &user.User{
-		FirstName:    payload.FirstName,
-		LastName:     payload.LastName,
-		Email:        payload.Email,
+		FirstName:    strings.TrimSpace(payload.FirstName),
+		LastName:     strings.TrimSpace(payload.LastName),
+		Email:        strings.TrimSpace(payload.Email),
 		PasswordHash: hashedPassword,
 		Birthday:     birthday,
-		// ImageUrl:     payload.ImageUrl,
+		// ImageUrl:     strings.TrimSpace(payload.ImageUrl),
 	}
 
 	// Create User in db and update its struct
@@ -194,7 +195,7 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 		// Create Auth Tokens
 		authTokensDto, err = service.createNewAuthTokens(ctx, user.Id)
 		if err != nil {
-			return nil, nil, domerrors.ParseIntError(err) // TODO: controlla parsing errore
+			return nil, nil, domerrors.ParseIntError(err)
 		}
 
 		service.logger.Info("User logged, Tokens created", "userId", user.Id)

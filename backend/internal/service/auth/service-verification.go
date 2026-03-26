@@ -3,6 +3,7 @@ package authservice
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
@@ -52,7 +53,7 @@ func (service *AuthService) VerifyEmailWithOTP(ctx context.Context, payload *pay
 	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
 		// Hash OTP
-		hashedOTP := service.tokenAuthenticator.HashOTP(payload.OTP, auth.EmailVerification)
+		hashedOTP := service.tokenAuthenticator.HashOTP(strings.TrimSpace(payload.OTP), auth.EmailVerification)
 
 		// Verify and get data
 		userId, err := service.verifyOtp(ctx, tx, payload.VerificationId, hashedOTP, service.config.Auth.OTP.MaxAttempts, auth.EmailVerification)
@@ -140,7 +141,7 @@ func (service *AuthService) VerifyPasswordResetWithOTP(ctx context.Context, payl
 	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
 		// Hash OTP
-		hashedOTP := service.tokenAuthenticator.HashOTP(payload.OTP, auth.PasswordReset)
+		hashedOTP := service.tokenAuthenticator.HashOTP(strings.TrimSpace(payload.OTP), auth.PasswordReset)
 
 		// Verify and get data
 		userId, err := service.verifyOtp(ctx, tx, payload.VerificationId, hashedOTP, service.config.Auth.OTP.MaxAttempts, auth.PasswordReset)
@@ -189,7 +190,7 @@ func (service *AuthService) ResetPassword(ctx context.Context, payload *payloads
 	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
 		// Hash token
-		hashedToken := auth.HashBase64Token(payload.PlainResetSessionToken)
+		hashedToken := auth.HashBase64Token(strings.TrimSpace(payload.PlainResetSessionToken))
 
 		// Get token data from db
 		resetSessionToken, err := service.rsTokenRepo.Get(ctx, tx, hashedToken)
@@ -203,7 +204,7 @@ func (service *AuthService) ResetPassword(ctx context.Context, payload *payloads
 		}
 
 		// Hash password
-		hashedPassword, err := service.hashPassword(payload.Password)
+		hashedPassword, err := service.hashPassword(strings.TrimSpace(payload.Password))
 		if err != nil {
 			return err
 		}
@@ -240,7 +241,7 @@ func (service *AuthService) TwoFactorAuthWithOTP(ctx context.Context, payload *p
 	err = service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
 		// Hash OTP
-		hashedOTP := service.tokenAuthenticator.HashOTP(payload.OTP, auth.TwoFactorAuth)
+		hashedOTP := service.tokenAuthenticator.HashOTP(strings.TrimSpace(payload.OTP), auth.TwoFactorAuth)
 
 		// Verify and get data
 		userId, err := service.verifyOtp(ctx, tx, payload.VerificationId, hashedOTP, service.config.Auth.OTP.MaxAttempts, auth.TwoFactorAuth)

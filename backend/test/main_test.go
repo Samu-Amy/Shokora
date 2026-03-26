@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/rand"
 	"os"
 	"testing"
 
@@ -11,14 +12,26 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/service"
 	"github.com/Samu-Amy/Shokora/internal/store"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 )
 
-var testService *service.Service
+// Constants
+const (
+	randSeed int64 = 12 // TODO: cambia il seed per testare diversi casi
+)
 
+// Services to use in test
+var customRand *rand.Rand // TODO: usa questo per generare valori pseudo-casuali (con casualità ma anche riproducibilità)
+var dataValidator *validator.Validate
+var testService *service.Service
 var testRouter *chi.Mux
 
+// Main
 func TestMain(m *testing.M) {
+
+	// Set rand seeed
+	customRand = rand.New(rand.NewSource(randSeed))
 
 	// - App and DB Config -
 	configs := appconfig.NewTestConfig()
@@ -40,6 +53,9 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
+	// Clear db
+	clearTestDB(db)
+
 	logger.Info("DB Connected")
 
 	// - Transaction Manager -
@@ -49,7 +65,7 @@ func TestMain(m *testing.M) {
 	store := store.NewPostgresStorage(db)
 
 	// - Validator -
-	dataValidator := payloads.NewValidator()
+	dataValidator = payloads.NewValidator()
 
 	// - Service -
 	authServiceConfig := appconfig.GetAuthServiceConfig(configs)

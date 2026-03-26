@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
@@ -24,7 +25,7 @@ func (service *AuthService) UpdatePassword(ctx context.Context, userId, sessionI
 		}
 
 		// Check old password
-		if err = bcrypt.CompareHashAndPassword(hashedOldPassword, []byte(payload.OldPassword)); err != nil {
+		if err = bcrypt.CompareHashAndPassword(hashedOldPassword, []byte(strings.TrimSpace(payload.OldPassword))); err != nil {
 			if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 				return interrors.IErrInvalid
 			}
@@ -34,7 +35,7 @@ func (service *AuthService) UpdatePassword(ctx context.Context, userId, sessionI
 		}
 
 		// Hash new password
-		hashedNewPassword, err := service.hashPassword(payload.NewPassword)
+		hashedNewPassword, err := service.hashPassword(strings.TrimSpace(payload.NewPassword))
 		if err != nil {
 			return err
 		}
