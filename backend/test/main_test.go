@@ -21,7 +21,7 @@ Per runnare i test:
 - "cd .\backend\"
 - test normali (tutti): "go test [-v] .\test\ -run [NomeTest (es. TestRegisterUserRoute)]"
 - test normali (singolo test): "go test [-v] .\test\"
-- test fuzz: "go test .\test\ -run=^$ -fuzz=FuzzRegisterUserRoute"
+- solo test fuzz: "go test .\test\ -run=^$ -fuzz=[NomeTest (es.FuzzRegisterUserRoute) -fuzztime=[tempo (es. 20s)]" (-run=^$ dice di runnare i test normali che matchano con la regex (nessuno))
 */
 
 // Constants
