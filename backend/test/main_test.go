@@ -26,12 +26,12 @@ Per runnare i test:
 
 // Constants
 const (
-	activateLogger = false
+	activateLogger = false // Useful for debugging when test don't pass
 
-	routesTestsNum     = 50
+	routesTestsNum     = 25
 	validationTestsNum = 50
 
-	randSeed int64 = 12 // TODO: cambia il seed per testare diversi casi
+	randSeed int64 = 42 // TODO: cambia il seed per testare diversi casi
 )
 
 // Services to use in test

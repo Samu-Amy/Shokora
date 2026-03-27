@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
@@ -27,11 +28,15 @@ Returns:
 func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.RegisterUserReq) (*payloads.RegisterUserRes, *payloads.AuthTokensDto, error) {
 
 	// ----- USER -----
+	var birthday time.Time
+	var err error
 
-	// Convert birthday to time.Time
-	birthday, err := convertBirthdayToTime(strings.TrimSpace(payload.Birthday))
-	if err != nil {
-		return nil, nil, domerrors.ErrInvalidDate
+	if payload.Birthday != "" {
+		// Convert birthday to time.Time
+		birthday, err = convertBirthdayToTime(strings.TrimSpace(payload.Birthday))
+		if err != nil {
+			return nil, nil, domerrors.ErrInvalidDate
+		}
 	}
 
 	// Hash password

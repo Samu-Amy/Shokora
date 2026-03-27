@@ -77,6 +77,8 @@ func checkErrorMessage(t *testing.T, w *httptest.ResponseRecorder, expected stri
 // }
 
 func logResBody(t *testing.T, w *httptest.ResponseRecorder) {
+	t.Helper()
+
 	if w.Body.Len() > 0 {
 		t.Logf("response body: %s", w.Body.String())
 	}

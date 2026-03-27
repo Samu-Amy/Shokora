@@ -21,6 +21,9 @@ func (service *AuthService) createUser(ctx context.Context, user *user.User) err
 		err := service.userRepo.Create(ctx, tx, user)
 		if err != nil {
 			service.logger.Warnw("Error creating user in db", "error", err)
+			if errors.Is(err, interrors.IErrDuplicate) {
+				return interrors.IErrDuplicateEmail
+			}
 			return err
 		}
 

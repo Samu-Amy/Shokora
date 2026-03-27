@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"math/rand"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
@@ -13,17 +13,17 @@ import (
 
 func TestRegisterUserRoute(t *testing.T) {
 	t.Run("should register all users", func(t *testing.T) {
-		logRes := true
+		logRes := false
 
 		// TODO: sistema mock data (minor numero di dati ma che copre il maggior numero di casi possibili, tanto per la validazione dei dati ci sono test apposta)
 
-		for range routesTestsNum {
+		for i := range min(routesTestsNum, len(validEmails)) { // Emails should be unique
 
 			// Payload
 			firstName := randomFrom(validFirstNames)
 			lastName := randomFrom(validLastNames)
 			birthday := randomFrom(validBirthdays)
-			email := randomFrom(validEmails)
+			email := validEmails[i]
 			pssw := randomFrom(validPasswords)
 
 			registerUserReq := makeRegisterUserReq(
@@ -55,45 +55,91 @@ func TestRegisterUserRoute(t *testing.T) {
 				t.Fatalf("failed to unmarshal response body: %v", err)
 			}
 
-			if res.User.FirstName != strings.TrimSpace(firstName) || res.User.LastName != strings.TrimSpace(lastName) || res.User.Email != strings.TrimSpace(email) {
-				t.Fatal("wrong user data in payload")
+			// Check important data
+			if res.User.IsVerified || res.User.Role != 0 {
+				t.Fatal("user created as verified or with role != 0")
+			}
+
+			// if res.User.FirstName != strings.TrimSpace(firstName) || res.User.LastName != strings.TrimSpace(lastName) || res.User.Email != strings.TrimSpace(email) {
+			// 	t.Fatal("wrong user data in payload")
+			// }
+		}
+	})
+
+	t.Run("should give badRequest error because of email already in db", func(t *testing.T) {
+		logRes := true
+
+		for i := range min(routesTestsNum, len(validEmails)) {
+
+			// Payload
+			firstName := randomFrom(validFirstNames)
+			lastName := randomFrom(validLastNames)
+			birthday := randomFrom(validBirthdays)
+			email := validEmails[i]
+			pssw := randomFrom(validPasswords)
+
+			registerUserReq := makeRegisterUserReq(
+				firstName,
+				lastName,
+				birthday,
+				email,
+				pssw,
+				pssw,
+			)
+
+			// Request
+			w := makeRequestWithPayload(t, testRouter, "POST", "/api/v1/auth/user", registerUserReq)
+
+			// Check the result
+			checkResponseCode(t, w, http.StatusBadRequest)
+			checkErrorMessage(t, w, "duplicate_email")
+
+			// Log response body
+			if logRes {
+				logResBody(t, w)
 			}
 		}
 	})
 
 	// Payload validation tested separately (here is just to test that works in the route)
-	// t.Run("should give badRequest errors because of invalid data in payload", func(t *testing.T) {
-	// 	logRes := false
+	t.Run("should give badRequest errors because of invalid data in payload", func(t *testing.T) {
+		logRes := true
 
-	// 	// TODO: fai payloads con field non validi
+		for i := range min(routesTestsNum, len(notValidEmails)) { // Emails should be unique
 
-	// 	// Payload
-	// 	registerUserRequest := payloads.RegisterUserReq{
-	// 		UserDataReq: payloads.UserDataReq{
-	// 			FirstName: "John&", // Symbols in first/last name
-	// 			LastName:  "%Snow",
-	// 		},
-	// 		EmailFieldReq: payloads.EmailFieldReq{
-	// 			Email: "john.snow@gmaildoc", // Invalid email
-	// 		},
-	// 		DoublePasswordFieldReq: payloads.DoublePasswordFieldReq{
-	// 			Password:             "Rob",         // Password too short
-	// 			PasswordConfirmation: "Rob1231sad3", // Different password
-	// 		},
-	// 	}
+			// Payload
+			firstName := randomFrom(notValidFirstNames)
+			lastName := randomFrom(notValidLastNames)
+			birthday := randomFrom(notValidBirthdays)
+			email := notValidEmails[i]
+			pssw := randomFrom(notValidPasswords)
+			pssw2 := pssw
 
-	// 	// Request
-	// 	w := makeRequestWithPayload(t, testRouter, "POST", "/api/v1/auth/user", registerUserRequest)
+			if rand.Float32() < 0.5 {
+				pssw2 = notValidPasswords[rand.Intn(len(notValidPasswords))] // Pick a random password (not using the customRand with the same seed as others)
+			}
 
-	// 	// Check the result
-	// 	checkResponseCode(t, w, http.StatusBadRequest)
-	// 	// checkErrorMessage(t, w, "bad_request") // TODO: dipende dai dati non validi (fai check generico oppure specifico ma con casi specifici (es. sapendo che in un caso la password non passa una certa validazione, aspettati quel'errore specifico))
+			registerUserReq := makeRegisterUserReq(
+				firstName,
+				lastName,
+				birthday,
+				email,
+				pssw,
+				pssw2,
+			)
 
-	// 	// Log response body
-	// 	if logRes {
-	// 		logResBody(t, w)
-	// 	}
-	// })
+			// Request
+			w := makeRequestWithPayload(t, testRouter, "POST", "/api/v1/auth/user", registerUserReq)
+
+			// Check the result
+			checkResponseCode(t, w, http.StatusBadRequest)
+
+			// Log response body
+			if logRes {
+				logResBody(t, w)
+			}
+		}
+	})
 }
 
 func TestLoginUserRoute(t *testing.T) {

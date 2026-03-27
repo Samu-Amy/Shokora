@@ -17,33 +17,47 @@ func randomFrom[T any](arr []T) T {
 // ----- DATA -----
 
 var validFirstNames = []string{
-	"Mario", "Giulia", "Luca", "Sara", "Alessandro", "Francesca", "Matteo", "Chiara", "Andrea", "Martina", "Federico", "Elena", "Davide",
-	"Valentina", "Simone", "Laura", "Nicola", "Giovanna", "Gabriele", "Alice", "Stefano", "Ilaria", "Tommaso", "Beatrice", "Riccardo",
-	"Francesco", "Vanessa", "Alessia", "Emanuele", "Giada", "Antonio", "Sofia", "Daniele", "Claudia", "Paolo", "Camilla", "Enrico",
-	"Michela", "Vincenzo", "Elisa", "Roberto", "Federica", "Salvatore", "Aurora", "Giorgio", "Veronica", "Fabio", "Chiara", "Simona", "Lorenzo",
-	"Jean-Luc", "Anna Maria", "D'Angelo", "Élise", "Óscar", "Alessio-Paolo", "Maria Chiara", "Léa", "José", "Zoë",
+	"Mario", "Giulia", "Luca", "Sara", "Alessandro", " Francesca ", "Matteo", "Chiara", "Andrea", "Martina", " Federico", "Elena", "Davide ",
+	"Valentina", "Simone ", "Laura", "Nicola", "Giovanna", "Gabriele", "Alice", "Stefano", "Ilaria", " Tommaso ", "Beatrice", "Riccardo",
+	"Francesco", "Vanessa", "Alessia", "Emanuele", "Giada", " Antonio", " Sofia ", "Daniele", "Claudia", "Paolo", "Camilla ", "Enrico",
+	"Michela", " Vincenzo", "Elisa", "Roberto", "Federica", "Salvatore", "Aurora", "Giorgio", "Veronica", "Fabio", "Chiara", "Simona", " Lorenzo ",
+	" Jean-Luc ", "Anna Maria", "D'Angelo", " Élise", "Óscar", "Alessio-Paolo ", "Maria Chiara", "Léa", "José", "Zoë",
 }
 
-var notValidFirstNames = []string{}
+var notValidFirstNames = []string{
+	"",          // vuoto
+	"Lu!ca",     // simbolo non consentito
+	"An@na",     // simbolo
+	"John123",   // numeri
+	"Élise!",    // simbolo
+	"Jean--Luc", // doppio trattino non permesso
+}
 
 var validLastNames = []string{
-	"Rossi", "Bianchi", "Verdi", "Ferrari", "Moretti", "Galli", "Rinaldi", "Romano", "Conti", "Costa", "Fontana", "Marini", "Ricci", "De Luca", "Longo", "Martini", "Barbieri",
-	"Grassi", "Giordano", "Cattaneo", "Villa", "Serra", "Pellegrini", "Lombardi", "Villa", "", "Sanna", "Bruno", "Esposito", "Caputo", "Santoro", "D'Amico", "Vitale",
-	"Gatti", "Sala", "Piras", "Bertoli", "Amato", "Testa", "Corsi", "Pagani", "De Santis", "Fabbri", "Monti", "Bernardi", "Ruggiero", "Negri", "Ferretti", "Barone", "",
-	"De Luca", "D'Amico", "Di Stefano", "Van Der Berg", "Leone-Smith", "Del Rio", "Mc Donald", "O'Connor", "De la Cruz", "San Martín",
+	"Rossi", "Bianchi", "Verdi", "Ferrari", " Moretti ", "Galli", "Rinaldi", "Romano", " Conti ", "Costa", "Fontana", "Marini", "Ricci", " De Luca", "Longo", "Martini", "Barbieri",
+	"Grassi", " Giordano ", "", "Cattaneo", "Villa", "Serra", "Pellegrini", "Lombardi", "Villa ", "", "Sanna", " Bruno", "Esposito", "Caputo", "Santoro", "D'Amico", "Vitale",
+	"Gatti", "Sala", "Piras", "Bertoli", " Amato", " Testa", "", "Corsi", "Pagani", "De Santis", "Fabbri", "Monti", " Bernardi ", "Ruggiero", "Negri", "Ferretti ", "Barone", "",
+	"De Luca", "D'Amico", "Di Stefano ", "Van Der Berg", "Leone-Smith", "Del Rio ", "Mc Donald", "O'Connor", "De la Cruz", "San Martín ",
 }
 
-var notValidLastNames = []string{}
+var notValidLastNames = []string{
+	"Verdi123",  // numeri
+	"De@Luca",   // simbolo
+	"O'Ne!ll",   // simbolo
+	"Mc_Donald", // underscore non permesso
+}
 
 var validBirthdays = []string{
 	"01-01", "14-01", "28-01",
 	"03-02", "11-02", "22-02",
+	"", "", "", "", "", "", "",
 	"29-02", "05-03", "17-03",
 	"30-03", "02-04", "09-04",
 	"21-04", "27-04", "01-05",
 	"13-05", "25-05", "04-06",
 	"16-06", "29-06", "07-07",
 	"18-07", "31-07", "03-08",
+	"", "", "", "", "", "", "",
 	"12-08", "24-08", "06-09",
 	"15-09", "28-09", "01-10",
 	"10-10", "23-10", "31-10",
@@ -57,7 +71,15 @@ var validBirthdays = []string{
 	"30-11", "29-02", "",
 }
 
-var notValidBirthdays = []string{}
+var notValidBirthdays = []string{
+	"32-01",      // giorno invalido
+	"00-12",      // giorno invalido
+	"15-13",      // mese invalido
+	"31-04",      // aprile ha 30 giorni
+	"abc-def",    // lettere
+	"12/12",      // formato errato
+	"12-12-2020", // troppi segmenti
+}
 
 var validEmails = []string{
 	"mario.rossi@example.com", "giulia.bianchi@example.com", "luca.verdi@example.com", "sara.ferrari@example.com", "alessandro.moretti@example.com", "francesca.galli@example.com",
@@ -75,59 +97,67 @@ var validEmails = []string{
 
 var notValidEmails = []string{
 	"email@123.123.123.123",
+	"plainaddress",          // manca @
+	"@no-local-part.com",    // manca parte locale
+	"username@",             // manca dominio
+	"user@.com",             // dominio invalido
+	"user@com",              // dominio invalido
+	"user@@example.com",     // doppia @
+	"user name@example.com", // spazio
+	"user#mail.com",         // simbolo non permesso
 }
 
 var validPasswords = []string{
 	"Password123!",                                 // lettere maiuscole, minuscole, numeri, simbolo
-	"justlettersabcd",                              // solo lettere minuscole
-	"UPPERCASELETTERS12",                           // maiuscole + numeri
+	"jus tletter sabcd",                            // solo lettere minuscole
+	"UPPERCASELE TTERS12",                          // maiuscole + numeri
 	"mixedCASEpassword",                            // maiuscole e minuscole
 	"complex!Pass#01",                              // lettere + numeri + simboli
-	"shortButGood12!",                              // vicino a 12 caratteri
+	"shortB utGood12!",                             // vicino a 12 caratteri
 	"LongPasswordExample1234567890!",               // lunga, sicura
 	"onlylowercaseletters",                         // solo lettere minuscole
-	"MiXeD123456",                                  // mix lettere/numeri
+	"MiXeD12 456g",                                 // mix lettere/numeri
 	"Symbols!@#Only12",                             // solo simboli + numeri + lettere
 	"JustLettersLONGname",                          // lettere lunghe
 	"1234abcd5678efgh",                             // lettere e numeri
-	"Mix3dCASE!@#",                                 // lettere, numeri e simboli
+	"Mix3dC ASE!@#",                                // lettere, numeri e simboli
 	"abcdefgHIJKLMN",                               // lettere maiuscole e minuscole
 	"abcdefgh12345678",                             // minuscole + numeri
 	"ONLYUPPERCASELETTERS",                         // solo maiuscole
 	"!@#ComplexSymbol12",                           // simboli + lettere + numeri
 	"lowerUPPER123",                                // mix semplice
 	"SomeRandomPass2024",                           // lettere e numeri
-	"SymbolsAndLetters!@#",                         // mix
+	"SymbolsAndLet ters!@#",                        // mix
 	"PasswordWithLONGText1234567890",               // lunga
 	"abcDEF123!@#",                                 // mix corto
 	"justlowercaseletters2",                        // minuscole + numero
-	"UPPERandlower123",                             // mix maiuscole/minuscole/numeri
+	"UPPERa ndlower123",                            // mix maiuscole/minuscole/numeri
 	"Special$$Symbols123",                          // simboli + numeri + lettere
 	"SimplepassWord12",                             // semplice
 	"AnotherGoodPass!@",                            // simboli + lettere
 	"lowercasewithnumber1",                         // minuscole + numero
-	"UPPERCASEWITHSYMBOLS!@",                       // maiuscole + simboli
+	"UPPERCASEWI THSYMBOLS!@",                      // maiuscole + simboli
 	"RandomLongPasswordExample123!",                // lunga e sicura
 	"MiXeDletters123!",                             // mix corto
 	"PasswordMinimal12",                            // vicino a 12 caratteri
 	"ComplexLONGPasswordWith123Symbols!@#",         // lunga, sicura
-	"JustLettersWithUppercase",                     // lettere + maiuscole
+	"JustLe ttersWithUppercase",                    // lettere + maiuscole
 	"lowercaseandUPPER12",                          // mix semplice
 	"MixedWith123Symbols!@",                        // mix medio
-	"LowerUPPERSymbols123",                         // mix
+	"LowerUPPERS ymbols123",                        // mix
 	"AnotherPass123456",                            // lettere + numeri
 	"ShortSym!@#12",                                // vicino a 12 caratteri
 	"LongPasswordWithLettersNumbersAndSymbols123!", // molto lunga
 	"lettersnumbers123",                            // semplice
 	"UPPERlower123!",                               // corto, mix
-	"Symbols123!@#",                                // simboli + numeri
+	"Symbols 123!@#",                               // simboli + numeri
 	"RandomPassWith12345",                          // lettere + numeri
 	"JustLetters12345",                             // lettere + numeri
 	"LowerCaseOnlyabcd",                            // minuscole
 	"UpperCASEOnlyABCD",                            // maiuscole
-	"MixedLettersWith!@#",                          // mix simboli + lettere
+	"MixedLettersW ith!@#",                         // mix simboli + lettere
 	"SafePassword2026!",                            // semplice ma sicura
-	"VeryLongPasswordWithLetters123!@#",            // lunga e sicura
+	"VeryLo ngPasswordWithLetters123!@#",           // lunga e sicura
 	"PassWith Space12!",                            // spazio interno (IMPORTANTE)
 	"ValidPasswordWith~Tilde123",
 	"Back\\Slash123!!",
@@ -137,7 +167,17 @@ var validPasswords = []string{
 	"MixOfAll!@#123ABCdef",
 }
 
-var notValidPasswords = []string{}
+var notValidPasswords = []string{
+	"short",          // meno di 12 caratteri
+	"password",       // comune
+	"12345678",       // comune
+	"aaaaaaaaaaaa",   // ripetizione unico carattere
+	"Invalid©Char12", // simbolo non consentito (©)
+	"TooLongPasswordBecauseItExceedsSeventyTwoCharactersWhichIsTheBcryptLimit123!", // troppo lunga
+	"  LeadingSpace12", // spazio iniziale non consentito
+	"TrailingSpace12 ", // spazio finale non consentito
+	" jhd87s#7a6d8% ",  // spazio iniziale e finale
+}
 
 // ----- FUNCTIONS -----
 
