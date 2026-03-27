@@ -144,6 +144,9 @@ func TestRegisterUserRoute(t *testing.T) {
 
 func TestLoginUserRoute(t *testing.T) {
 	// t.Run("should not allow unauthenticated requests", func (t *testing.T) {
+
+	// TODO: crea manualmente gli user prima (non è detto che siano presenti quelli usati da register) -> magari fai package per seeding
+
 	// TODO: test login user esistenti e user non esistenti (usando tutti i dati mescolati, in modo da usare email di utenti con password di altri)
 	// })
 }
