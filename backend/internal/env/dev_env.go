@@ -3,6 +3,10 @@ package env
 
 import "github.com/joho/godotenv"
 
-func LoadEnv() {
+func LoadDevEnv() {
 	godotenv.Load("../.env")
+}
+
+func LoadTestEnv() {
+	godotenv.Load("../../.env")
 }

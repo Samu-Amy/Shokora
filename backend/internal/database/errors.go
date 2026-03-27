@@ -14,6 +14,8 @@ const (
 	CHECK_VIOLATION_ERROR  = pq.ErrorCode("23514")
 )
 
+// TODO: aggiungi errori foreign key (tipo "user_settings_user_id_fkey")
+
 // Error constraints
 const (
 	// Verification tokens

@@ -21,8 +21,8 @@ func NewPostgresStore(db *sql.DB) *PostgresUserStore {
 
 func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx, user *User) error {
 	query := `
-		INSERT INTO users (first_name, last_name, email, password, birth_date)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO users (first_name, last_name, email, password, birthday)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, updated_at
 	`
 

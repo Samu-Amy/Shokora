@@ -8,7 +8,7 @@ import (
 
 func FuzzRegisterUserRoute(f *testing.F) {
 
-	f.Add([]byte(`{"first_name":"Mario","last_name":"Rossi","birthday":"31-12","email":"mario@example.com","password":"Password%123!","password_confirmation":"Password%123!"}`))
+	f.Add("Mario", "Rossi", "31-12", "mario@example.com", "Password%123!", "Password%123!")
 
 	f.Fuzz(func(t *testing.T, firstName, lastName, birthday, email, password, passwordConf string) {
 		reqStruct := makeRegisterUserReq(firstName, lastName, birthday, email, password, passwordConf)
@@ -19,7 +19,7 @@ func FuzzRegisterUserRoute(f *testing.F) {
 
 func FuzzLoginUserRoute(f *testing.F) {
 
-	f.Add([]byte(`{"email":"mario@example.com","password":"Password%123!"}`))
+	f.Add("mario@example.com", "Password%123!")
 
 	f.Fuzz(func(t *testing.T, email, password string) {
 		reqStruct := makeLoginUserReq(email, password)

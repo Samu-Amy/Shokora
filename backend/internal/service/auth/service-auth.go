@@ -91,12 +91,12 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	if err != nil {
 		registerUserRes.HasAuthError = true
 
-		service.logger.Info("Only User created", "userId", user.Id)
+		service.logger.Infow("Only User created", "userId", user.Id)
 
 		return registerUserRes, nil, nil
 	}
 
-	service.logger.Info("User and Tokens created", "userId", user.Id)
+	service.logger.Infow("User and Tokens created", "userId", user.Id)
 
 	return registerUserRes, authTokensDto, nil
 }

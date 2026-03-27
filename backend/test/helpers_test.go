@@ -36,7 +36,7 @@ func checkResponseCode(t *testing.T, w *httptest.ResponseRecorder, expected int)
 	t.Helper()
 
 	if expected != w.Code {
-		t.Fatalf("expected 201, got %d, body: %s", w.Code, w.Body.String())
+		t.Fatalf("expected %d, got %d, body: %s", expected, w.Code, w.Body.String())
 	}
 }
 
@@ -58,6 +58,23 @@ func checkErrorMessage(t *testing.T, w *httptest.ResponseRecorder, expected stri
 		t.Fatalf("expected error message %q, got %q", expected, res.Error)
 	}
 }
+
+// func checkResBody[T any](t *testing.T, w *httptest.ResponseRecorder, expected T) {
+// 	t.Helper()
+
+// 	// TODO: fai (con generics?) - però ci sono dati che non so (tipo )
+
+// 	var res T
+
+// 	err := json.Unmarshal(w.Body.Bytes(), &res)
+// 	if err != nil {
+// 		t.Fatalf("failed to unmarshal response body: %v", err)
+// 	}
+
+// 	if res != expected {
+// 		t.Fatalf("expected error message %q, got %q", expected, res.Error)
+// 	}
+// }
 
 func logResBody(t *testing.T, w *httptest.ResponseRecorder) {
 	if w.Body.Len() > 0 {

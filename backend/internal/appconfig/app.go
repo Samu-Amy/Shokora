@@ -17,7 +17,7 @@ func NewDefaultConfig() config.Config {
 	environment := env.GetString("ENV", "dev")
 
 	if environment != "prod" {
-		env.LoadEnv() // Dev Only
+		env.LoadDevEnv() // Dev Only
 	}
 
 	return config.Config{

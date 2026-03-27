@@ -16,8 +16,21 @@ import (
 	"go.uber.org/zap"
 )
 
+/*
+Per runnare i test:
+- "cd .\backend\"
+- test normali (tutti): "go test [-v] .\test\ -run [NomeTest (es. TestRegisterUserRoute)]"
+- test normali (singolo test): "go test [-v] .\test\"
+- test fuzz: "go test .\test\ -run=^$ -fuzz=FuzzRegisterUserRoute"
+*/
+
 // Constants
 const (
+	activateLogger = false
+
+	routesTestsNum     = 50
+	validationTestsNum = 50
+
 	randSeed int64 = 12 // TODO: cambia il seed per testare diversi casi
 )
 
@@ -37,7 +50,12 @@ func TestMain(m *testing.M) {
 	configs := appconfig.NewTestConfig()
 
 	// - Logger -
-	logger := zap.NewNop().Sugar()
+	var logger *zap.SugaredLogger
+	if activateLogger {
+		logger = zap.Must(zap.NewProduction()).Sugar()
+	} else {
+		logger = zap.NewNop().Sugar()
+	}
 
 	// - Mailer -
 	mailer := appconfig.GetMailerFromConfig(configs)

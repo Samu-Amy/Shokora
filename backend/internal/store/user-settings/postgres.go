@@ -29,7 +29,7 @@ func (store *PostgresUserSettingsStore) Create(ctx context.Context, transaction 
 
 	var settingsId int64
 
-	err := store.db.QueryRowContext(
+	err := transaction.QueryRowContext(
 		queryCtx,
 		query,
 		userId,

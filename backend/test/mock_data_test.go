@@ -24,12 +24,16 @@ var validFirstNames = []string{
 	"Jean-Luc", "Anna Maria", "D'Angelo", "Élise", "Óscar", "Alessio-Paolo", "Maria Chiara", "Léa", "José", "Zoë",
 }
 
+var notValidFirstNames = []string{}
+
 var validLastNames = []string{
 	"Rossi", "Bianchi", "Verdi", "Ferrari", "Moretti", "Galli", "Rinaldi", "Romano", "Conti", "Costa", "Fontana", "Marini", "Ricci", "De Luca", "Longo", "Martini", "Barbieri",
 	"Grassi", "Giordano", "Cattaneo", "Villa", "Serra", "Pellegrini", "Lombardi", "Villa", "", "Sanna", "Bruno", "Esposito", "Caputo", "Santoro", "D'Amico", "Vitale",
 	"Gatti", "Sala", "Piras", "Bertoli", "Amato", "Testa", "Corsi", "Pagani", "De Santis", "Fabbri", "Monti", "Bernardi", "Ruggiero", "Negri", "Ferretti", "Barone", "",
 	"De Luca", "D'Amico", "Di Stefano", "Van Der Berg", "Leone-Smith", "Del Rio", "Mc Donald", "O'Connor", "De la Cruz", "San Martín",
 }
+
+var notValidLastNames = []string{}
 
 var validBirthdays = []string{
 	"01-01", "14-01", "28-01",
@@ -53,6 +57,8 @@ var validBirthdays = []string{
 	"30-11", "29-02", "",
 }
 
+var notValidBirthdays = []string{}
+
 var validEmails = []string{
 	"mario.rossi@example.com", "giulia.bianchi@example.com", "luca.verdi@example.com", "sara.ferrari@example.com", "alessandro.moretti@example.com", "francesca.galli@example.com",
 	"matteo.rinaldi@example.com", "chiara.romano@example.com", "andrea.conti@example.com", "martina.costa@example.com", "federico.fontana@example.com", "elena.marini@example.com",
@@ -64,7 +70,11 @@ var validEmails = []string{
 	"roberto.pagani@example.com", "federica.desantis@example.com", "salvatore.fabbri@example.com", "aurora.monti@example.com", "giorgio.bernardi@example.com",
 	"veronica.ruggiero@example.com", "fabio.negri@example.com", "chiara.ferretti@example.com", "simona.barone@example.com", "lorenzo.bellini@example.com",
 	"user+tag@example.com", "user.name+alias@sub.domain.com", "firstname-lastname@example.co.uk", "x@example.com", "user123@sub.mail.example.org", "test_email@example.io",
-	"name.surname@company.travel", "a.b.c.d@example.com", "email@123.123.123.123", "_______@example.com",
+	"name.surname@company.travel", "a.b.c.d@example.com", "_______@example.com",
+}
+
+var notValidEmails = []string{
+	"email@123.123.123.123",
 }
 
 var validPasswords = []string{
@@ -126,6 +136,8 @@ var validPasswords = []string{
 	"Pipe|Symbol123!!",
 	"MixOfAll!@#123ABCdef",
 }
+
+var notValidPasswords = []string{}
 
 // ----- FUNCTIONS -----
 

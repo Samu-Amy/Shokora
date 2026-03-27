@@ -10,10 +10,10 @@ import (
 )
 
 func NewTestConfig() config.Config {
-	environment := env.GetString("ENV", "test")
+	environment := env.GetString("ENV", "test") // If not found -> dev/test
 
 	if environment != "prod" {
-		env.LoadEnv() // Dev/test Only
+		env.LoadTestEnv() // Dev/test Only
 	}
 
 	return config.Config{
