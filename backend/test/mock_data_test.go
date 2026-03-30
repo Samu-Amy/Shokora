@@ -212,15 +212,29 @@ var validPasswords = []string{
 }
 
 var notValidPasswords = []string{
-	"short",          // meno di 12 caratteri
-	"password",       // comune
-	"12345678",       // comune
-	"aaaaaaaaaaaa",   // ripetizione unico carattere
-	"Invalid©Char12", // simbolo non consentito (©)
+	"",
+	"short",            // meno di 12 caratteri
+	"passwordpassword", // comune
+	"admin12345678",    // comune
+	"aaaaaaaaaaaa",     // ripetizione unico carattere
+	"Invalid©Char12",   // simbolo non consentito (©)
 	"TooLongPasswordBecauseItExceedsSeventyTwoCharactersWhichIsTheBcryptLimit123!", // troppo lunga
 	"  LeadingSpace12", // spazio iniziale non consentito
 	"TrailingSpace12 ", // spazio finale non consentito
 	" jhd87s#7a6d8% ",  // spazio iniziale e finale
+}
+
+var notValidPasswordsValidation = map[string]string{
+	"":                 "required",
+	"short":            "min",                // meno di 12 caratteri
+	"passwordpassword": "no-common-password", // comune
+	"admin12345678":    "no-common-password", // comune
+	"aaaaaaaaaaaa":     "no-common-password", // ripetizione unico carattere
+	"Invalid©Char12":   "valid-chars",        // simbolo non consentito (©)
+	"TooLongPasswordBecauseItExceedsSeventyTwoCharactersWhichIsTheBcryptLimit123!": "max", // troppo lunga
+	"  LeadingSpace12": "no-edge-spaces", // spazio iniziale non consentito
+	"TrailingSpace12 ": "no-edge-spaces", // spazio finale non consentito
+	" jhd87s#7a6d8% ":  "no-edge-spaces", // spazio iniziale e finale
 }
 
 // ----- FUNCTIONS -----

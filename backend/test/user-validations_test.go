@@ -146,7 +146,7 @@ func TestUserDataReqValidation(t *testing.T) {
 			found := false
 
 			for _, ve := range validationErrors {
-				if ve.Field() == invalidField || ve.Tag() != expectedTag {
+				if ve.Field() == invalidField && ve.Tag() == expectedTag {
 					found = true
 					break
 				}
@@ -272,9 +272,42 @@ func TestPasswordFieldReqValidation(t *testing.T) {
 		}
 	})
 
-	// t.Run("should not pass validation", func(t *testing.T) {
+	t.Run("should not pass validation", func(t *testing.T) {
+		invalidField := "password"
+		logErr := false
 
-	// })
+		for val, expectedTag := range notValidPasswordsValidation {
+			req := payloads.PasswordFieldReq{
+				Password: val,
+			}
+
+			err := dataValidator.Struct(req)
+
+			if err == nil {
+				t.Fatal("expected not valid, got valid")
+			}
+
+			if logErr {
+				t.Logf("val: %s, error: %v", val, err)
+			}
+
+			validationErrors := parseValidationErr(t, err)
+
+			// Check validation
+			found := false
+
+			for _, ve := range validationErrors {
+				if ve.Field() == invalidField && ve.Tag() == expectedTag {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
+			}
+		}
+	})
 }
 
 // - Double Password Field Req -
@@ -298,6 +331,11 @@ func TestDoublePasswordFieldReqValidation(t *testing.T) {
 	})
 
 	t.Run("should not pass validation because of different password", func(t *testing.T) {
+		invalidField := "password_confirmation"
+		expectedTag := "eqfield"
+		expectedParam := "Password"
+		logErr := false
+
 		for range validationTestsNum {
 			passw1 := randomFrom(validPasswords)
 			passw2 := randomFrom(validPasswords)
@@ -314,29 +352,65 @@ func TestDoublePasswordFieldReqValidation(t *testing.T) {
 			err := dataValidator.Struct(req)
 
 			if err == nil {
-				t.Errorf("expected invalid")
+				t.Fatal("expected not valid, got valid")
+			}
+
+			if logErr {
+				t.Logf("error: %v", err)
+			}
+
+			validationErrors := parseValidationErr(t, err)
+
+			// Check validation
+			found := false
+
+			for _, ve := range validationErrors {
+				if ve.Field() == invalidField && ve.Tag() == expectedTag && ve.Param() == expectedParam {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				t.Errorf("expected error on field %s with tag %s and param %s not found", invalidField, expectedTag, expectedParam)
 			}
 		}
 	})
 
-	t.Run("should not pass validation because of ...", func(t *testing.T) {
-		for range validationTestsNum {
-			passw1 := randomFrom(validPasswords)
-			passw2 := randomFrom(validPasswords)
+	t.Run("should not pass validation because of invalid password", func(t *testing.T) {
+		invalidField := "password"
+		logErr := false
 
-			for passw1 == passw2 {
-				passw2 = randomFrom(validPasswords)
-			}
-
+		for val, expectedTag := range notValidPasswordsValidation {
 			req := payloads.DoublePasswordFieldReq{
-				Password:             passw1,
-				PasswordConfirmation: passw2,
+				Password:             val,
+				PasswordConfirmation: val,
 			}
 
 			err := dataValidator.Struct(req)
 
 			if err == nil {
-				t.Errorf("expected invalid")
+				t.Fatal("expected not valid, got valid")
+			}
+
+			if logErr {
+				t.Logf("val: %s, error: %v", val, err)
+			}
+
+			validationErrors := parseValidationErr(t, err)
+
+			// Check validation
+			found := false
+
+			for _, ve := range validationErrors {
+				if ve.Field() == invalidField && ve.Tag() == expectedTag {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
 			}
 		}
 	})
@@ -361,18 +435,88 @@ func TestUpdatePasswordReqValidation(t *testing.T) {
 	})
 
 	t.Run("should not pass validation bacause of same password", func(t *testing.T) {
+		invalidField := "new_password"
+		expectedTag := "nefield"
+		expectedParam := "OldPassword"
+		logErr := false
+
 		for range validationTestsNum {
 			passw := randomFrom(validPasswords)
 
-			req := payloads.DoublePasswordFieldReq{
-				Password:             passw,
-				PasswordConfirmation: passw,
+			req := payloads.UpdatePasswordReq{
+				OldPassword: passw,
+				NewPassword: passw,
 			}
 
 			err := dataValidator.Struct(req)
 
 			if err == nil {
-				t.Errorf("expected invalid")
+				t.Fatal("expected not valid, got valid")
+			}
+
+			if logErr {
+				t.Logf("error: %v", err)
+			}
+
+			validationErrors := parseValidationErr(t, err)
+
+			// Check validation
+			found := false
+
+			for _, ve := range validationErrors {
+				if ve.Field() == invalidField && ve.Tag() == expectedTag && ve.Param() == expectedParam {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				t.Errorf("expected error on field %s with tag %s and param %s not found", invalidField, expectedTag, expectedParam)
+			}
+		}
+	})
+
+	t.Run("should not pass validation because of invalid password", func(t *testing.T) {
+		invalidField1 := "old_password"
+		invalidField2 := "new_password"
+		logErr := false
+
+		for val1, expectedTag1 := range notValidPasswordsValidation {
+			for val2, expectedTag2 := range notValidPasswordsValidation {
+				req := payloads.UpdatePasswordReq{
+					OldPassword: val1,
+					NewPassword: val2,
+				}
+
+				err := dataValidator.Struct(req)
+
+				if err == nil {
+					t.Fatal("expected not valid, got valid")
+				}
+
+				if logErr {
+					t.Logf("values: %s, %s, error: %v", val1, val2, err)
+				}
+
+				validationErrors := parseValidationErr(t, err)
+
+				// Check validation
+				foundOldPassword := false
+				foundNewPassword := false
+
+				for _, ve := range validationErrors {
+					if ve.Field() == invalidField1 && ve.Tag() == expectedTag1 {
+						foundOldPassword = true
+					} else if ve.Field() == invalidField2 && ve.Tag() == expectedTag2 {
+						foundNewPassword = true
+					}
+				}
+
+				if !foundOldPassword {
+					t.Errorf("expected error on field %s with tag %s not found", invalidField1, expectedTag1)
+				} else if !foundNewPassword {
+					t.Errorf("expected error on field %s with tag %s not found", invalidField2, expectedTag2)
+				}
 			}
 		}
 	})
