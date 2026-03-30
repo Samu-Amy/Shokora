@@ -16,6 +16,8 @@ func randomFrom[T any](arr []T) T {
 
 // ----- DATA -----
 
+// - First Name -
+
 var validFirstNames = []string{
 	"Mario", "Giulia", "Luca", "Sara", "Alessandro", " Francesca ", "Matteo", "Chiara", "Andrea", "Martina", " Federico", "Elena", "Davide ",
 	"Valentina", "Simone ", "Laura", "Nicola", "Giovanna", "Gabriele", "Alice", "Stefano", "Ilaria", " Tommaso ", "Beatrice", "Riccardo",
@@ -24,14 +26,25 @@ var validFirstNames = []string{
 	" Jean-Luc ", "Anna Maria", "D'Angelo", " Élise", "Óscar", "Alessio-Paolo ", "Maria Chiara", "Léa", "José", "Zoë",
 }
 
-var notValidFirstNames = []string{
-	"",          // vuoto
-	"Lu!ca",     // simbolo non consentito
-	"An@na",     // simbolo
-	"John123",   // numeri
-	"Élise!",    // simbolo
-	"Jean--Luc", // doppio trattino non permesso
+var notValidFirstNames = []string{ // TODO: fare versione con anche i tag che violano per controllo più preciso (?)
+	"",        // vuoto
+	"Lu!ca",   // simbolo non consentito
+	"An@na",   // simbolo
+	"John123", // numeri
+	"Élise!",  // simbolo
 }
+
+var notValidFirstNamesValidation = map[string]string{
+	"":        "required",
+	"Lu!ca":   "valid-name",
+	"An@na":   "valid-name",
+	"John123": "valid-name",
+	"Élise!":  "valid-name",
+	"sahgdsdasjkhdajsdmnbcjdhfiadkjSHIUYDSAKJDHASjahsdaIUhsdJAKHdi":   "max",
+	"sahgdsdasjk&dajsdmnbcjdhfiadkjSHIUYDS%KJDHASjahsd#IUhsd$JAK%Hdi": "max",
+}
+
+// - Last Name -
 
 var validLastNames = []string{
 	"Rossi", "Bianchi", "Verdi", "Ferrari", " Moretti ", "Galli", "Rinaldi", "Romano", " Conti ", "Costa", "Fontana", "Marini", "Ricci", " De Luca", "Longo", "Martini", "Barbieri",
@@ -46,6 +59,17 @@ var notValidLastNames = []string{
 	"O'Ne!ll",   // simbolo
 	"Mc_Donald", // underscore non permesso
 }
+
+var notValidLastNamesValidation = map[string]string{
+	"Verdi123":  "valid-name", // numeri
+	"De@Luca":   "valid-name", // simbolo
+	"O'Ne!ll":   "valid-name", // simbolo
+	"Mc_Donald": "valid-name", // underscore non permesso
+	"AjhsdjasySFdasDASKsLJMNCkANLMANdakljdaskldnASDhgsdaAHG":      "max",
+	"&Ajhsdjasy%SFdasDASKsLJMNCk@ANLMANdakljd$ask#ldnASDhgsdaAHG": "max",
+}
+
+// - Birthday -
 
 var validBirthdays = []string{
 	"01-01", "14-01", "28-01",
@@ -81,6 +105,8 @@ var notValidBirthdays = []string{
 	"12-12-2020", // troppi segmenti
 }
 
+// - Email -
+
 var validEmails = []string{
 	"mario.rossi@example.com", "giulia.bianchi@example.com", "luca.verdi@example.com", "sara.ferrari@example.com", "alessandro.moretti@example.com", "francesca.galli@example.com",
 	"matteo.rinaldi@example.com", "chiara.romano@example.com", "andrea.conti@example.com", "martina.costa@example.com", "federico.fontana@example.com", "elena.marini@example.com",
@@ -96,7 +122,8 @@ var validEmails = []string{
 }
 
 var notValidEmails = []string{
-	"email@123.123.123.123",
+	"",
+	"email@123.123.123.123", // formato non valido
 	"plainaddress",          // manca @
 	"@no-local-part.com",    // manca parte locale
 	"username@",             // manca dominio
@@ -105,7 +132,24 @@ var notValidEmails = []string{
 	"user@@example.com",     // doppia @
 	"user name@example.com", // spazio
 	"user#mail.com",         // simbolo non permesso
+	"use76sad87sa8dhjsahdsA87adsajhkldas90483kjlaskdh1hj2gasjhnjhdas78das76d8a7sdasjhdghasdnberhjsGDASJDASdjsAhdjasGHDsahgd76asJKdhakdklsajd872aslr@maasjhsaudsadjshaJHYDASJKYDASHJtdasyu786a65dasGDASHJidysjfsd54fdsjhfisdfsdfahdil.comdasjkhASDdjashhjsa78657786saHDjahjhdasjkdsuiaydasdsaddsjakhds",
 }
+
+var notValidEmailsValidation = map[string]string{
+	"":                      "required",
+	"email@123.123.123.123": "email",
+	"plainaddress":          "email",
+	"@no-local-part.com":    "email",
+	"username@":             "email",
+	"user@.com":             "email",
+	"user@com":              "email",
+	"user@@example.com":     "email",
+	"user name@example.com": "email",
+	"user#mail.com":         "email",
+	"use76sad87sa8dhjsahdsA87adsajhkldas90483kjlaskdh1hj2gasjhnjhdas78das76d8a7sdasjhdghasdnberhjsGDASJDASdjsAhdjasGHDsahgd76asJKdhakdklsajd872aslr@maasjhsaudsadjshaJHYDASJKYDASHJtdasyu786a65dasGDASHJidysjfsd54fdsjhfisdfsdfahdil.comdasjkhASDdjashhjsa78657786saHDjahjhdasjkdsuiaydasdsaddsjakhds": "max",
+}
+
+// - Password -
 
 var validPasswords = []string{
 	"Password123!",                                 // lettere maiuscole, minuscole, numeri, simbolo

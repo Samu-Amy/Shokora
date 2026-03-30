@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // - Routes -
@@ -82,4 +84,16 @@ func logResBody(t *testing.T, w *httptest.ResponseRecorder) {
 	if w.Body.Len() > 0 {
 		t.Logf("response body: %s", w.Body.String())
 	}
+}
+
+// - Validation -
+func parseValidationErr(t *testing.T, err error) validator.ValidationErrors {
+	t.Helper()
+
+	validationErrors, ok := err.(validator.ValidationErrors)
+	if !ok {
+		t.Fatalf("unexpected error type: %v", err)
+	}
+
+	return validationErrors
 }

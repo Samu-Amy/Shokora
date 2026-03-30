@@ -5,14 +5,14 @@ package payloads
 // TODO: finisci validazione (fai anche per stringhe generiche, tipo nomi prodotti e descrizioni), togli validazione da service
 
 type UserDataReq struct {
-	FirstName string `json:"first_name" validate:"required,min=1,max=125,valid-name"`
-	LastName  string `json:"last_name" validate:"omitempty,max=125,valid-name"`
+	FirstName string `json:"first_name" validate:"required,min=1,max=50,valid-name"`
+	LastName  string `json:"last_name" validate:"omitempty,max=50,valid-name"`
 	Birthday  string `json:"birthday,omitempty" validate:"omitempty,valid-birthday"`
 	// ImageUrl  string    `json:"image_url,omitempty" validate:"omitempty,url,valid-chars"` // usare url (se l'url sarà conforme al controllo)?
 }
 
 type EmailFieldReq struct {
-	Email string `json:"email" validate:"required,email,max=255"` // TODO: migliora controllo sull'email
+	Email string `json:"email" validate:"required,email,max=254"` // Length accepted by IETF
 }
 
 type PasswordFieldReq struct {
