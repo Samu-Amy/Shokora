@@ -9,7 +9,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
-	rtoken "github.com/Samu-Amy/Shokora/internal/store/refresh-token.go"
+	rtoken "github.com/Samu-Amy/Shokora/internal/store/refresh-token"
 )
 
 // ----- CREATE AND ROTATE REFRESH TOKENS -----

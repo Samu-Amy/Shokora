@@ -25,7 +25,7 @@ type Service struct {
 
 func NewService(txManager database.ITransactionManager, store *store.Storage, mailer mailer.IClient, logger *zap.SugaredLogger, jwtAuthenticator *auth.JWTAuthenticator, tokenAuthenticator *auth.TokenAuthenticator, authServiceConfig config.AuthServiceConfig) *Service {
 	return &Service{
-		Auth: authservice.NewService(txManager, store.VToken, store.ResetSessionToken, store.RefreshToken, store.UserSession, store.User, store.UserSettings, mailer, logger, jwtAuthenticator, tokenAuthenticator, authServiceConfig),
+		Auth: authservice.NewService(txManager, store.VToken, store.ResetSessionToken, store.OAuthState, store.RefreshToken, store.UserSession, store.User, store.UserSettings, mailer, logger, jwtAuthenticator, tokenAuthenticator, authServiceConfig),
 		User: userservice.NewService(txManager, store.User, logger),
 	}
 }

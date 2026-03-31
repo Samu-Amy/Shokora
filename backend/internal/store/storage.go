@@ -3,8 +3,9 @@ package store
 import (
 	"database/sql"
 
+	oauthstate "github.com/Samu-Amy/Shokora/internal/store/oauth-states"
 	"github.com/Samu-Amy/Shokora/internal/store/product"
-	refreshtoken "github.com/Samu-Amy/Shokora/internal/store/refresh-token.go"
+	rtoken "github.com/Samu-Amy/Shokora/internal/store/refresh-token"
 	rstoken "github.com/Samu-Amy/Shokora/internal/store/reset-session-tokens"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
 	session "github.com/Samu-Amy/Shokora/internal/store/user-session"
@@ -19,7 +20,8 @@ It is divided in Repositories (one for every db table) and it is used by the Ser
 type Storage struct {
 	VToken            vtoken.IVTokenRepository
 	ResetSessionToken rstoken.IResetSessionTokenRepository
-	RefreshToken      refreshtoken.IRefreshTokenRepository
+	OAuthState        oauthstate.IOAuthStateRepository
+	RefreshToken      rtoken.IRefreshTokenRepository
 	UserSession       session.IUserSessionRepository
 	User              user.IUserRepository
 	UserSettings      usersettings.IUserSettingsRepository
@@ -30,7 +32,8 @@ func NewPostgresStorage(db *sql.DB) *Storage {
 	return &Storage{
 		VToken:            vtoken.NewPostgresStore(db),
 		ResetSessionToken: rstoken.NewPostgresStore(db),
-		RefreshToken:      refreshtoken.NewPostgresStore(db),
+		OAuthState:        oauthstate.NewPostgresStore(db),
+		RefreshToken:      rtoken.NewPostgresStore(db),
 		UserSession:       session.NewPostgresStore(db),
 		User:              user.NewPostgresStore(db),
 		UserSettings:      usersettings.NewPostgresStore(db),
