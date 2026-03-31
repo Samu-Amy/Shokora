@@ -2,6 +2,8 @@ package api
 
 import (
 	"net/http"
+
+	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 )
 
 // ----- CREATE -----
@@ -12,7 +14,7 @@ func (app *App) createProductHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: usa paginate middleware (chi) per la paginazione?
 
 	// // Get payload data
-	// var payload payloads.CreateProductReqPayload
+	// var payload payloads.CreateProductReq
 
 	// if err := readJSON(w, r, &payload); err != nil {
 	// 	app.badRequestError(w, r, err)
@@ -41,7 +43,7 @@ func (app *App) createProductHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// //* Return product
-	// if err := app.jsonResponse(w, http.StatusCreated, product); err != nil {
+	// if err := app.jsonResponse(w, http.StatusCreated, product); err != nil { // TODO: fai productRes (non usare model db)
 	// 	app.internalServerError(w, r, err)
 	// 	return
 	// }
@@ -66,11 +68,15 @@ func (app *App) getProductHandler(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
+	productRes := payloads.ProductRes{
+		Name: "Cappuccino",
+	}
+
 	// //* Return product
-	// if err := app.jsonResponse(w, http.StatusOK, product); err != nil {
-	// 	app.internalServerError(w, r, err)
-	// 	return
-	// }
+	if err := app.jsonResponse(w, http.StatusOK, productRes); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 }
 
 // ----- UPDATE -----

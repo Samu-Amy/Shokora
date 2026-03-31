@@ -2,6 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS users(
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  google_id VARCHAR(255) UNIQUE NULL,
 
   first_name varchar(125) NOT NULL,
   last_name varchar(125) NOT NULL,

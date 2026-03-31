@@ -97,6 +97,28 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (app *App) googleHandler(w http.ResponseWriter, r *http.Request) {
+	// ctx := r.Context()
+
+	// TODO: controlla email esistente
+
+	//* Return user
+	// if err := app.jsonResponse(w, http.StatusCreated, loginUserRes); err != nil { // TODO: lato frontend bisognerà gestire i casi (es. call route per verifica)
+	// 	app.internalServerError(w, r, err)
+	// 	return
+	// }
+}
+
+func (app *App) googleCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	// ctx := r.Context()
+
+	//* Return user
+	// if err := app.jsonResponse(w, http.StatusCreated, loginUserRes); err != nil { // TODO: lato frontend bisognerà gestire i casi (es. call route per verifica)
+	// 	app.internalServerError(w, r, err)
+	// 	return
+	// }
+}
+
 // ----- LOGOUT -----
 
 func (app *App) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -193,7 +215,7 @@ func (app *App) verifyEmailWithOtpHandler(w http.ResponseWriter, r *http.Request
 
 // - Verification -
 
-func (app *App) verifyPasswordResetWithMagicLinkHandler(w http.ResponseWriter, r *http.Request) {
+func (app *App) verifyPasswordResetWithMagicLinkHandler(w http.ResponseWriter, r *http.Request) { // TODO: aggiungi controllo nel service per non far cambiare la password a chi ha l'accesso con google
 	ctx := r.Context()
 
 	// Get "token" param

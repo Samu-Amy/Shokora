@@ -3,7 +3,8 @@
 	import { onMount } from "svelte";
 
   let status = $state<FetchStatus>("loading");
-  let productId = $state<number | undefined>();
+  // let productId = $state<number | undefined>();
+  let productName = $state<number | undefined>();
 
   // TODO: usare load in +page.ts invece che onMount qua (?)
   onMount(async () => {
@@ -26,7 +27,8 @@
 
       
       let product = await res.json();
-      productId = product.data.id;
+      // productId = product.data.id;
+      productName = product.data.name;
       status = "success";
     } catch (err) {
       // TODO: gestisci (?)
@@ -46,7 +48,8 @@
   <p>Test page (data)</p>
   
   {#if status == "success"}
-    <p>Id prodotto: {productId}</p>
+    <!-- <p>Id prodotto: {productId}</p> -->
+    <p>Nome prodotto: {productName}</p>
   {:else if status == "loading"}
     <p>Caricamento...</p>
   {:else}
