@@ -98,19 +98,25 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) googleHandler(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
+	ctx := r.Context()
 
-	// TODO: controlla email esistente
+	oAuthUrl, err := app.service.Auth.GenerateOAuthUrl(ctx)
+	if err != nil {
+		app.parseError(w, r, err)
+		return
+	}
 
-	//* Return user
-	// if err := app.jsonResponse(w, http.StatusCreated, loginUserRes); err != nil { // TODO: lato frontend bisognerà gestire i casi (es. call route per verifica)
-	// 	app.internalServerError(w, r, err)
-	// 	return
-	// }
+	//* Return OAuth url
+	if err := app.jsonResponse(w, http.StatusOK, map[string]string{"url": oAuthUrl}); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 }
 
 func (app *App) googleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
+
+	// TODO: controlla email esistente
 
 	//* Return user
 	// if err := app.jsonResponse(w, http.StatusCreated, loginUserRes); err != nil { // TODO: lato frontend bisognerà gestire i casi (es. call route per verifica)

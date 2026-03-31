@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/ratelimiter"
+	"golang.org/x/oauth2"
 )
 
 // ----- APP -----
@@ -41,6 +42,7 @@ type ResendConfig struct {
 // ----- AUTH -----
 
 type AuthConfig struct {
+	GoogleOAuthConfig           *oauth2.Config
 	PasswordHashingCost         int
 	Token                       TokensConfig
 	MagicLink                   MagicLinkConfig

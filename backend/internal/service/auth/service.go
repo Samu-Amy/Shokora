@@ -19,7 +19,7 @@ type AuthService struct {
 	txManager          database.ITransactionManager
 	vTokenRepo         v_token.IVTokenRepository
 	rsTokenRepo        rstoken.IResetSessionTokenRepository
-	oAuthState         oauthstate.IOAuthStateRepository
+	oAuthStateRepo     oauthstate.IOAuthStateRepository
 	refreshTokenRepo   rtoken.IRefreshTokenRepository
 	userSessionRepo    session.IUserSessionRepository
 	userRepo           user.IUserRepository
@@ -31,6 +31,6 @@ type AuthService struct {
 	config             config.AuthServiceConfig
 }
 
-func NewService(txManager database.ITransactionManager, vTokenRepo v_token.IVTokenRepository, rsTokenRepo rstoken.IResetSessionTokenRepository, oAuthState oauthstate.IOAuthStateRepository, refreshTokensRepo rtoken.IRefreshTokenRepository, userSessionRepo session.IUserSessionRepository, userRepo user.IUserRepository, userSettingsRepo usersettings.IUserSettingsRepository, mailer mailer.IClient, logger *zap.SugaredLogger, jwtAuthenticator *auth.JWTAuthenticator, tokenAuthenticator *auth.TokenAuthenticator, config config.AuthServiceConfig) *AuthService {
-	return &AuthService{txManager, vTokenRepo, rsTokenRepo, oAuthState, refreshTokensRepo, userSessionRepo, userRepo, userSettingsRepo, mailer, logger, jwtAuthenticator, tokenAuthenticator, config}
+func NewService(txManager database.ITransactionManager, vTokenRepo v_token.IVTokenRepository, rsTokenRepo rstoken.IResetSessionTokenRepository, oAuthStateRepo oauthstate.IOAuthStateRepository, refreshTokensRepo rtoken.IRefreshTokenRepository, userSessionRepo session.IUserSessionRepository, userRepo user.IUserRepository, userSettingsRepo usersettings.IUserSettingsRepository, mailer mailer.IClient, logger *zap.SugaredLogger, jwtAuthenticator *auth.JWTAuthenticator, tokenAuthenticator *auth.TokenAuthenticator, config config.AuthServiceConfig) *AuthService {
+	return &AuthService{txManager, vTokenRepo, rsTokenRepo, oAuthStateRepo, refreshTokensRepo, userSessionRepo, userRepo, userSettingsRepo, mailer, logger, jwtAuthenticator, tokenAuthenticator, config}
 }

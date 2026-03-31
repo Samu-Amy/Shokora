@@ -7,6 +7,8 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api/ratelimiter"
 	"github.com/Samu-Amy/Shokora/internal/config"
 	"github.com/Samu-Amy/Shokora/internal/env"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 func NewTestConfig() config.Config {
@@ -40,6 +42,17 @@ func NewTestConfig() config.Config {
 			IsSandboxEnv: env.GetBool("SANDBOX_TEST", true),
 		},
 		Auth: config.AuthConfig{
+			GoogleOAuthConfig: &oauth2.Config{
+				ClientID:     env.GetString("GOOGLE_CLIENT_ID", ""),
+				ClientSecret: env.GetString("GOOGLE_CLIENT_SECRET", ""),
+				RedirectURL:  env.GetString("GOOGLE_REDIRECT_URL", ""),
+				Scopes: []string{
+					"openid",
+					"email",
+					"profile",
+				},
+				Endpoint: google.Endpoint,
+			},
 			PasswordHashingCost: 12, // bcrypt.DefaultCost = 10
 			Token: config.TokensConfig{
 				Secret:                    env.GetString("AUTH_TOKEN_SECRET", "4a4c345b5064c9a85fff749313ff25310085a606a47232c94e9d898470c6e854"), // TODO: cambia quello di default (oppure dai errore se non lo trova dall'env) e usa "openssl rand -hex 32" per generare token
