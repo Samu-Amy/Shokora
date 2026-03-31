@@ -78,16 +78,18 @@ func (app *App) InitRouter() *chi.Mux {
 		r.Route("/auth", func(r chi.Router) {
 			// Auth
 			r.Post("/user", app.registerUserHandler)
-			r.Post("/login", app.loginUserHandler)
-			r.Post("/google", app.googleHandler)
+			r.Get("/login", app.loginUserHandler)   // TODO: usare Get invece di Post (?)
+			r.Get("/logout", app.logoutUserHandler) // TODO: usare Get invece di Post (?)
+
+			r.Get("/google", app.googleHandler)
 			r.Post("/google/callback", app.googleCallbackHandler)
-			r.Post("/logout", app.logoutUserHandler)
 
 			// Google
 			// r.Post("/google", app.googleRegisterUserHandler)
 			// r.Post("/login/google", app.googleLoginUserHandler)
 
 			// Verifications
+			// TODO: usare Get invece di Post (?)
 			r.Post("/verify-email/send", app.resendEmailVerificationHandler) // Resend Email verification
 			r.Post("/verify-email/otp", app.verifyEmailWithOtpHandler)       // TODO: spostare verifiche email in Auth-Protected Routes (?)
 			r.Post("/verify-email/{token}", app.verifyEmailWithMagicLinkHandler)

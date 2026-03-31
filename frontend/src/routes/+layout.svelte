@@ -26,8 +26,9 @@
 <nav class="py-4 bg-slate-800 text-white flex gap-4 justify-center items-center">
   <a class="hover:text-orange-400" href="/">Home</a>
   <a class="hover:text-orange-400" href="/menu">Menu</a>
-  <a class="hover:text-orange-400" href="/about">About</a>
-  <a class="hover:text-orange-400" href="/contacts">Contacts</a>
+  <a class="hover:text-orange-400" href="/about">Chi siamo</a>
+  <a class="hover:text-orange-400" href="/contacts">Contatti</a>
+  <a class="hover:text-orange-400" href="/auth/login">Accedi</a>
 </nav>
 <main>
   {@render children()}
