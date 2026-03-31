@@ -116,6 +116,11 @@ func (app *App) googleHandler(w http.ResponseWriter, r *http.Request) {
 func (app *App) googleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	// controllare se la mail esiste già e se google_id esiste già
+	// controllare status
+	// salvare dati utente (se mail e google_id non esistono)
+	// creare tokens e cookies (?)
+
 	// TODO: controlla email esistente
 
 	//* Return user
