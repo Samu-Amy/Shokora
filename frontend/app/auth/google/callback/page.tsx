@@ -1,7 +1,7 @@
 export default function GoogleCallbackPage() {
   return (
-    <main>
+    <div>
       <h1>Google Callback Page</h1>
-    </main>
+    </div>
   );
 }

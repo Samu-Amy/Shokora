@@ -13,6 +13,8 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 // TODO: controlla corretto utilizzo di html semantics (tags)
 
+// TODO: fai pagina 404 (adatta anche a mobile, con tasto per tornare indietro)
+
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
 //   subsets: ["latin"],
@@ -49,9 +51,11 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", interSans.variable, interMono.variable, "font-sans", inter.variable)}
     >
       {/* TODO: usa tag html bene (tipo nav, aside, ecc.) */}
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col justify-between">
         <Navbar />
-        {children}
+        <main className="order-1 sm:order-2 flex">
+          {children}
+        </main>
       </body>
     </html>
   );
