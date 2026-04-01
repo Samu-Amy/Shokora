@@ -117,7 +117,7 @@ func (app *App) googleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// controllare se la mail esiste già e se google_id esiste già
-	// controllare status
+	// controllare state
 	// salvare dati utente (se mail e google_id non esistono)
 	// creare tokens e cookies (?)
 
