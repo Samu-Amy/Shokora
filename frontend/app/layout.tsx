@@ -53,7 +53,7 @@ export default function RootLayout({
       {/* TODO: usa tag html bene (tipo nav, aside, ecc.) */}
       <body className="min-h-full flex flex-col justify-between">
         <Navbar />
-        <main className="order-1 sm:order-2 flex">
+        <main className="order-1 sm:order-2 flex-1 px-2 sm:px-64">
           {children}
         </main>
       </body>

@@ -114,7 +114,21 @@ func (app *App) googleHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) googleCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	// ctx := r.Context()
+
+	// Get payload data
+	var payload payloads.GoogleOAuthCallbackReq
+
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	// Validate
+	if err := app.dataValidator.Struct(payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
 
 	// controllare se la mail esiste già e se google_id esiste già
 	// controllare state

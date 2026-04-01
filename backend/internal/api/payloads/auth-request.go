@@ -14,6 +14,11 @@ type LoginUserReq struct {
 	PasswordFieldReq
 }
 
+type GoogleOAuthCallbackReq struct {
+	State string `json:"state" validate:"required,min=43,max=43"`
+	Code  string `json:"code" validate:"required"`
+}
+
 // Verification
 type OTPVerificationReq struct {
 	VerificationId uuid.UUID `json:"verification_id" validate:"gte=0"`
