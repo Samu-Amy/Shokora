@@ -100,7 +100,8 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 func (app *App) googleHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	oAuthUrl, err := app.service.Auth.GenerateOAuthUrl(ctx)
+	// Get OAuth url
+	oAuthUrl, err := app.service.Auth.GenerateGoogleOAuthUrl(ctx)
 	if err != nil {
 		app.parseError(w, r, err)
 		return
@@ -114,7 +115,7 @@ func (app *App) googleHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) googleCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
+	ctx := r.Context()
 
 	// Get payload data
 	var payload payloads.GoogleOAuthCallbackReq
@@ -130,18 +131,21 @@ func (app *App) googleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// controllare se la mail esiste già e se google_id esiste già
-	// controllare state
-	// salvare dati utente (se mail e google_id non esistono)
-	// creare tokens e cookies (?)
+	// Check and Login user
+	loginUserRes, authTokensDto, err := app.service.Auth.LoginUserWithGoogleOAuth(ctx, payload)
+	if err != nil {
+		app.parseError(w, r, err)
+		return
+	}
 
-	// TODO: controlla email esistente
+	// Set cookies
+	app.setAuthCookies(w, *authTokensDto)
 
 	//* Return user
-	// if err := app.jsonResponse(w, http.StatusCreated, loginUserRes); err != nil { // TODO: lato frontend bisognerà gestire i casi (es. call route per verifica)
-	// 	app.internalServerError(w, r, err)
-	// 	return
-	// }
+	if err := app.jsonResponse(w, http.StatusCreated, loginUserRes); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 }
 
 // ----- LOGOUT -----

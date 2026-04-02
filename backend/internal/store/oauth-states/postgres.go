@@ -35,30 +35,30 @@ func (store *PostgresOAuthStateStore) Create(ctx context.Context, state string) 
 
 // ----- GET -----
 
-func (store *PostgresOAuthStateStore) Get(ctx context.Context, oAuthState *OAuthState) error {
-	query := `
-		SELECT created_at
-		FROM oauth_states
-		WHERE state = $1
-	`
+// func (store *PostgresOAuthStateStore) Get(ctx context.Context, oAuthState *OAuthState) error {
+// 	query := `
+// 		SELECT created_at
+// 		FROM oauth_states
+// 		WHERE state = $1
+// 	`
 
-	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
-	defer cancel()
+// 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
+// 	defer cancel()
 
-	err := store.db.QueryRowContext(
-		queryCtx,
-		query,
-		oAuthState.State,
-	).Scan(
-		&oAuthState.CreatedAt,
-	)
+// 	err := store.db.QueryRowContext(
+// 		queryCtx,
+// 		query,
+// 		oAuthState.State,
+// 	).Scan(
+// 		&oAuthState.CreatedAt,
+// 	)
 
-	return database.ParseDbError(err)
-}
+// 	return database.ParseDbError(err)
+// }
 
 // ----- DELETE -----
 
-func (store *PostgresOAuthStateStore) Delete(ctx context.Context, state string) error {
+func (store *PostgresOAuthStateStore) Delete(ctx context.Context, transaction *sql.Tx, state string) error {
 	query := `
 		DELETE FROM oauth_states
 		WHERE state = $1
@@ -67,7 +67,7 @@ func (store *PostgresOAuthStateStore) Delete(ctx context.Context, state string) 
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
 	defer cancel()
 
-	return database.HandleExecContextResult(store.db.ExecContext(
+	return database.HandleExecContextResult(transaction.ExecContext(
 		queryCtx,
 		query,
 		state,

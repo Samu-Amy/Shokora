@@ -17,9 +17,9 @@ type RegisterUserRes struct {
 }
 
 // Create a new RegisterUserRes with the user data and intializing the other fields
-func NewRegisterUserRes(user UserRes) *RegisterUserRes {
+func NewRegisterUserRes(user *UserRes) *RegisterUserRes {
 	return &RegisterUserRes{
-		User:           user,
+		User:           *user,
 		VerificationId: nil,
 		IsEmailSent:    true,
 		HasAuthError:   false,

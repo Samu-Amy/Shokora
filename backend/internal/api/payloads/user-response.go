@@ -20,8 +20,8 @@ type UserRes struct {
 	UpdateAt    time.Time       `json:"updated_at"`
 }
 
-func ToUserRes(user user.User) UserRes {
-	return UserRes{
+func ToUserRes(user user.User) *UserRes {
+	return &UserRes{
 		Id:        user.Id,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,

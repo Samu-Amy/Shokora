@@ -42,6 +42,10 @@ var notValidFirstNamesValidation = map[string]string{
 	"Élise!":  "valid-name",
 	"sahgdsdasjkhdajsdmnbcjdhfiadkjSHIUYDSAKJDHASjahsdaIUhsdJAKHdi":   "max",
 	"sahgdsdasjk&dajsdmnbcjdhfiadkjSHIUYDS%KJDHASjahsd#IUhsd$JAK%Hdi": "max",
+	"John😂": "valid-name",
+	"🙌Dav":  "valid-name",
+	"Gk😎sa": "valid-name",
+	"5l😣s@": "valid-name",
 }
 
 // - Last Name -
@@ -67,6 +71,10 @@ var notValidLastNamesValidation = map[string]string{
 	"Mc_Donald": "valid-name", // underscore non permesso
 	"AjhsdjasySFdasDASKsLJMNCkANLMANdakljdaskldnASDhgsdaAHG":      "max",
 	"&Ajhsdjasy%SFdasDASKsLJMNCk@ANLMANdakljd$ask#ldnASDhgsdaAHG": "max",
+	"John😂": "valid-name",
+	"🙌Dav":  "valid-name",
+	"Gk😎sa": "valid-name",
+	"5l😣s@": "valid-name",
 }
 
 // - Birthday -
@@ -103,6 +111,7 @@ var notValidBirthdays = []string{
 	"abc-def",    // lettere
 	"12/12",      // formato errato
 	"12-12-2020", // troppi segmenti
+	"05-1😒",
 }
 
 // - Email -
@@ -133,6 +142,7 @@ var notValidEmails = []string{
 	"user name@example.com", // spazio
 	"user#mail.com",         // simbolo non permesso
 	"use76sad87sa8dhjsahdsA87adsajhkldas90483kjlaskdh1hj2gasjhnjhdas78das76d8a7sdasjhdghasdnberhjsGDASJDASdjsAhdjasGHDsahgd76asJKdhakdklsajd872aslr@maasjhsaudsadjshaJHYDASJKYDASHJtdasyu786a65dasGDASHJidysjfsd54fdsjhfisdfsdfahdil.comdasjkhASDdjashhjsa78657786saHDjahjhdasjkdsuiaydasdsaddsjakhds",
+	"user👌@mail.com", // emoji
 }
 
 var notValidEmailsValidation = map[string]string{
@@ -147,6 +157,7 @@ var notValidEmailsValidation = map[string]string{
 	"user name@example.com": "email",
 	"user#mail.com":         "email",
 	"use76sad87sa8dhjsahdsA87adsajhkldas90483kjlaskdh1hj2gasjhnjhdas78das76d8a7sdasjhdghasdnberhjsGDASJDASdjsAhdjasGHDsahgd76asJKdhakdklsajd872aslr@maasjhsaudsadjshaJHYDASJKYDASHJtdasyu786a65dasGDASHJidysjfsd54fdsjhfisdfsdfahdil.comdasjkhASDdjashhjsa78657786saHDjahjhdasjkdsuiaydasdsaddsjakhds": "max",
+	"user👌@mail.com": "email",
 }
 
 // - Password -
@@ -235,6 +246,7 @@ var notValidPasswordsValidation = map[string]string{
 	"  LeadingSpace12": "no-edge-spaces", // spazio iniziale non consentito
 	"TrailingSpace12 ": "no-edge-spaces", // spazio finale non consentito
 	" jhd87s#7a6d8% ":  "no-edge-spaces", // spazio iniziale e finale
+	"admin✌️12345678":  "valid-chars",
 }
 
 // ----- FUNCTIONS -----

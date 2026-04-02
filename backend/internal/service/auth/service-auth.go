@@ -120,14 +120,14 @@ Returns:
 */
 func (service *AuthService) LoginUser(ctx context.Context, payload payloads.LoginUserReq) (*payloads.LoginUserRes, *payloads.AuthTokensDto, error) {
 
-	loginUserRes := payloads.LoginUserRes{}
+	var loginUserRes payloads.LoginUserRes
 	var verificationType auth.VerificationType
 	isVerificationRequired := false
 
 	// ----- USER -----
 
 	// Get user
-	user, err := service.getUser(ctx, payload.Email, payload.Password) // TODO: aggiungi controllo compleanno (per non farlo lato frontend) e two factor auth check (magari join con settings table?)
+	user, err := service.getUser(ctx, payload.Email, payload.Password)
 	if err != nil {
 
 		if errors.Is(err, interrors.IErrNotVerified) {
@@ -151,8 +151,7 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 	if !(isVerificationRequired && verificationType == auth.TwoFactorAuth) {
 
 		// Create Response payload with UserRes built from user model
-		userRes := payloads.ToUserRes(*user)
-		loginUserRes.User = &userRes
+		loginUserRes.User = payloads.ToUserRes(*user)
 	}
 
 	// ----- VERIFICATION -----

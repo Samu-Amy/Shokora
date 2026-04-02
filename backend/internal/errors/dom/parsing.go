@@ -8,6 +8,11 @@ import (
 
 func ParseIntError(err error) error {
 	switch {
+	// Domain error (pass through)
+	case IsDomainErr(err):
+		return err
+
+	// Internal error (parse to domain error)
 	case errors.Is(err, interrors.IErrNotFound):
 		return ErrNotFound
 
@@ -15,7 +20,7 @@ func ParseIntError(err error) error {
 		return ErrInvalid
 
 	case errors.Is(err, interrors.IErrNoRowsAffected):
-		return ErrInvalid // TODO: cambia?
+		return ErrInvalid
 
 	case errors.Is(err, interrors.IErrDuplicateToken):
 		return ErrInvalid // TODO: cambia (dipende, può essere not valid (se token fornito dall'utente) o internal error (se token generato internamente))
