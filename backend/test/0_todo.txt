@@ -25,3 +25,7 @@ Users con dati validi:
 - test ownership (users richiedono/modificano dati propri/di altri)
 - test ruoli (ok/unauthenticated/unauthorized)
 - test permessi (ok/unauthenticated/unauthorized)
+
+
+Specifici:
+- OAuth (Google) -> test registrazione/login per utenti non esistenti, esistenti (sia con email verificata ("connessione" account) che non (errore user non verificato)), test registrazione email/password utente che esiste già (creato tramite OAuth Google -> non dovrebbe farlo creare (altrimenti potrebbe connettere l'account ad uno esistente senza verificare di essere davvero quell'utente))

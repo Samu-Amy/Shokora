@@ -118,7 +118,7 @@ func (store *PostgresVTokenStore) IncrementOtpAttempts(ctx context.Context, tran
 
 // ----- GET -----
 
-func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, transaction *sql.Tx, verificationId uuid.UUID, verificationType auth.VerificationType) (*OTPVerificationData, error) {
+func (store *PostgresVTokenStore) GetOtpDataForUpdate(ctx context.Context, transaction *sql.Tx, verificationId uuid.UUID, verificationType auth.VerificationType) (*OTPVerificationData, error) {
 	query := `
 		SELECT user_id, otp_hash, otp_attempts, otp_expires_at
 		FROM verification_tokens
@@ -152,7 +152,7 @@ func (store *PostgresVTokenStore) GetOtpData(ctx context.Context, transaction *s
 
 // ----- VERIFY -----
 
-func (store *PostgresVTokenStore) GetValidMagicLinkData(ctx context.Context, transaction *sql.Tx, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkVerificationData, error) {
+func (store *PostgresVTokenStore) GetValidMagicLinkDataForUpdate(ctx context.Context, transaction *sql.Tx, hashedToken []byte, verificationType auth.VerificationType) (*MagicLinkVerificationData, error) {
 	query := `
 		SELECT id, user_id
 		FROM verification_tokens

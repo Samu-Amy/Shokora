@@ -40,6 +40,31 @@ func (store *PostgresUserSettingsStore) Create(ctx context.Context, transaction 
 	return settingsId, database.ParseDbError(err)
 }
 
+// ----- GET -----
+
+func (store *PostgresUserSettingsStore) GetHasTwoFactorAuthById(ctx context.Context, userId int64) (bool, error) {
+	query := `
+		SELECT two_factor_auth
+		FROM user_settings
+		WHERE user_id = $1
+	`
+
+	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
+	defer cancel()
+
+	var hasTwoFactorAuth bool
+
+	err := store.db.QueryRowContext(
+		queryCtx,
+		query,
+		userId,
+	).Scan(
+		&hasTwoFactorAuth,
+	)
+
+	return hasTwoFactorAuth, database.ParseDbError(err)
+}
+
 // ----- UPDATE -----
 
 func (store *PostgresUserSettingsStore) Update(ctx context.Context, settings *UserSettings) error {

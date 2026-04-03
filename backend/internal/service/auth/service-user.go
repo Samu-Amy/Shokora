@@ -19,7 +19,7 @@ func (service *AuthService) UpdatePassword(ctx context.Context, userId, sessionI
 	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
 		// Get old password from userId
-		hashedOldPassword, err := service.userRepo.GetPassword(ctx, tx, userId)
+		hashedOldPassword, err := service.userRepo.GetPasswordForUpdate(ctx, tx, userId)
 		if err != nil {
 			return err
 		}

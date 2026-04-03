@@ -87,6 +87,8 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 		// Set email "error" in response
 		registerUserRes.IsEmailSent = false
+	} else {
+		registerUserRes.IsEmailSent = true
 	}
 
 	// ----- AUTH -----
@@ -160,13 +162,12 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 
 		// Create Verification Tokens (soft error)
 		verificationTokens, err := service.createVerificationTokensWithRetries(ctx, user.Id, verificationType)
-		if err == nil {
-			// Add verification id to response
-			loginUserRes.VerificationId = &verificationTokens.VerificationId //* If registerUserRes.VerificationId == nil -> error during verification (tokens not created)
-		}
+		if err == nil && verificationTokens != nil {
 
-		// Send email (soft error)
-		if verificationTokens != nil {
+			// Save verification id in response
+			loginUserRes.VerificationId = &verificationTokens.VerificationId //* If registerUserRes.VerificationId == nil -> error during verification (tokens not created)
+
+			// Send email (soft error)
 			err = service.sendVerificationEmail(
 				ctx,
 				verificationType,
@@ -180,13 +181,15 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 
 				// Set email "error" in response
 				loginUserRes.IsEmailSent = false
+			} else {
+				loginUserRes.IsEmailSent = true
 			}
 
-			service.logger.Info("Verification email sent", "userId", user.Id, "verificationType", verificationType)
+			// service.logger.Info("Verification email sent", "userId", user.Id, "verificationType", verificationType)
 		}
 	}
 
-	// ----- AUTH -----
+	// ----- AUTH TOKENS -----
 
 	var authTokensDto *payloads.AuthTokensDto
 
@@ -202,7 +205,7 @@ func (service *AuthService) LoginUser(ctx context.Context, payload payloads.Logi
 			return nil, nil, domerrors.ParseIntError(err)
 		}
 
-		service.logger.Info("User logged, Tokens created", "userId", user.Id)
+		// service.logger.Info("User logged, Tokens created", "userId", user.Id)
 	}
 
 	return &loginUserRes, authTokensDto, nil

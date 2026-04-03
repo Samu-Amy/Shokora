@@ -14,7 +14,7 @@ import (
 
 // - Create -
 
-// Create user and related tables (e.g. settings, stats, achievements, copons)
+// Create user and related tables (e.g. settings, stats, achievements, coupons)
 func (service *AuthService) createUser(ctx context.Context, user *user.User) error {
 	return service.txManager.WithTx(ctx, func(tx *sql.Tx) error { // TODO: usare transaction oppure creare solo user e creare le righe nelle altre tabelle a parte (e se falliscono si creano quando vengono usate (però non si possono ottenere))
 
@@ -73,13 +73,22 @@ func (service *AuthService) getUser(ctx context.Context, email string, plainPass
 		return nil, interrors.IErrUnauthorized
 	}
 
+	// TODO: aggiungi check per blocked (se usato)
+
 	if !user.IsVerified {
 		return nil, interrors.IErrNotVerified
 	}
 
-	// if user.HasTwoFactorAuth { // TODO: aggiungi two factor auth check (magari join con settings table?)
-	// return nil, interrors.IErrTwoFactorAuthReqired
-	// }
+	// Check 2FA
+	hasTwoFactorAuth, err := service.userSettingsRepo.GetHasTwoFactorAuthById(ctx, user.Id)
+	if err != nil {
+		service.logger.Warnw("Error getting hasTwoFactorAuth", "error", err)
+		return nil, err
+	}
+
+	if hasTwoFactorAuth {
+		return user, interrors.IErrTwoFactorAuthReqired
+	}
 
 	return user, nil
 }

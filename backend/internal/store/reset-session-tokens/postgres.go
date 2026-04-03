@@ -42,7 +42,7 @@ func (store *PostgresRSTokenStore) Create(ctx context.Context, transaction *sql.
 
 // ----- GET -----
 
-func (store *PostgresRSTokenStore) Get(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*RSToken, error) {
+func (store *PostgresRSTokenStore) Get(ctx context.Context, hashedToken []byte) (*RSToken, error) {
 	query := `
 		SELECT user_id, expires_at, created_at
 		FROM reset_session_tokens
@@ -54,7 +54,7 @@ func (store *PostgresRSTokenStore) Get(ctx context.Context, transaction *sql.Tx,
 
 	var rsToken RSToken
 
-	err := transaction.QueryRowContext(
+	err := store.db.QueryRowContext(
 		queryCtx,
 		query,
 		hashedToken,

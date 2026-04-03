@@ -12,16 +12,12 @@ type IUserRepository interface {
 
 	GetById(ctx context.Context, userId int64) (*User, error)
 	GetByGoogleId(ctx context.Context, googleId string) (*User, error)
-
 	GetByEmail(ctx context.Context, email string) (*User, error)
 	GetByEmailForUpdate(ctx context.Context, transaction *sql.Tx, email string) (*User, error)
-
-	GetUserVerificationDataByEmail(ctx context.Context, transaction *sql.Tx, email string) (*UserVerificationData, error)
-
-	GetPassword(ctx context.Context, transaction *sql.Tx, userId int64) ([]byte, error)
+	GetUserVerificationDataByEmailForUpdate(ctx context.Context, transaction *sql.Tx, email string) (*UserVerificationData, error)
+	GetPasswordForUpdate(ctx context.Context, transaction *sql.Tx, userId int64) ([]byte, error)
 
 	UpdatePassword(ctx context.Context, transaction *sql.Tx, userId int64, hashedPassword []byte) error
-
 	SetGoogleId(ctx context.Context, transaction *sql.Tx, userId int64, googleId string) error
 	SetIsVerified(ctx context.Context, userId int64) error // Set is_verified to true
 	// SetIsActive(ctx context.Context, userId int64, isActive bool) error // TODO: implementa (per bloccare/sbloccare users)

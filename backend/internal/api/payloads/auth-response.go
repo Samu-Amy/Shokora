@@ -11,8 +11,8 @@ import (
 // The response sent to the frontend (with soft failure report)
 type RegisterUserRes struct {
 	User           UserRes    `json:"user"`
-	VerificationId *uuid.UUID `json:"verification_id,omitempty"`
-	IsEmailSent    bool       `json:"is_email_sent"` // Has the verification email been sent?
+	VerificationId *uuid.UUID `json:"verification_id,omitempty"` // Email verification
+	IsEmailSent    bool       `json:"is_email_sent"`             // Has the verification email been sent?
 	HasAuthError   bool       `json:"has_auth_error"`
 }
 
@@ -31,7 +31,7 @@ func NewRegisterUserRes(user *UserRes) *RegisterUserRes {
 // The response sent to the frontend
 type LoginUserRes struct {
 	User           *UserRes   `json:"user,omitempty"`            // If present -> authenticated (already verified or to be verified, but no 2fa)
-	VerificationId *uuid.UUID `json:"verification_id,omitempty"` // for 2fa or email verification (if nil: if user ok -> no verification required, if user nil -> verification error)
+	VerificationId *uuid.UUID `json:"verification_id,omitempty"` // for 2fa or email verification (if nil: if user ok -> no verification required, if user nil -> verification error; if not nil: if user ok -> email verification, if user nil -> 2fa)
 	IsEmailSent    bool       `json:"is_email_sent"`             // Has the verification email been sent?
 }
 

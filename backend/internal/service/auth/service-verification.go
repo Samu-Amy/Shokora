@@ -24,7 +24,7 @@ func (service *AuthService) VerifyEmailWithMagicLink(ctx context.Context, plainT
 		hashedToken := auth.HashBase64Token(plainToken)
 
 		// Verify and get data
-		magicLinkTokenQueryData, err := service.vTokenRepo.GetValidMagicLinkData(ctx, tx, hashedToken, auth.EmailVerification)
+		magicLinkTokenQueryData, err := service.vTokenRepo.GetValidMagicLinkDataForUpdate(ctx, tx, hashedToken, auth.EmailVerification)
 		if err != nil {
 			service.logger.Warnw("Error getting magic link Token", "error", err)
 			return err
@@ -94,7 +94,7 @@ func (service *AuthService) VerifyPasswordResetWithMagicLink(ctx context.Context
 		hashedToken := auth.HashBase64Token(plainToken)
 
 		// Verify and get data
-		magicLinkTokenQueryData, err := service.vTokenRepo.GetValidMagicLinkData(ctx, tx, hashedToken, auth.PasswordReset)
+		magicLinkTokenQueryData, err := service.vTokenRepo.GetValidMagicLinkDataForUpdate(ctx, tx, hashedToken, auth.PasswordReset)
 		if err != nil {
 			service.logger.Warnw("Error getting magic link Token", "error", err)
 			return err
@@ -193,7 +193,7 @@ func (service *AuthService) ResetPassword(ctx context.Context, payload *payloads
 		hashedToken := auth.HashBase64Token(strings.TrimSpace(payload.PlainResetSessionToken))
 
 		// Get token data from db
-		resetSessionToken, err := service.rsTokenRepo.Get(ctx, tx, hashedToken)
+		resetSessionToken, err := service.rsTokenRepo.Get(ctx, hashedToken)
 		if err != nil {
 			return err
 		}
@@ -281,7 +281,7 @@ func (service *AuthService) SendVerification(ctx context.Context, verificationTy
 	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
 		// Get user from email
-		userData, err := service.userRepo.GetUserVerificationDataByEmail(ctx, tx, email)
+		userData, err := service.userRepo.GetUserVerificationDataByEmailForUpdate(ctx, tx, email)
 		if err != nil {
 			service.logger.Warnw("Error getting user verifica data in send verification", "verificationType", verificationType, "error", err)
 			return err

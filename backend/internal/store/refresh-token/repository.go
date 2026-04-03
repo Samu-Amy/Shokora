@@ -13,7 +13,8 @@ type IRefreshTokenRepository interface {
 	Create(ctx context.Context, transaction *sql.Tx, refreshToken *RefreshToken) error
 
 	// Get the refresh token data, userId and session ExpiresAt
-	GetByToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*TokenAndSessionData, error)
+	GetByTokenForUpdate(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*TokenAndSessionData, error)
 	GetSessionDataByToken(ctx context.Context, hashedToken []byte) (*session.SessionData, error)
+
 	RevokeById(ctx context.Context, transaction *sql.Tx, tokenId int64, revokedAt time.Time) error
 }

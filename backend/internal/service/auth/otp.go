@@ -19,7 +19,7 @@ Get the OTP from db, validate it and return userId
 func (service *AuthService) verifyOtp(ctx context.Context, tx *sql.Tx, verificationId uuid.UUID, hashedOTP []byte, maxAttempts uint8, verificationType auth.VerificationType) (int64, error) {
 
 	// Get data
-	otpQueryData, err := service.vTokenRepo.GetOtpData(ctx, tx, verificationId, verificationType)
+	otpQueryData, err := service.vTokenRepo.GetOtpDataForUpdate(ctx, tx, verificationId, verificationType)
 	if err != nil {
 		service.logger.Warnw("Error getting otp data", "error", err, "verificationId", verificationId)
 

@@ -30,8 +30,14 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 	defer cancel()
 
 	isVerified := false
-	if user.IsVerified && user.GoogleId != "" {
-		isVerified = true
+	if user.IsVerified {
+		if user.GoogleId != "" {
+			// OAuth Google -> verified
+			isVerified = true
+		} else {
+			// Fix possible error (user can't be verified at creation without OAuth)
+			user.IsVerified = false
+		}
 	}
 
 	err := transaction.QueryRowContext(
@@ -47,6 +53,8 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 		isVerified,
 	).Scan(
 		&user.Id,
+		&user.Role,
+		&user.Permissions,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -222,7 +230,7 @@ func (store *PostgresUserStore) GetByEmailForUpdate(ctx context.Context, transac
 	return &user, nil
 }
 
-func (store *PostgresUserStore) GetUserVerificationDataByEmail(ctx context.Context, transaction *sql.Tx, email string) (*UserVerificationData, error) {
+func (store *PostgresUserStore) GetUserVerificationDataByEmailForUpdate(ctx context.Context, transaction *sql.Tx, email string) (*UserVerificationData, error) {
 	query := `
 		SELECT id, first_name
 		FROM users
@@ -251,7 +259,7 @@ func (store *PostgresUserStore) GetUserVerificationDataByEmail(ctx context.Conte
 	return &userData, nil
 }
 
-func (store *PostgresUserStore) GetPassword(ctx context.Context, transaction *sql.Tx, userId int64) ([]byte, error) {
+func (store *PostgresUserStore) GetPasswordForUpdate(ctx context.Context, transaction *sql.Tx, userId int64) ([]byte, error) {
 	query := `
 		SELECT password
 		FROM users

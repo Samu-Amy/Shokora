@@ -45,7 +45,7 @@ func (store *PostgresRefreshTokenStore) Create(ctx context.Context, transaction 
 
 // ----- GET -----
 
-func (store *PostgresRefreshTokenStore) GetByToken(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*TokenAndSessionData, error) {
+func (store *PostgresRefreshTokenStore) GetByTokenForUpdate(ctx context.Context, transaction *sql.Tx, hashedToken []byte) (*TokenAndSessionData, error) {
 	query := `
 		SELECT r.id, r.session_id, r.expires_at, r.revoked_at, s.user_id, s.expires_at
 		FROM refresh_tokens r

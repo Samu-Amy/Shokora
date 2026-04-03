@@ -71,7 +71,7 @@ func (service *AuthService) rotateRefreshToken(ctx context.Context, oldHashedTok
 	err := service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
 
 		// Get old refresh token and session data
-		oldTokenAndSessionData, err := service.refreshTokenRepo.GetByToken(ctx, tx, oldHashedToken)
+		oldTokenAndSessionData, err := service.refreshTokenRepo.GetByTokenForUpdate(ctx, tx, oldHashedToken)
 		if err != nil {
 			service.logger.Warnw("Error getting the old refresh token", "error", err)
 			return err
