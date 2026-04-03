@@ -6,7 +6,7 @@ import (
 
 type User struct {
 	Id           int64
-	GoogleId     string
+	GoogleId     *string
 	FirstName    string
 	LastName     string
 	Email        string

@@ -2,6 +2,7 @@ package authservice
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"strings"
 	"time"
@@ -57,7 +58,10 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 	}
 
 	// Create User in db and update its struct
-	if err := service.createUser(ctx, user); err != nil {
+	err = service.txManager.WithTx(ctx, func(tx *sql.Tx) error {
+		return service.createUser(ctx, tx, user)
+	})
+	if err != nil {
 		return nil, nil, domerrors.ParseIntError(err)
 	}
 
@@ -68,27 +72,27 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	// Create Email Verification Tokens (soft error)
 	verificationTokens, err := service.createVerificationTokensWithRetries(ctx, user.Id, auth.EmailVerification)
-	if err == nil {
+	if err == nil && verificationTokens != nil {
 		// Add verification id to response
 		registerUserRes.VerificationId = &verificationTokens.VerificationId //* If registerUserRes.VerificationId == nil -> error during verification (tokens not created)
-	}
 
-	// Send email (soft error)
-	err = service.sendVerificationEmail(
-		ctx,
-		auth.EmailVerification,
-		user.FirstName,
-		user.Email,
-		verificationTokens.PlainMagicLinkToken,
-		verificationTokens.PlainOTP,
-	)
-	if err != nil {
-		service.logger.Warnw("Error sending verification email", "error", err)
+		// Send email (soft error)
+		err = service.sendVerificationEmail(
+			ctx,
+			auth.EmailVerification,
+			user.FirstName,
+			user.Email,
+			verificationTokens.PlainMagicLinkToken,
+			verificationTokens.PlainOTP,
+		)
+		if err != nil {
+			service.logger.Warnw("Error sending verification email", "error", err)
 
-		// Set email "error" in response
-		registerUserRes.IsEmailSent = false
-	} else {
-		registerUserRes.IsEmailSent = true
+			// Set email "error" in response
+			registerUserRes.IsEmailSent = false
+		} else {
+			registerUserRes.IsEmailSent = true
+		}
 	}
 
 	// ----- AUTH -----

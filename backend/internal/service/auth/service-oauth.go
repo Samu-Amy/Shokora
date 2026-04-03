@@ -58,17 +58,20 @@ func (service *AuthService) LoginUserWithGoogleOAuth(ctx context.Context, payloa
 		// Get token from code
 		token, err := service.config.Auth.GoogleOAuthConfig.Exchange(ctx, payload.Code)
 		if err != nil {
+			service.logger.Warnw("Error exchanging Google Code for token ", "error", err)
 			return domerrors.ErrInvalid
 		}
 
 		// Get data from token
 		rawIDToken, ok := token.Extra("id_token").(string)
 		if !ok {
+			service.logger.Warnw("Error getting or converting Google token to string ", "error", err)
 			return domerrors.ErrInternalError
 		}
 
 		tokenPayload, err := idtoken.Validate(ctx, rawIDToken, service.config.Auth.GoogleOAuthConfig.ClientID)
 		if err != nil {
+			service.logger.Warnw("Error validating Google token ", "error", err)
 			return domerrors.ErrInvalid
 		}
 
@@ -86,10 +89,12 @@ func (service *AuthService) LoginUserWithGoogleOAuth(ctx context.Context, payloa
 		if err != nil {
 			// db errors
 			if !errors.Is(err, interrors.IErrNotFound) {
+				service.logger.Warnw("Error getting user by Google Id from db ", "error", err)
 				return err
 			}
 
 			if !emailOk || !emailVerifiedOk {
+				service.logger.Warnw("Email or EmailVerified are not ok ", "error", err)
 				return domerrors.ErrInvalid
 			}
 
@@ -98,11 +103,13 @@ func (service *AuthService) LoginUserWithGoogleOAuth(ctx context.Context, payloa
 			if err != nil {
 				// db errors
 				if !errors.Is(err, interrors.IErrNotFound) {
+					service.logger.Warnw("Error getting user by email from db ", "error", err)
 					return err
 				}
 
 				// User does not exists -> Create user
 				if !firstNameOk {
+					service.logger.Warnw("Name is not ok ", "error", err)
 					return domerrors.ErrInvalid
 				}
 
@@ -111,7 +118,7 @@ func (service *AuthService) LoginUserWithGoogleOAuth(ctx context.Context, payloa
 				}
 
 				user = &user_repo.User{
-					GoogleId:   googleId,
+					GoogleId:   &googleId,
 					FirstName:  firstName,
 					LastName:   lastName,
 					Email:      email,
@@ -120,14 +127,16 @@ func (service *AuthService) LoginUserWithGoogleOAuth(ctx context.Context, payloa
 
 				// TODO: non c'è la password -> come fare (va bene lasciarla null se c'è google id, ma bloccando login normale? -> la si può in qualche modo cambiare dopo (però l'update richiede la vecchia password, che però non esiste))?
 
-				err = service.userRepo.Create(ctx, tx, user)
+				err = service.createUser(ctx, tx, user)
 				if err != nil {
+					service.logger.Warnw("Error creating user in db ", "error", err)
 					return err
 				}
 			}
 
 			// Check if verified (if not -> error)
 			if !user.IsVerified {
+				service.logger.Warnw("User is not verified ", "error", err)
 				return domerrors.ErrNotVerified // TODO: ricorda di dire nel FRONTEND che serve avere account verificato se si vuole accedere ad un account email e password usando google
 			}
 

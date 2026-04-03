@@ -23,7 +23,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 	query := `
 		INSERT INTO users (google_id, first_name, last_name, email, password, birthday, is_verified)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id, created_at, updated_at
+		RETURNING id, user_role, permissions, created_at, updated_at
 	`
 
 	queryCtx, cancel := context.WithTimeout(ctx, database.MediumQueryTimeout)
@@ -31,7 +31,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 
 	isVerified := false
 	if user.IsVerified {
-		if user.GoogleId != "" {
+		if user.GoogleId != nil {
 			// OAuth Google -> verified
 			isVerified = true
 		} else {
@@ -66,7 +66,7 @@ func (store *PostgresUserStore) Create(ctx context.Context, transaction *sql.Tx,
 
 func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*User, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password, birthday, is_verified, user_role, permissions, created_at, updated_at
+		SELECT id, first_name, last_name, email, password, birthday, is_verified, is_active, user_role, permissions, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
@@ -89,6 +89,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 		// &user.ImageUrl,
 		&user.Birthday,
 		&user.IsVerified,
+		&user.IsActive,
 		&user.Role,
 		&user.Permissions,
 		// &user.Version,
@@ -105,7 +106,7 @@ func (store *PostgresUserStore) GetById(ctx context.Context, userId int64) (*Use
 
 func (store *PostgresUserStore) GetByGoogleId(ctx context.Context, googleId string) (*User, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password, birthday, is_verified, user_role, permissions, created_at, updated_at
+		SELECT id, first_name, last_name, email, password, birthday, is_verified, is_active, user_role, permissions, created_at, updated_at
 		FROM users
 		WHERE google_id = $1
 	`
@@ -128,6 +129,7 @@ func (store *PostgresUserStore) GetByGoogleId(ctx context.Context, googleId stri
 		// &user.ImageUrl,
 		&user.Birthday,
 		&user.IsVerified,
+		&user.IsActive,
 		&user.Role,
 		&user.Permissions,
 		// &user.Version,
@@ -144,7 +146,7 @@ func (store *PostgresUserStore) GetByGoogleId(ctx context.Context, googleId stri
 
 func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password, birthday, is_verified, user_role, permissions, created_at, updated_at
+		SELECT id, google_id, first_name, last_name, email, password, birthday, is_verified, is_active, user_role, permissions, created_at, updated_at
 		FROM users
 		WHERE email = $1
 	`
@@ -160,6 +162,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 		email,
 	).Scan(
 		&user.Id,
+		&user.GoogleId,
 		&user.FirstName,
 		&user.LastName,
 		&user.Email,
@@ -167,6 +170,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 		// &user.ImageUrl,
 		&user.Birthday,
 		&user.IsVerified,
+		&user.IsActive,
 		&user.Role,
 		&user.Permissions,
 		// &user.Version,
@@ -192,7 +196,7 @@ func (store *PostgresUserStore) GetByEmail(ctx context.Context, email string) (*
 
 func (store *PostgresUserStore) GetByEmailForUpdate(ctx context.Context, transaction *sql.Tx, email string) (*User, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password, birthday, is_verified, user_role, permissions, created_at, updated_at
+		SELECT id, first_name, last_name, email, password, birthday, is_verified, is_active, user_role, permissions, created_at, updated_at
 		FROM users
 		WHERE email = $1
 		FOR UPDATE
@@ -216,6 +220,7 @@ func (store *PostgresUserStore) GetByEmailForUpdate(ctx context.Context, transac
 		// &user.ImageUrl,
 		&user.Birthday,
 		&user.IsVerified,
+		&user.IsActive,
 		&user.Role,
 		&user.Permissions,
 		// &user.Version,

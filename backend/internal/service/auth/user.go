@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 	interrors "github.com/Samu-Amy/Shokora/internal/errors/int"
 	"github.com/Samu-Amy/Shokora/internal/store/user"
 	"golang.org/x/crypto/bcrypt"
@@ -15,29 +16,25 @@ import (
 // - Create -
 
 // Create user and related tables (e.g. settings, stats, achievements, coupons)
-func (service *AuthService) createUser(ctx context.Context, user *user.User) error {
-	return service.txManager.WithTx(ctx, func(tx *sql.Tx) error { // TODO: usare transaction oppure creare solo user e creare le righe nelle altre tabelle a parte (e se falliscono si creano quando vengono usate (però non si possono ottenere))
-
-		err := service.userRepo.Create(ctx, tx, user)
-		if err != nil {
-			service.logger.Warnw("Error creating user in db", "error", err)
-			if errors.Is(err, interrors.IErrDuplicate) {
-				return interrors.IErrDuplicateEmail
-			}
-			return err
+func (service *AuthService) createUser(ctx context.Context, tx *sql.Tx, user *user.User) error {
+	err := service.userRepo.Create(ctx, tx, user)
+	if err != nil {
+		service.logger.Warnw("Error creating user in db", "error", err)
+		if errors.Is(err, interrors.IErrDuplicate) {
+			return interrors.IErrDuplicateEmail
 		}
+		return err
+	}
 
-		_, err = service.userSettingsRepo.Create(ctx, tx, user.Id)
-		if err != nil {
-			service.logger.Warnw("Error creating user settings", "error", err)
-			return err
-		}
+	_, err = service.userSettingsRepo.Create(ctx, tx, user.Id)
+	if err != nil {
+		service.logger.Warnw("Error creating user settings", "error", err)
+		return err
+	}
 
-		// TODO: crea anche stats (oppure crearle nell'update se non esistono)?
+	// TODO: crea anche stats (oppure crearle nell'update se non esistono)?
 
-		return nil
-	})
-
+	return nil
 }
 
 // - Get -
@@ -50,7 +47,8 @@ func (service *AuthService) getUser(ctx context.Context, email string, plainPass
 	// Get user from db
 	user, err := service.userRepo.GetByEmail(ctx, email)
 	if err != nil {
-		service.logger.Warnw("Error getting user from db", "error", err)
+		service.logger.Warnw("Error getting user from db ", "error", err)
+
 		if errors.Is(err, interrors.IErrNotFound) {
 			return nil, interrors.IErrInvalid
 		}
@@ -64,19 +62,26 @@ func (service *AuthService) getUser(ctx context.Context, email string, plainPass
 			return nil, interrors.IErrInvalid
 		}
 
-		service.logger.Warnw("Password compare error", "error", err)
+		if errors.Is(err, bcrypt.ErrHashTooShort) && user.GoogleId != nil {
+			service.logger.Warnw("Only google auth is valid ", "error", err)
+			return nil, domerrors.ErrOnlyGoogleAuth
+		}
+
+		service.logger.Warnw("Password compare error ", "error", err)
 		return nil, err
 	}
 
 	// Check user
 	if !user.IsActive {
+		service.logger.Warn("User not active")
 		return nil, interrors.IErrUnauthorized
 	}
 
 	// TODO: aggiungi check per blocked (se usato)
 
 	if !user.IsVerified {
-		return nil, interrors.IErrNotVerified
+		service.logger.Warn("User not verified")
+		return user, interrors.IErrNotVerified
 	}
 
 	// Check 2FA

@@ -131,6 +131,7 @@ func (app *App) InitRouter() *chi.Mux {
 				// r.Use(app.userDataOwnershipMiddleware) // User Data Ownerhip Middleware // TODO: serve (uso i cookie per l'auth e quindi ottenere i dati dell'utente)?
 
 				r.Patch("/", app.updateUserHandler)
+				// r.Patch("/birthday", app.updateUserBirthdayHandler) // TODO: può aggiornare il compleanno solo se è "zero value" (0001-01-01T00:00:00Z)
 
 				r.Group(func(r chi.Router) {
 					// TODO: fai handlers per otterene le stats (con achievements), coupons ed altro

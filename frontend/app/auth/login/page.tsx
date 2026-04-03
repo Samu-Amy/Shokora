@@ -1,10 +1,12 @@
 "use client"
 
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
 
   const handleGoogleLogin = async () => {
     try {
@@ -12,7 +14,7 @@ export default function LoginPage() {
 
       if (!res.ok) {
         // TODO: gestisci (throw error e gestione nel catch?)
-        console.log("Errore login google");
+        router.replace("/auth/login?error=oauth_failed");
       }
 
       const data = await res.json();
@@ -20,14 +22,16 @@ export default function LoginPage() {
       router.push(data.data.url);
 
     } catch (err) {
-      // TODO: gestisci
-      console.log(err);
+      router.replace("/auth/login?error=oauth_failed");
     }
   }
 
   return (
     <div className="flex flex-col gap-8 justify-center align-center">
       <h1>Login Page</h1>
+      {error === "oauth_failed" && <p className="p-4 rounded-md bg-red-50 text-red-600 border border-red-600">
+        Errore autenticazione con Google
+      </p>}
       <Button onClick={handleGoogleLogin}>Accedi con Google</Button>
     </div>
   );

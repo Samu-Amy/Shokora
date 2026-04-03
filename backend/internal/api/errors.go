@@ -87,6 +87,7 @@ func (app *App) unauthorizedError(w http.ResponseWriter, r *http.Request, err er
 	// Domain (custom) error
 	if domerrors.IsDomainErr(err) {
 		writeJSONError(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	// Fallback
@@ -101,6 +102,7 @@ func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error
 	// Domain (custom) error
 	if domerrors.IsDomainErr(err) {
 		writeJSONError(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	// Fallback
@@ -139,7 +141,7 @@ func (app *App) parseError(w http.ResponseWriter, r *http.Request, err error) {
 		app.badRequestError(w, r, err)
 
 	// - Unauthorized -
-	case errors.Is(err, domerrors.ErrUnauthorized), errors.Is(err, domerrors.ErrNotVerified):
+	case errors.Is(err, domerrors.ErrUnauthorized), errors.Is(err, domerrors.ErrNotVerified), errors.Is(err, domerrors.ErrOnlyGoogleAuth):
 		app.unauthorizedError(w, r, err)
 
 	// - Forbidden -

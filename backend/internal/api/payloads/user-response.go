@@ -17,7 +17,7 @@ type UserRes struct {
 	Role        user.Role       `json:"role"`
 	Permissions user.Permission `json:"permissions"`
 	CreatedAt   time.Time       `json:"created_at"`
-	UpdateAt    time.Time       `json:"updated_at"`
+	UpdatedAt   time.Time       `json:"updated_at"`
 }
 
 func ToUserRes(user user.User) *UserRes {
@@ -32,6 +32,6 @@ func ToUserRes(user user.User) *UserRes {
 		Role:        user.Role,
 		Permissions: user.Permissions,
 		CreatedAt:   user.CreatedAt,
-		UpdateAt:    user.UpdatedAt,
+		UpdatedAt:   user.UpdatedAt,
 	}
 }
