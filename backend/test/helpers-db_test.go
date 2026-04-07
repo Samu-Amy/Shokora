@@ -23,8 +23,3 @@ func clearTestDB(db *sql.DB) {
 		}
 	}
 }
-
-// Res Data
-type APIResponse[T any] struct {
-	Data T `json:"data"`
-}

@@ -10,6 +10,11 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// Res Data
+type APIResponse[T any] struct {
+	Data T `json:"data"`
+}
+
 // - Routes -
 
 func makeRequestWithPayload(t *testing.T, router http.Handler, method, route string, payload any) *httptest.ResponseRecorder {
