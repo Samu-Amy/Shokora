@@ -35,7 +35,7 @@ const (
 	randSeed int64 = 42 // TODO: cambia il seed per testare diversi casi
 
 	// DB Seeding
-	seedUserNum = 10
+	seedUserNum = 15
 )
 
 // Services to use in test

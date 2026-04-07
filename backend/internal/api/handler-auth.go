@@ -91,7 +91,7 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//* Return user
-	if err := app.jsonResponse(w, http.StatusCreated, loginUserRes); err != nil { // TODO: lato frontend bisognerà gestire i casi (es. call route per verifica)
+	if err := app.jsonResponse(w, http.StatusOK, loginUserRes); err != nil { // TODO: lato frontend bisognerà gestire i casi (es. call route per verifica)
 		app.internalServerError(w, r, err)
 		return
 	}

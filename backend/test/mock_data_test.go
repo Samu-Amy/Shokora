@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
+	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
 // TODO: crea dati di base per users e products
@@ -117,17 +118,17 @@ var notValidBirthdays = []string{
 // - Email -
 
 var validEmails = []string{
-	"mario.rossi@example.com", "giulia.bianchi@example.com", "luca.verdi@example.com", "sara.ferrari@example.com", "alessandro.moretti@example.com", "francesca.galli@example.com",
-	"matteo.rinaldi@example.com", "chiara.romano@example.com", "andrea.conti@example.com", "martina.costa@example.com", "federico.fontana@example.com", "elena.marini@example.com",
-	"davide.ricci@example.com", "valentina.deluca@example.com", "simone.longo@example.com", "laura.martini@example.com", "nicola.barbieri@example.com", "giovanna.grassi@example.com",
-	"gabriele.giordano@example.com", "alice.cattaneo@example.com", "stefano.villa@example.com", "ilaria.serra@example.com", "tommaso.pellegrini@example.com",
-	"beatrice.lombardi@example.com", "riccardo.villa@example.com", "francesco.parisi@example.com", "vanessa.sanna@example.com", "alessia.bruno@example.com",
-	"emanuele.esposito@example.com", "giada.caputo@example.com", "antonio.santoro@example.com", "sofia.damico@example.com", "daniele.vitale@example.com", "claudia.gatti@example.com",
-	"paolo.sala@example.com", "camilla.piras@example.com", "enrico.bertoli@example.com", "michela.amato@example.com", "vincenzo.testa@example.com", "elisa.corsi@example.com",
+	"mario.rossi@example.com", "giulia.bianchi@gmail.com", "luca.verdi@example.com", "sara.ferrari@example.com", "alessandro.moretti@example.com", "francesca.galli@example.com",
+	"matteo.rinaldi@gmail.com", "chiara.romano@example.com", "andrea.conti@example.com", "martina.costa@example.com", "federico.fontana@gmail.com", "elena.marini@gmail.com",
+	"davide.ricci@example.com", "valentina.deluca@gmail.com", "simone.longo@hotmail.com", "laura.martini@example.com", "nicola.barbieri@example.com", "giovanna.grassi@example.com",
+	"gabriele.giordano@example.com", "alice.cattaneo@gmail.com", "stefano.villa@example.com", "ilaria.serra@gmail.com", "tommaso.pellegrini@example.com",
+	"beatrice.lombardi@example.com", "riccardo.villa@example.com", "francesco.parisi@gmail.com", "vanessa.sanna@example.com", "alessia.bruno@gmail.com",
+	"emanuele.esposito@gmail.com", "giada.caputo@example.com", "antonio.santoro@gmail.com", "sofia.damico@hotmail.com", "daniele.vitale@example.com", "claudia.gatti@example.com",
+	"paolo.sala@example.com", "camilla.piras@example.com", "enrico.bertoli@example.com", "michela.amato@hotmail.com", "vincenzo.testa@example.com", "elisa.corsi@example.com",
 	"roberto.pagani@example.com", "federica.desantis@example.com", "salvatore.fabbri@example.com", "aurora.monti@example.com", "giorgio.bernardi@example.com",
-	"veronica.ruggiero@example.com", "fabio.negri@example.com", "chiara.ferretti@example.com", "simona.barone@example.com", "lorenzo.bellini@example.com",
-	"user+tag@example.com", "user.name+alias@sub.domain.com", "firstname-lastname@example.co.uk", "x@example.com", "user123@sub.mail.example.org", "test_email@example.io",
-	"name.surname@company.travel", "a.b.c.d@example.com", "_______@example.com",
+	"veronica.ruggiero@example.com", "fabio.negri@hotmail.com", "chiara.ferretti@hotmail.com", "simona.barone@example.com", "lorenzo.bellini@gmail.com",
+	"user+tag@example.com", "user.name+alias@sub.domain.com", "firstname-lastname@gmail.co.uk", "x@example.com", "user123@sub.mail.example.org", "test_email@example.io",
+	"name.surname@company.travel", "a.b.c.d@gmail.com", "_______@example.com",
 }
 
 var notValidEmails = []string{
@@ -247,6 +248,110 @@ var notValidPasswordsValidation = map[string]string{
 	"TrailingSpace12 ": "no-edge-spaces", // spazio finale non consentito
 	" jhd87s#7a6d8% ":  "no-edge-spaces", // spazio iniziale e finale
 	"admin✌️12345678":  "valid-chars",
+}
+
+var userRoles = []user.Role{
+	user.RoleCustomer,
+	user.RoleCustomer,
+	user.RoleAdmin,
+	user.RoleCustomer,
+	user.RoleEmployee,
+	user.RoleEmployee,
+	user.RoleCustomer,
+	user.RoleAdmin,
+	user.RoleAdmin,
+	user.RoleDev,
+	user.RoleCustomer,
+	user.RoleCustomer,
+	user.RoleEmployee,
+	user.RoleEmployee,
+	user.RoleCustomer,
+	user.RoleAdmin,
+	user.RoleCustomer,
+	user.RoleCustomer,
+	user.RoleCustomer,
+	user.RoleCustomer,
+	user.RoleAdmin,
+	user.RoleEmployee,
+	user.RoleEmployee,
+	user.RoleCustomer,
+	user.RoleEmployee,
+	user.RoleAdmin,
+	user.RoleCustomer,
+	user.RoleAdmin,
+	user.RoleEmployee,
+	user.RoleEmployee,
+	user.RoleCustomer,
+	user.RoleEmployee,
+}
+
+var userVerified = []bool{
+	false,
+	false,
+	false,
+	true,
+	false,
+	false,
+	false,
+	false,
+	false,
+	true,
+	true,
+	true,
+	true,
+	true,
+	true,
+	true,
+	false,
+	false,
+	true,
+	true,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	true,
+	true,
+	false,
+	false,
+	false,
+}
+
+var userTwoFactorAuth = []bool{
+	false,
+	false,
+	false,
+	true,
+	false,
+	false,
+	false,
+	false,
+	false,
+	true,
+	true,
+	false,
+	true,
+	true,
+	false,
+	true,
+	false,
+	false,
+	true,
+	true,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	true,
+	false,
+	false,
+	false,
+	false,
 }
 
 // ----- FUNCTIONS -----
