@@ -114,7 +114,7 @@ func seedUsersFuzz(f *testing.F, db *sql.DB) {
 	for i := range min(seedUserNum, len(validFirstNames), len(validLastNames), len(validBirthdays), len(validEmails), len(validPasswords)) {
 
 		// Start transaction
-		tx, err := db.BeginTx(f.Context(), nil)
+		tx, err := db.BeginTx(context.Background(), nil)
 		if err != nil {
 			f.Fatalf("failed to start transaction: %v", err)
 		}
@@ -142,7 +142,7 @@ func seedUsersFuzz(f *testing.F, db *sql.DB) {
 
 		// Create user
 		err = tx.QueryRowContext(
-			f.Context(),
+			context.Background(),
 			userQuery,
 			nil,
 			strings.TrimSpace(validFirstNames[i]),
