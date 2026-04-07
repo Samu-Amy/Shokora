@@ -1,6 +1,8 @@
 package main
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 // Clear db
 func clearTestDB(db *sql.DB) {
@@ -20,4 +22,9 @@ func clearTestDB(db *sql.DB) {
 			panic("failed to clean table " + table + ": " + err.Error())
 		}
 	}
+}
+
+// Res Data
+type APIResponse[T any] struct {
+	Data T `json:"data"`
 }

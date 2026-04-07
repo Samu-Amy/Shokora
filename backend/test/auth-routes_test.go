@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"math/rand"
 	"net/http"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
+	authservice "github.com/Samu-Amy/Shokora/internal/service/auth"
 )
 
 // TODO: verifica i vari casi e l'errore ottenuto (per ogni caso) - per controllare anche il parsing degli errori
@@ -15,12 +19,10 @@ func TestRegisterUserRoute(t *testing.T) {
 	t.Run("should register all users", func(t *testing.T) {
 		logRes := false
 
-		// TODO: sistema mock data (minor numero di dati ma che copre il maggior numero di casi possibili, tanto per la validazione dei dati ci sono test apposta)
-
 		for i := range min(routesTestsNum, len(validEmails)) { // Emails should be unique
 
 			// Payload
-			firstName := randomFrom(validFirstNames)
+			firstName := randomFrom(validFirstNames) // TODO: fare casi "fissi" hardcoded, invece che casuali (quelli già testati da validation e fuzz tests)
 			lastName := randomFrom(validLastNames)
 			birthday := randomFrom(validBirthdays)
 			email := validEmails[i]
@@ -69,6 +71,53 @@ func TestRegisterUserRoute(t *testing.T) {
 	t.Run("should give badRequest error because of email already in db", func(t *testing.T) {
 		logRes := true
 
+		clearTestDB(db)
+
+		query := `
+			INSERT INTO users (google_id, first_name, last_name, email, password, birthday, is_verified)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
+		`
+
+		// Create users in db
+		for i := range min(routesTestsNum, len(validEmails)) {
+
+			firstName := randomFrom(validFirstNames)
+			lastName := randomFrom(validLastNames)
+			strBirthday := randomFrom(validBirthdays)
+			email := validEmails[i]
+			pssw := randomFrom(validPasswords)
+
+			hashedPssw, err := testService.Auth.HashPassword(strings.TrimSpace(pssw))
+			if err != nil {
+				t.Errorf("Error hashing password: %v", err)
+			}
+
+			var birthday time.Time
+			if strBirthday != "" {
+				birthday, err = authservice.ConvertBirthdayToTime(strings.TrimSpace(strBirthday))
+				if err != nil {
+					t.Errorf("Error converting birthday: %v", err)
+				}
+			}
+
+			_, err = db.ExecContext(
+				context.Background(),
+				query,
+				nil,
+				firstName,
+				lastName,
+				email,
+				hashedPssw,
+				birthday,
+				false,
+			)
+
+			if err != nil {
+				t.Errorf("Error db: %v", err)
+			}
+		}
+
+		// Test register handler
 		for i := range min(routesTestsNum, len(validEmails)) {
 
 			// Payload

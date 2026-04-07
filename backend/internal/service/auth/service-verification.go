@@ -204,7 +204,7 @@ func (service *AuthService) ResetPassword(ctx context.Context, payload *payloads
 		}
 
 		// Hash password
-		hashedPassword, err := service.hashPassword(strings.TrimSpace(payload.Password))
+		hashedPassword, err := service.HashPassword(strings.TrimSpace(payload.Password))
 		if err != nil {
 			return err
 		}

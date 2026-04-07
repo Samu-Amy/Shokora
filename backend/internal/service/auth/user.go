@@ -101,7 +101,7 @@ func (service *AuthService) getUser(ctx context.Context, email string, plainPass
 // ----- UTILS -----
 
 // Birthday conversion
-func convertBirthdayToTime(birthdayStr string) (time.Time, error) {
+func ConvertBirthdayToTime(birthdayStr string) (time.Time, error) {
 	// The layout is "02" -> day, "01" -> month, "2006" -> year, using 2000 because is a leap year (to avoid errors in the case of February 29)
 	return time.Parse("02-01-2006", birthdayStr+"-2000")
 }

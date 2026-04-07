@@ -35,7 +35,7 @@ func (service *AuthService) UpdatePassword(ctx context.Context, userId, sessionI
 		}
 
 		// Hash new password
-		hashedNewPassword, err := service.hashPassword(strings.TrimSpace(payload.NewPassword))
+		hashedNewPassword, err := service.HashPassword(strings.TrimSpace(payload.NewPassword))
 		if err != nil {
 			return err
 		}

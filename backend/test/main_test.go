@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"math/rand"
 	"os"
 	"testing"
@@ -19,9 +20,9 @@ import (
 /*
 Per runnare i test:
 - "cd .\backend\"
-- test normali (tutti): "go test [-v] .\test\"
-- test normali (singolo test): "go test [-v] .\test\ -run [NomeTest (es. TestRegisterUserRoute)]"
-- solo test fuzz: "go test .\test\ -run=^$ -fuzz=[NomeTest (es.FuzzRegisterUserRoute) -fuzztime=[tempo (es. 20s)]" (-run=^$ dice di runnare i test normali che matchano con la regex (nessuno))
+	- test normali (tutti): "go test [-v] .\test\"
+	- test normali (singolo test): "go test [-v] .\test\ -run [NomeTest (es. TestRegisterUserRoute)]"
+	- solo test fuzz: "go test .\test\ -run=^$ -fuzz=[NomeTest (es. FuzzRegisterUserRoute) -fuzztime=[tempo (es. 20s)]" (-run=^$ dice di runnare i test normali che matchano con la regex (nessuno))
 */
 
 // Constants
@@ -32,13 +33,20 @@ const (
 	validationTestsNum = 50
 
 	randSeed int64 = 42 // TODO: cambia il seed per testare diversi casi
+
+	// DB Seeding
+	seedUserNum = 10
 )
 
 // Services to use in test
 var customRand *rand.Rand // TODO: usa questo per generare valori pseudo-casuali (con casualità ma anche riproducibilità)
 var dataValidator *validator.Validate
+var testStore *store.Storage
+var db *sql.DB
 var testService *service.Service
 var testRouter *chi.Mux
+
+var err error
 
 // Main
 func TestMain(m *testing.M) {
@@ -66,7 +74,7 @@ func TestMain(m *testing.M) {
 	tokenAuthenricator := appconfig.GetTokenAuthenticatorFromConfig(configs)
 
 	// - DB Connection -
-	db, err := appconfig.GetDbFromConfig(configs)
+	db, err = appconfig.GetDbFromConfig(configs)
 	if err != nil {
 		panic(err)
 	}
@@ -80,14 +88,14 @@ func TestMain(m *testing.M) {
 	txManager := database.NewSQLTransactionManager(db)
 
 	// - Store -
-	store := store.NewPostgresStorage(db)
+	testStore = store.NewPostgresStorage(db)
 
 	// - Validator -
 	dataValidator = payloads.NewValidator()
 
 	// - Service -
 	authServiceConfig := appconfig.GetAuthServiceConfig(configs)
-	testService = service.NewService(txManager, store, mailer, logger, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
+	testService = service.NewService(txManager, testStore, mailer, logger, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
 
 	// - Rate Limiter -
 	rateLimiter := appconfig.GetFixedWindowLimiterFromConfig(configs)

@@ -34,14 +34,14 @@ func (service *AuthService) RegisterUser(ctx context.Context, payload payloads.R
 
 	if payload.Birthday != "" {
 		// Convert birthday to time.Time
-		birthday, err = convertBirthdayToTime(strings.TrimSpace(payload.Birthday))
+		birthday, err = ConvertBirthdayToTime(strings.TrimSpace(payload.Birthday))
 		if err != nil {
 			return nil, nil, domerrors.ErrInvalidDate
 		}
 	}
 
 	// Hash password
-	hashedPassword, err := service.hashPassword(strings.TrimSpace(payload.Password))
+	hashedPassword, err := service.HashPassword(strings.TrimSpace(payload.Password))
 	if err != nil {
 		service.logger.Warnw("Error hashing password", "error", err)
 		return nil, nil, domerrors.ParseIntError(err)
