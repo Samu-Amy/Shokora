@@ -9,6 +9,7 @@ import (
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
+	domerrors "github.com/Samu-Amy/Shokora/internal/errors/dom"
 )
 
 // TODO: verifica i vari casi e l'errore ottenuto (per ogni caso) - per controllare anche il parsing degli errori
@@ -98,7 +99,7 @@ func TestRegisterUserRoute(t *testing.T) {
 
 			// Check the result
 			checkResponseCode(t, w, http.StatusBadRequest)
-			checkErrorMessage(t, w, "duplicate_email")
+			checkErrorMessage(t, w, domerrors.ErrDuplicateEmail.Error())
 
 			// Log response body
 			if logRes {
@@ -150,7 +151,7 @@ func TestRegisterUserRoute(t *testing.T) {
 
 func TestLoginUserRoute(t *testing.T) {
 	t.Run("should authenticate users", func(t *testing.T) {
-		logRes := true
+		logRes := false
 
 		clearTestDB(db)
 		seedUsers(t, db)
@@ -214,18 +215,73 @@ func TestLoginUserRoute(t *testing.T) {
 		}
 	})
 
-	// t.Run("should not authenticate users bacause of emails not exists in db", func(t *testing.T) {
+	t.Run("should not authenticate users bacause of emails not exists in db", func(t *testing.T) {
+		logRes := false
 
-	// })
+		clearTestDB(db)
 
-	// t.Run("should not authenticate users bacause of wrong passwords", func(t *testing.T) {
+		// Test login handler
+		for i := range min(seedUserNum, routesTestsNum, len(validEmails)) {
 
-	// })
+			// Payload
+			email := validEmails[i]
+			pssw := validPasswords[i]
 
-	// t.Run("should not allow unauthenticated requests", func (t *testing.T) {
+			loginUserReq := makeLoginUserReq(
+				email,
+				pssw,
+			)
 
-	// TODO: crea manualmente gli user prima (non è detto che siano presenti quelli usati da register) -> magari fai package per seeding
+			// Request
+			w := makeRequestWithPayload(t, testRouter, "GET", "/api/v1/auth/user", loginUserReq)
 
-	// TODO: test login user esistenti e user non esistenti (usando tutti i dati mescolati, in modo da usare email di utenti con password di altri)
-	// })
+			// Check the result
+			checkResponseCode(t, w, http.StatusBadRequest)
+			checkErrorMessage(t, w, domerrors.ErrInvalid.Error())
+
+			// Log response body
+			if logRes {
+				logResBody(t, w)
+			}
+		}
+	})
+
+	t.Run("should not authenticate users bacause of wrong passwords", func(t *testing.T) {
+		logRes := false
+
+		clearTestDB(db)
+		seedUsers(t, db)
+
+		// Test login handler
+		for i := range min(seedUserNum, routesTestsNum, len(validEmails)) {
+
+			// Payload
+			email := validEmails[i]
+
+			// Get a different index for the password
+			randomIndex := customRand.Intn(len(validPasswords))
+			for randomIndex == i {
+				randomIndex = customRand.Intn(len(validPasswords))
+			}
+
+			pssw := validPasswords[randomIndex]
+
+			loginUserReq := makeLoginUserReq(
+				email,
+				pssw,
+			)
+
+			// Request
+			w := makeRequestWithPayload(t, testRouter, "GET", "/api/v1/auth/user", loginUserReq)
+
+			// Check the result
+			checkResponseCode(t, w, http.StatusBadRequest)
+			checkErrorMessage(t, w, domerrors.ErrInvalid.Error())
+
+			// Log response body
+			if logRes {
+				logResBody(t, w)
+			}
+		}
+	})
 }

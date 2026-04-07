@@ -81,7 +81,7 @@ func (app *App) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Log in user
 	loginUserRes, authTokensDto, err := app.service.Auth.LoginUser(ctx, payload)
 	if err != nil {
-		app.parseError(w, r, err)
+		app.parseError(w, r, err) // TODO: lato frontend se si ottiene invalid (es. caso email non esistente in db) dire che l'email o la password è sbagliata (generico)
 		return
 	}
 

@@ -27,7 +27,7 @@ Per runnare i test:
 
 // Constants
 const (
-	activateLogger = false // Useful for debugging when test don't pass
+	activateLogger = true // Useful for debugging when test don't pass
 
 	routesTestsNum     = 25
 	validationTestsNum = 50

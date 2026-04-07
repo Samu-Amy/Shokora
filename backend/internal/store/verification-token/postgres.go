@@ -35,8 +35,10 @@ func (store *PostgresVTokenStore) Create(ctx context.Context, userId int64, veri
 	defer cancel()
 
 	// Fix magic link exp (nil if no magic link)
+	var hashedMagicLink any = nil
 	var magicLinkExp any = nil
-	if verificationTokens.HashedMagicLinkToken != nil {
+	if len(verificationTokens.HashedMagicLinkToken) > 0 {
+		hashedMagicLink = verificationTokens.HashedMagicLinkToken
 		magicLinkExp = time.Now().Add(verificationTokens.MagicLinkTokenExp).UTC()
 	}
 
@@ -47,7 +49,7 @@ func (store *PostgresVTokenStore) Create(ctx context.Context, userId int64, veri
 		query,
 		userId,
 		verificationTokens.VerificationType,
-		verificationTokens.HashedMagicLinkToken,
+		hashedMagicLink,
 		magicLinkExp,
 		verificationTokens.HashedOTP,
 		time.Now().Add(verificationTokens.OTPExp).UTC(),
