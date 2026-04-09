@@ -27,7 +27,7 @@ Per runnare i test:
 
 // Constants
 const (
-	activateLogger = true // Useful for debugging when test don't pass
+	activateLogger = false // Useful for debugging when test don't pass
 
 	routesTestsNum     = 25
 	validationTestsNum = 50
@@ -79,9 +79,6 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	// Clear db
-	clearTestDB(db)
-
 	logger.Info("DB Connected")
 
 	// - Transaction Manager -
@@ -111,6 +108,14 @@ func TestMain(m *testing.M) {
 
 	// - Router -
 	testRouter = testApp.InitRouter() // Useful for http tests
+
+	// - DB Actions -
+	clearTestDB(db)
+	// err = seedUsers(db)
+	// if err != nil {
+	// 	logger.Warnf("Error seeding db: %v", err)
+	// 	panic(err)
+	// }
 
 	code := m.Run()
 

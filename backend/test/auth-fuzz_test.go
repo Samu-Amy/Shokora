@@ -2,8 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
@@ -14,21 +17,23 @@ import (
 
 func FuzzRegisterUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzRegisterUserRoute -fuzztime=20s
 
-	clearTestDB(db) // Already done by main (but called also here for security)
-
 	f.Add("Mario", "Rossi", "31-12", "mario@example.com", "Password%123!", "Password%123!")
 
 	f.Fuzz(func(t *testing.T, firstName, lastName, birthday, email, password, passwordConf string) {
+
+		// Make request
 		req := makeRegisterUserReq(firstName, lastName, birthday, email, password, passwordConf)
 
 		w := makeRequestWithPayload(t, testRouter, "POST", "/api/v1/auth/user", req)
 
-		// - Check errors -
+		// - Checks -
 
+		// No server errors
 		if w.Code >= 500 {
 			t.Fatalf("Server error: %v", req)
 		}
 
+		// Correct response and data
 		if w.Code == 201 {
 			var res APIResponse[payloads.RegisterUserRes]
 
@@ -56,60 +61,23 @@ func FuzzRegisterUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=Fuzz
 	})
 }
 
-// TODO: fixxa questo test (non runna con fuzz)
 func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLoginUserRoute -fuzztime=20s
-
-	// customRand := rand.New(rand.NewSource(randSeed))
-
-	// configs := appconfig.NewTestConfig()
-	// dataValidator := payloads.NewValidator()
-
-	// mailer := appconfig.GetMailerFromConfig(configs)
-	// jwtAuthenticator := appconfig.GetJWTAuthenticatorFromConfig(configs)
-	// tokenAuthenricator := appconfig.GetTokenAuthenticatorFromConfig(configs)
-
-	// db, err := appconfig.GetDbFromConfig(configs)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// logger := zap.Must(zap.NewProduction()).Sugar()
-
-	// txManager := database.NewSQLTransactionManager(db)
-	// testStore := store.NewPostgresStorage(db)
-
-	// authServiceConfig := appconfig.GetAuthServiceConfig(configs)
-	// testService := service.NewService(txManager, testStore, mailer, logger, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
-
-	// rateLimiter := appconfig.GetFixedWindowLimiterFromConfig(configs)
-
-	// testApp := api.NewApp(
-	// 	configs,
-	// 	dataValidator,
-	// 	testService,
-	// 	logger,
-	// 	rateLimiter,
-	// )
-
-	// testRouter := testApp.InitRouter() // Useful for http tests
-
-	clearTestDB(db)
-	seedUsersFuzz(f, db)
 
 	f.Add("mario@example.com", "Password%123!")
 
 	f.Fuzz(func(t *testing.T, email, password string) {
-		defer func() {
-			if r := recover(); r != nil {
-				t.Fatalf("PANIC: %v", r)
-			}
-		}()
+
+		// Random ID
+		workerID := rand.Int63()
+
+		seedUsersFuzz(t, db, workerID)
 
 		// Use some valid (generated with seeding) data
 		if customRand.Float32() < 0.3 { // ~ 30% use valid email
 			i := customRand.Intn(min(seedUserNum, len(validEmails), len(validPasswords)))
 
-			email = validEmails[i]
+			emailParts := strings.Split(validEmails[i], "@")
+			email = fmt.Sprintf("%s-%d-%d@%s", emailParts[0], workerID, time.Now().UnixNano(), emailParts[1])
 			t.Log("Valid Email tested")
 
 			if customRand.Float32() < 0.5 { // ~ 50% use valid password for the chosen email
@@ -118,6 +86,7 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 			}
 		}
 
+		// Make request
 		req := makeLoginUserReq(email, password)
 
 		w := makeRequestWithPayload(t, testRouter, "GET", "/api/v1/auth/user", req)
