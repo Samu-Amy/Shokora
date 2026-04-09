@@ -11,7 +11,7 @@ import (
 
 type Config struct {
 	Addr               string
-	Env                string // "env" | "prod"
+	Env                string // "env" | "prod" | "test"
 	FrontEndURL        string
 	AllowedOriginsURLs []string
 	Db                 DbConfig
