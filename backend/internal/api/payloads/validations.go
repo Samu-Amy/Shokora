@@ -14,10 +14,11 @@ import (
 
 // - Regex -
 var (
-	regName      = regexp.MustCompile(`^[A-Za-zÀ-ÖØ-öø-ÿ' \-]+$`)
-	regBirthday  = regexp.MustCompile(`^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])$`)
-	regPasssword = regexp.MustCompile(`^[A-Za-z\d!@#$%^&*()\-_=+\[\]{};:'",.<>?/\\|` + "`" + ` ~]+$`)
-	regOTP       = regexp.MustCompile(`^[0-9]{` + strconv.Itoa(int(appconfig.OtpLength)) + `}$`) // TODO: va bene?
+	regName               = regexp.MustCompile(`^[A-Za-zÀ-ÖØ-öø-ÿ' \-]+$`)
+	regBirthday           = regexp.MustCompile(`^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])$`)
+	regPasssword          = regexp.MustCompile(`^[A-Za-z\d!@#$%^&*()\-_=+\[\]{};:'",.<>?/\\|` + "`" + ` ~]+$`)
+	regBase64RawURL32Byte = regexp.MustCompile(`^[A-Za-z0-9\-_]{43}$`) // For 32 bytes -> 43 chars
+	regOTP                = regexp.MustCompile(`^[0-9]{` + strconv.Itoa(int(appconfig.OtpLength)) + `}$`)
 )
 
 // - Validator -
@@ -45,6 +46,8 @@ func NewValidator() *validator.Validate {
 	v.RegisterValidation("valid-password", validPassword)
 	v.RegisterValidation("no-common-password", noCommonPassword)
 	v.RegisterValidation("valid-otp", validOTP)
+
+	v.RegisterValidation("valid-base64-rawurl-32", validBase64RawURL32Byte)
 
 	v.RegisterValidation("safe-chars", safeChars)
 
@@ -158,6 +161,10 @@ func validBirthday(fl validator.FieldLevel) bool {
 
 func validPassword(fl validator.FieldLevel) bool {
 	return regPasssword.MatchString(fl.Field().String())
+}
+
+func validBase64RawURL32Byte(fl validator.FieldLevel) bool {
+	return regBase64RawURL32Byte.MatchString(fl.Field().String())
 }
 
 func validOTP(fl validator.FieldLevel) bool {

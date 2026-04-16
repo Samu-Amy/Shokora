@@ -53,28 +53,10 @@ func TestUserDataReqValidation(t *testing.T) {
 
 			err := dataValidator.Struct(req)
 
-			if err == nil {
-				t.Fatal("expected not valid, got valid")
-			}
+			assertValidationFails(t, err, invalidField, expectedTag, val)
 
 			if logErr {
-				t.Logf("val: %s, error: %v", val, err)
-			}
-
-			validationErrors := parseValidationErr(t, err)
-
-			// Check validation
-			found := false
-
-			for _, ve := range validationErrors {
-				if ve.Field() == invalidField && ve.Tag() == expectedTag {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
+				t.Logf("val: %q, error: %v", val, err)
 			}
 		}
 	})
@@ -92,28 +74,10 @@ func TestUserDataReqValidation(t *testing.T) {
 
 			err := dataValidator.Struct(req)
 
-			if err == nil {
-				t.Fatal("expected not valid, got valid")
-			}
+			assertValidationFails(t, err, invalidField, expectedTag, val)
 
 			if logErr {
-				t.Logf("val: %s, error: %v", val, err)
-			}
-
-			validationErrors := parseValidationErr(t, err)
-
-			// Check validation
-			found := false
-
-			for _, ve := range validationErrors {
-				if ve.Field() == invalidField && ve.Tag() == expectedTag {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
+				t.Logf("val: %q, error: %v", val, err)
 			}
 		}
 	})
@@ -132,28 +96,10 @@ func TestUserDataReqValidation(t *testing.T) {
 
 			err := dataValidator.Struct(req)
 
-			if err == nil {
-				t.Error("expected not valid, got valid")
-			}
+			assertValidationFails(t, err, invalidField, expectedTag, val)
 
 			if logErr {
-				t.Logf("val: %s, error: %v", val, err)
-			}
-
-			validationErrors := parseValidationErr(t, err)
-
-			// Check validation
-			found := false
-
-			for _, ve := range validationErrors {
-				if ve.Field() == invalidField && ve.Tag() == expectedTag {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
+				t.Logf("val: %q, error: %v", val, err)
 			}
 		}
 	})
@@ -228,28 +174,10 @@ func TestEmailFieldReqValidation(t *testing.T) {
 
 			err := dataValidator.Struct(req)
 
-			if err == nil {
-				t.Fatal("expected not valid, got valid")
-			}
+			assertValidationFails(t, err, invalidField, expectedTag, val)
 
 			if logErr {
-				t.Logf("val: %s, error: %v", val, err)
-			}
-
-			validationErrors := parseValidationErr(t, err)
-
-			// Check validation
-			found := false
-
-			for _, ve := range validationErrors {
-				if ve.Field() == invalidField && ve.Tag() == expectedTag {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
+				t.Logf("val: %q, error: %v", val, err)
 			}
 		}
 	})
@@ -283,28 +211,10 @@ func TestPasswordFieldReqValidation(t *testing.T) {
 
 			err := dataValidator.Struct(req)
 
-			if err == nil {
-				t.Fatal("expected not valid, got valid")
-			}
+			assertValidationFails(t, err, invalidField, expectedTag, val)
 
 			if logErr {
-				t.Logf("val: %s, error: %v", val, err)
-			}
-
-			validationErrors := parseValidationErr(t, err)
-
-			// Check validation
-			found := false
-
-			for _, ve := range validationErrors {
-				if ve.Field() == invalidField && ve.Tag() == expectedTag {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
+				t.Logf("val: %q, error: %v", val, err)
 			}
 		}
 	})
@@ -351,28 +261,10 @@ func TestDoublePasswordFieldReqValidation(t *testing.T) {
 
 			err := dataValidator.Struct(req)
 
-			if err == nil {
-				t.Fatal("expected not valid, got valid")
-			}
+			assertValidationFailsWithParam(t, err, invalidField, expectedTag, expectedParam, "")
 
 			if logErr {
 				t.Logf("error: %v", err)
-			}
-
-			validationErrors := parseValidationErr(t, err)
-
-			// Check validation
-			found := false
-
-			for _, ve := range validationErrors {
-				if ve.Field() == invalidField && ve.Tag() == expectedTag && ve.Param() == expectedParam {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Errorf("expected error on field %s with tag %s and param %s not found", invalidField, expectedTag, expectedParam)
 			}
 		}
 	})
@@ -389,28 +281,10 @@ func TestDoublePasswordFieldReqValidation(t *testing.T) {
 
 			err := dataValidator.Struct(req)
 
-			if err == nil {
-				t.Fatal("expected not valid, got valid")
-			}
+			assertValidationFails(t, err, invalidField, expectedTag, val)
 
 			if logErr {
-				t.Logf("val: %s, error: %v", val, err)
-			}
-
-			validationErrors := parseValidationErr(t, err)
-
-			// Check validation
-			found := false
-
-			for _, ve := range validationErrors {
-				if ve.Field() == invalidField && ve.Tag() == expectedTag {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
+				t.Logf("val: %q, error: %v", val, err)
 			}
 		}
 	})
@@ -452,28 +326,10 @@ func TestUpdatePasswordReqValidation(t *testing.T) {
 
 			err := dataValidator.Struct(req)
 
-			if err == nil {
-				t.Fatal("expected not valid, got valid")
-			}
+			assertValidationFailsWithParam(t, err, invalidField, expectedTag, expectedParam, "")
 
 			if logErr {
 				t.Logf("error: %v", err)
-			}
-
-			validationErrors := parseValidationErr(t, err)
-
-			// Check validation
-			found := false
-
-			for _, ve := range validationErrors {
-				if ve.Field() == invalidField && ve.Tag() == expectedTag && ve.Param() == expectedParam {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Errorf("expected error on field %s with tag %s and param %s not found", invalidField, expectedTag, expectedParam)
 			}
 		}
 	})
@@ -515,10 +371,10 @@ func TestUpdatePasswordReqValidation(t *testing.T) {
 					}
 				}
 
-				if !foundOldPassword {
-					t.Errorf("expected error on field %s with tag %s not found", invalidField1, expectedTag1)
+				if !foundOldPassword && expectedTag1 != "no-common-password" { // Fix for updated OldPassword (no more check on common password)
+					t.Errorf("expected error on field %q with tag %q not found, val: %q", invalidField1, expectedTag1, val1)
 				} else if !foundNewPassword {
-					t.Errorf("expected error on field %s with tag %s not found", invalidField2, expectedTag2)
+					t.Errorf("expected error on field %q with tag %q not found, val: %q", invalidField2, expectedTag2, val2)
 				}
 			}
 		}

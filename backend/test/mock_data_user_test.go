@@ -5,20 +5,6 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/store/user"
 )
 
-// TODO: crea dati di base per users e products
-
-// TODO: fai db di test (compose come per dev)
-
-// ----- FUNCTIONS -----
-
-func randomFrom[T any](arr []T) T {
-	return arr[customRand.Intn(len(arr))]
-}
-
-func randomBool() bool {
-	return customRand.Float32() < 0.5
-}
-
 // ----- DATA -----
 
 // - First Name -
@@ -31,7 +17,7 @@ var validFirstNames = []string{
 	" Jean-Luc ", "Anna Maria", "D'Angelo", " Élise", "Óscar", "Alessio-Paolo ", "Maria Chiara", "Léa", "José", "Zoë",
 }
 
-var notValidFirstNames = []string{ // TODO: fare versione con anche i tag che violano per controllo più preciso (?)
+var notValidFirstNames = []string{
 	"",        // vuoto
 	"Lu!ca",   // simbolo non consentito
 	"An@na",   // simbolo
@@ -116,7 +102,7 @@ var notValidBirthdays = []string{
 	"abc-def",    // lettere
 	"12/12",      // formato errato
 	"12-12-2020", // troppi segmenti
-	"05-1😒",
+	"05-1😒",      // emojii
 }
 
 // - Email -
@@ -246,12 +232,12 @@ var notValidPasswordsValidation = map[string]string{
 	"passwordpassword": "no-common-password", // comune
 	"admin12345678":    "no-common-password", // comune
 	"aaaaaaaaaaaa":     "no-common-password", // ripetizione unico carattere
-	"Invalid©Char12":   "valid-chars",        // simbolo non consentito (©)
+	"Invalid©Char12":   "valid-password",     // simbolo non consentito (©)
 	"TooLongPasswordBecauseItExceedsSeventyTwoCharactersWhichIsTheBcryptLimit123!": "max", // troppo lunga
 	"  LeadingSpace12": "no-edge-spaces", // spazio iniziale non consentito
 	"TrailingSpace12 ": "no-edge-spaces", // spazio finale non consentito
 	" jhd87s#7a6d8% ":  "no-edge-spaces", // spazio iniziale e finale
-	"admin✌️12345678":  "valid-chars",
+	"admin✌️12345678":  "valid-password",
 }
 
 var userRoles = []user.Role{

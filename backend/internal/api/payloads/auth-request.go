@@ -15,8 +15,8 @@ type LoginUserReq struct {
 }
 
 type GoogleOAuthCallbackReq struct {
-	State string `json:"state" validate:"required,min=43,max=43,safe-chars"`
-	Code  string `json:"code" validate:"required,safe-chars"`
+	State string `json:"state" validate:"required,valid-base64-rawurl-32"` // base64
+	Code  string `json:"code" validate:"required,max=512,safe-chars"`      // 512 is just to avoid strings too long
 }
 
 // Verification
@@ -30,6 +30,6 @@ type SendVerificationReq struct {
 }
 
 type ResetPasswordReq struct {
-	PlainResetSessionToken string `json:"plain_reset_session_token" validate:"required,safe-chars"`
+	PlainResetSessionToken string `json:"plain_reset_session_token" validate:"required,valid-base64-rawurl-32"` // base64
 	PasswordFieldReq
 }
