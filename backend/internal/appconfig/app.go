@@ -15,6 +15,10 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
+const (
+	OtpLength uint8 = 6
+)
+
 func NewDefaultConfig() config.Config {
 	environment := env.GetString("ENV", "dev")
 
@@ -74,7 +78,7 @@ func NewDefaultConfig() config.Config {
 				Exp:      30 * time.Minute, // 30 min
 			},
 			OTP: config.OTPConfig{
-				Length:      6, // Suggested: between 4 and 10
+				Length:      OtpLength, // Suggested: between 4 and 10
 				MaxAttempts: 5,
 				LongExp:     10 * time.Minute, // 10 min (email verification, password reset)
 				BaseExp:     5 * time.Minute,  // 5 min (2FA)

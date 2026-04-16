@@ -4,8 +4,6 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/navbar";
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
-
 
 // TODO: fai anche robot.txt ed altre cose utili
 
@@ -25,13 +23,8 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 //   subsets: ["latin"],
 // });
 
-const interSans = Geist({
+const interSans = Inter({
   variable: "--font-inter-sans",
-  subsets: ["latin"],
-});
-
-const interMono = Geist_Mono({
-  variable: "--font-inter-mono",
   subsets: ["latin"],
 });
 
@@ -48,10 +41,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", interSans.variable, interMono.variable, "font-sans", inter.variable)}
+      className={cn("h-dvh", "antialiased", interSans.variable, "font-sans")}
     >
       {/* TODO: usa tag html bene (tipo nav, aside, ecc.) */}
-      <body className="min-h-full flex flex-col justify-between">
+      <body className="min-h-dvh flex flex-col justify-between">
         <Navbar />
         <main className="order-1 sm:order-2 flex-1 px-2 sm:px-64">
           {children}

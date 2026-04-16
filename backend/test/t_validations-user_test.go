@@ -255,7 +255,7 @@ func TestEmailFieldReqValidation(t *testing.T) {
 	})
 }
 
-// - Password Field Req -
+// Password Field Req
 
 func TestPasswordFieldReqValidation(t *testing.T) {
 	t.Run("should pass validation", func(t *testing.T) {
@@ -310,7 +310,7 @@ func TestPasswordFieldReqValidation(t *testing.T) {
 	})
 }
 
-// - Double Password Field Req -
+// Double Password Field Req
 
 func TestDoublePasswordFieldReqValidation(t *testing.T) {
 	t.Run("should pass validation", func(t *testing.T) {
@@ -416,14 +416,15 @@ func TestDoublePasswordFieldReqValidation(t *testing.T) {
 	})
 }
 
-// - Update Password Field Req -
+// Update Password Field Req
 
 func TestUpdatePasswordReqValidation(t *testing.T) {
 	t.Run("should pass validation", func(t *testing.T) {
 		for range validationTestsNum {
 			req := payloads.UpdatePasswordReq{
-				OldPassword: randomFrom(validPasswords),
-				NewPassword: randomFrom(validPasswords),
+				OldPassword:             randomFrom(validPasswords),
+				NewPassword:             randomFrom(validPasswords),
+				InvalidateOtherSessions: randomBool(),
 			}
 
 			err := dataValidator.Struct(req)
@@ -444,8 +445,9 @@ func TestUpdatePasswordReqValidation(t *testing.T) {
 			passw := randomFrom(validPasswords)
 
 			req := payloads.UpdatePasswordReq{
-				OldPassword: passw,
-				NewPassword: passw,
+				OldPassword:             passw,
+				NewPassword:             passw,
+				InvalidateOtherSessions: randomBool(),
 			}
 
 			err := dataValidator.Struct(req)
@@ -484,8 +486,9 @@ func TestUpdatePasswordReqValidation(t *testing.T) {
 		for val1, expectedTag1 := range notValidPasswordsValidation {
 			for val2, expectedTag2 := range notValidPasswordsValidation {
 				req := payloads.UpdatePasswordReq{
-					OldPassword: val1,
-					NewPassword: val2,
+					OldPassword:             val1,
+					NewPassword:             val2,
+					InvalidateOtherSessions: randomBool(),
 				}
 
 				err := dataValidator.Struct(req)

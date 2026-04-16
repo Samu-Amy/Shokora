@@ -22,22 +22,22 @@ import (
 func main() {
 
 	// - App and DB Config -
-	configs := appconfig.NewDefaultConfig()
+	config := appconfig.NewDefaultConfig()
 
 	// - Logger -
 	logger := zap.Must(zap.NewProduction()).Sugar()
 	defer logger.Sync()
 
 	// - Mailer -
-	mailer := appconfig.GetMailerFromConfig(configs)
+	mailer := appconfig.GetMailerFromConfig(config)
 
 	// - Authenticators -
-	jwtAuthenticator := appconfig.GetJWTAuthenticatorFromConfig(configs)
+	jwtAuthenticator := appconfig.GetJWTAuthenticatorFromConfig(config)
 
-	tokenAuthenricator := appconfig.GetTokenAuthenticatorFromConfig(configs)
+	tokenAuthenricator := appconfig.GetTokenAuthenticatorFromConfig(config)
 
 	// - DB Connection -
-	db, err := appconfig.GetDbFromConfig(configs)
+	db, err := appconfig.GetDbFromConfig(config)
 
 	if err != nil {
 		logger.Fatal(err)
@@ -56,11 +56,11 @@ func main() {
 	dataValidator := payloads.NewValidator()
 
 	// - Service -
-	authServiceConfig := appconfig.GetAuthServiceConfig(configs)
+	authServiceConfig := appconfig.GetAuthServiceConfig(config)
 	service := service.NewService(txManager, store, mailer, logger, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
 
 	// - Rate Limiter -
-	rateLimiter := appconfig.GetFixedWindowLimiterFromConfig(configs)
+	rateLimiter := appconfig.GetFixedWindowLimiterFromConfig(config)
 
 	// - Metrics -
 
@@ -79,7 +79,7 @@ func main() {
 
 	// - App -
 	app := api.NewApp(
-		configs,
+		config,
 		dataValidator,
 		service,
 		logger,

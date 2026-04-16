@@ -106,7 +106,7 @@ func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error
 	}
 
 	// Fallback
-	writeJSONError(w, http.StatusBadRequest, "forbidden")
+	writeJSONError(w, http.StatusBadRequest, "forbidden") // TODO: sostituisci con domainErrors (tanto le stringhe sono le stesse, almeno si centralizzano i messaggi di errore lì)
 }
 
 // ----- PARSE ERROR -----

@@ -15,14 +15,14 @@ type LoginUserReq struct {
 }
 
 type GoogleOAuthCallbackReq struct {
-	State string `json:"state" validate:"required,min=43,max=43"`
-	Code  string `json:"code" validate:"required"`
+	State string `json:"state" validate:"required,min=43,max=43,safe-chars"`
+	Code  string `json:"code" validate:"required,safe-chars"`
 }
 
 // Verification
 type OTPVerificationReq struct {
-	VerificationId uuid.UUID `json:"verification_id" validate:"gte=0"`
-	OTP            string    `json:"otp" validate:"required,min=4,max=10"`
+	VerificationId uuid.UUID `json:"verification_id" validate:"required"`
+	OTP            string    `json:"otp" validate:"required,valid-otp"`
 }
 
 type SendVerificationReq struct {
@@ -30,6 +30,6 @@ type SendVerificationReq struct {
 }
 
 type ResetPasswordReq struct {
-	PlainResetSessionToken string
+	PlainResetSessionToken string `json:"plain_reset_session_token" validate:"required,safe-chars"`
 	PasswordFieldReq
 }

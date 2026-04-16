@@ -3,17 +3,21 @@ package payloads
 import (
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
+	"github.com/Samu-Amy/Shokora/internal/appconfig"
 	"github.com/go-playground/validator/v10"
 )
 
 // - Regex -
 var (
-	regName        = regexp.MustCompile(`^[A-Za-zÀ-ÖØ-öø-ÿ' \-]+$`)
-	regSecureChars = regexp.MustCompile(`^[A-Za-z\d!@#$%^&*()\-_=+\[\]{};:'",.<>?/\\|` + "`" + ` ~]+$`)
-	regBirthday    = regexp.MustCompile(`^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])$`)
+	regName      = regexp.MustCompile(`^[A-Za-zÀ-ÖØ-öø-ÿ' \-]+$`)
+	regBirthday  = regexp.MustCompile(`^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])$`)
+	regPasssword = regexp.MustCompile(`^[A-Za-z\d!@#$%^&*()\-_=+\[\]{};:'",.<>?/\\|` + "`" + ` ~]+$`)
+	regOTP       = regexp.MustCompile(`^[0-9]{` + strconv.Itoa(int(appconfig.OtpLength)) + `}$`) // TODO: va bene?
 )
 
 // - Validator -
@@ -36,10 +40,13 @@ func NewValidator() *validator.Validate {
 	v.RegisterValidation("valid-name", validName)
 
 	v.RegisterValidation("no-edge-spaces", noEdgeSpaces)
-	v.RegisterValidation("valid-chars", validCharacters)
-	v.RegisterValidation("no-common-password", noCommonPassword)
-
 	v.RegisterValidation("valid-birthday", validBirthday)
+
+	v.RegisterValidation("valid-password", validPassword)
+	v.RegisterValidation("no-common-password", noCommonPassword)
+	v.RegisterValidation("valid-otp", validOTP)
+
+	v.RegisterValidation("safe-chars", safeChars)
 
 	return v
 }
@@ -78,14 +85,17 @@ var commonPasswords = map[string]struct{}{
 	"P@ssword123456":   {},
 }
 
+// - Utils -
+
 func hasRepeatedChar(password string) bool { // Has only one char repeated (e.g. "aaaaaaaaaaaa")
-	if len(password) == 0 {
+	runes := []rune(password)
+	if len(runes) == 0 {
 		return false
 	}
 
-	first := password[0]
-	for i := 1; i < len(password); i++ {
-		if password[i] != first {
+	first := runes[0]
+	for _, r := range runes[1:] {
+		if r != first {
 			return false
 		}
 	}
@@ -99,6 +109,24 @@ func IsCommonPassword(password string) bool {
 
 	return found || hasRepeatedChar(password)
 }
+
+func isSafeText(s string) bool {
+	for _, r := range s {
+		if unicode.IsControl(r) {
+			return false
+		}
+		if r > 0xFFFF { // All codepoint out of BMP (Basic Multilingual Plane) are emoji or rare symbols
+			return false
+		}
+		if unicode.Is(unicode.So, r) || unicode.Is(unicode.Sk, r) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// - Validators -
 
 func noCommonPassword(fl validator.FieldLevel) bool {
 	return !IsCommonPassword(fl.Field().String())
@@ -115,10 +143,6 @@ func noEdgeSpaces(fl validator.FieldLevel) bool {
 	return strings.TrimSpace(value) == value
 }
 
-func validCharacters(fl validator.FieldLevel) bool {
-	return regSecureChars.MatchString(fl.Field().String())
-}
-
 func validBirthday(fl validator.FieldLevel) bool {
 	value := fl.Field().String()
 
@@ -130,4 +154,16 @@ func validBirthday(fl validator.FieldLevel) bool {
 	// Verify date
 	_, err := time.Parse("02-01-2006", value+"-2000") // 02-01-2006 means format the date as DD-MM-YYYY (and then using the value (with format "DD-MM") with "-2000" -> leap year, so 29-02 is valid)
 	return err == nil
+}
+
+func validPassword(fl validator.FieldLevel) bool {
+	return regPasssword.MatchString(fl.Field().String())
+}
+
+func validOTP(fl validator.FieldLevel) bool {
+	return regOTP.MatchString(fl.Field().String())
+}
+
+func safeChars(fl validator.FieldLevel) bool {
+	return isSafeText(fl.Field().String())
 }
