@@ -58,28 +58,10 @@ func TestGoogleOAuthCallbackReqValidation(t *testing.T) {
 
 			err := dataValidator.Struct(req)
 
-			if err == nil {
-				t.Fatal("expected not valid, got valid")
-			}
+			assertValidationFails(t, err, invalidField, expectedTag, val)
 
 			if logErr {
 				t.Logf("val: %s, error: %v", val, err)
-			}
-
-			validationErrors := parseValidationErr(t, err)
-
-			// Check validation
-			found := false
-
-			for _, ve := range validationErrors {
-				if ve.Field() == invalidField && ve.Tag() == expectedTag {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
 			}
 		}
 	})
@@ -87,38 +69,44 @@ func TestGoogleOAuthCallbackReqValidation(t *testing.T) {
 	t.Run("should not pass validation for both fields", func(t *testing.T) {
 		logErr := false
 
-		req := payloads.GoogleOAuthCallbackReq{
-			State: "invalid state!@#$",
-			Code:  "invalid@code!#$%",
-		}
+		for val1, expectedTag1 := range notValidBase64RawUrl32BytesString {
+			for val2, expectedTag2 := range notValidGoogleCodesValidation {
 
-		err := dataValidator.Struct(req)
+				req := payloads.GoogleOAuthCallbackReq{
+					State: val1,
+					Code:  val2,
+				}
 
-		if err == nil {
-			t.Error("expected not valid, got valid")
-		}
+				err := dataValidator.Struct(req)
 
-		if logErr {
-			t.Logf("error: %v", err)
-		}
+				if err == nil {
+					t.Error("expected not valid, got valid")
+				}
 
-		validationErrors := parseValidationErr(t, err)
+				if logErr {
+					t.Logf("error: %v", err)
+				}
 
-		foundStateErr := false
-		foundCodeErr := false
+				validationErrors := parseValidationErr(t, err)
 
-		for _, ve := range validationErrors {
-			switch {
-			case ve.Field() == "state" && ve.Tag() == "safe-chars":
-				foundStateErr = true
-			case ve.Field() == "code" && ve.Tag() == "safe-chars":
-				foundCodeErr = true
+				foundStateErr := false
+				foundCodeErr := false
+
+				for _, ve := range validationErrors {
+					switch {
+					case ve.Field() == "state" && ve.Tag() == expectedTag1:
+						foundStateErr = true
+					case ve.Field() == "code" && ve.Tag() == expectedTag2:
+						foundCodeErr = true
+					}
+				}
+
+				if !(foundStateErr && foundCodeErr) {
+					t.Error("expected error on both state and code fields")
+				}
 			}
 		}
 
-		if !(foundStateErr && foundCodeErr) {
-			t.Error("expected error on both state and code fields")
-		}
 	})
 }
 
@@ -153,27 +141,10 @@ func TestOTPVerificationReqValidation(t *testing.T) {
 
 		err := dataValidator.Struct(req)
 
-		if err == nil {
-			t.Fatal("expected not valid, got valid")
-		}
+		assertValidationFails(t, err, invalidField, expectedTag, "")
 
 		if logErr {
-			t.Logf("error: %v", err)
-		}
-
-		validationErrors := parseValidationErr(t, err)
-
-		found := false
-
-		for _, ve := range validationErrors {
-			if ve.Field() == invalidField && ve.Tag() == expectedTag {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
+			t.Logf("val: %s, error: %v", "", err)
 		}
 	})
 
@@ -189,27 +160,10 @@ func TestOTPVerificationReqValidation(t *testing.T) {
 
 			err := dataValidator.Struct(req)
 
-			if err == nil {
-				t.Fatal("expected not valid, got valid")
-			}
+			assertValidationFails(t, err, invalidField, expectedTag, val)
 
 			if logErr {
 				t.Logf("val: %s, error: %v", val, err)
-			}
-
-			validationErrors := parseValidationErr(t, err)
-
-			found := false
-
-			for _, ve := range validationErrors {
-				if ve.Field() == invalidField && ve.Tag() == expectedTag {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
 			}
 		}
 	})
@@ -219,36 +173,38 @@ func TestOTPVerificationReqValidation(t *testing.T) {
 		invalidField2 := "otp"
 		logErr := false
 
-		req := payloads.OTPVerificationReq{
-			VerificationId: uuid.Nil,
-			OTP:            "invalid",
-		}
-
-		err := dataValidator.Struct(req)
-
-		if err == nil {
-			t.Error("expected not valid, got valid")
-		}
-
-		if logErr {
-			t.Logf("error: %v", err)
-		}
-
-		validationErrors := parseValidationErr(t, err)
-
-		foundVerificationIDErr := false
-		foundOTPErr := false
-
-		for _, ve := range validationErrors {
-			if ve.Field() == invalidField1 && ve.Tag() == "required" {
-				foundVerificationIDErr = true
-			} else if ve.Field() == invalidField2 && ve.Tag() == "valid-otp" {
-				foundOTPErr = true
+		for val, expectedTag := range notValidOTPsValidation {
+			req := payloads.OTPVerificationReq{
+				VerificationId: uuid.Nil,
+				OTP:            val,
 			}
-		}
 
-		if !(foundVerificationIDErr && foundOTPErr) {
-			t.Error("expected error on both verification_id and otp fields")
+			err := dataValidator.Struct(req)
+
+			if err == nil {
+				t.Error("expected not valid, got valid")
+			}
+
+			if logErr {
+				t.Logf("error: %v", err)
+			}
+
+			validationErrors := parseValidationErr(t, err)
+
+			foundVerificationIDErr := false
+			foundOTPErr := false
+
+			for _, ve := range validationErrors {
+				if ve.Field() == invalidField1 && ve.Tag() == "required" {
+					foundVerificationIDErr = true
+				} else if ve.Field() == invalidField2 && ve.Tag() == expectedTag {
+					foundOTPErr = true
+				}
+			}
+
+			if !(foundVerificationIDErr && foundOTPErr) {
+				t.Error("expected error on both verification_id and otp fields")
+			}
 		}
 	})
 }
@@ -277,6 +233,7 @@ func TestResetPasswordReqValidation(t *testing.T) {
 		logErr := false
 
 		for val, expectedTag := range notValidBase64RawUrl32BytesString {
+
 			req := payloads.ResetPasswordReq{
 				PlainResetSessionToken: val,
 				PasswordFieldReq: payloads.PasswordFieldReq{
@@ -286,27 +243,10 @@ func TestResetPasswordReqValidation(t *testing.T) {
 
 			err := dataValidator.Struct(req)
 
-			if err == nil {
-				t.Fatal("expected not valid, got valid")
-			}
+			assertValidationFails(t, err, invalidField, expectedTag, val)
 
 			if logErr {
 				t.Logf("val: %s, error: %v", val, err)
-			}
-
-			validationErrors := parseValidationErr(t, err)
-
-			found := false
-
-			for _, ve := range validationErrors {
-				if ve.Field() == invalidField && ve.Tag() == expectedTag {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
 			}
 		}
 	})
@@ -316,6 +256,7 @@ func TestResetPasswordReqValidation(t *testing.T) {
 		logErr := false
 
 		for val, expectedTag := range notValidPasswordsValidation {
+
 			req := payloads.ResetPasswordReq{
 				PlainResetSessionToken: randomFrom(validBase64RawUrl32BytesString),
 				PasswordFieldReq: payloads.PasswordFieldReq{
@@ -325,27 +266,10 @@ func TestResetPasswordReqValidation(t *testing.T) {
 
 			err := dataValidator.Struct(req)
 
-			if err == nil {
-				t.Fatal("expected not valid, got valid")
-			}
+			assertValidationFails(t, err, invalidField, expectedTag, val)
 
 			if logErr {
 				t.Logf("val: %s, error: %v", val, err)
-			}
-
-			validationErrors := parseValidationErr(t, err)
-
-			found := false
-
-			for _, ve := range validationErrors {
-				if ve.Field() == invalidField && ve.Tag() == expectedTag {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
 			}
 		}
 	})
@@ -353,50 +277,56 @@ func TestResetPasswordReqValidation(t *testing.T) {
 	t.Run("should not pass validation for both fields", func(t *testing.T) {
 		logErr := false
 
-		req := payloads.ResetPasswordReq{
-			PlainResetSessionToken: "invalid state!@#$",
-			PasswordFieldReq: payloads.PasswordFieldReq{
-				Password: "short",
-			},
-		}
+		for val1, expectedTag1 := range notValidBase64RawUrl32BytesString {
+			for val2, expectedTag2 := range notValidPasswordsValidation {
 
-		err := dataValidator.Struct(req)
+				req := payloads.ResetPasswordReq{
+					PlainResetSessionToken: val1,
+					PasswordFieldReq: payloads.PasswordFieldReq{
+						Password: val2,
+					},
+				}
 
-		if err == nil {
-			t.Error("expected not valid, got valid")
-		}
+				err := dataValidator.Struct(req)
 
-		if logErr {
-			t.Logf("error: %v", err)
-		}
+				if err == nil {
+					t.Error("expected not valid, got valid")
+				}
 
-		validationErrors := parseValidationErr(t, err)
+				if logErr {
+					t.Logf("error: %v", err)
+				}
 
-		foundTokenErr := false
-		foundPasswordErr := false
+				validationErrors := parseValidationErr(t, err)
 
-		for _, ve := range validationErrors {
-			switch {
-			case ve.Field() == "plain_reset_session_token" && ve.Tag() == "safe-chars":
-				foundTokenErr = true
-			case ve.Field() == "password" && ve.Tag() == "min":
-				foundPasswordErr = true
+				foundTokenErr := false
+				foundPasswordErr := false
+
+				for _, ve := range validationErrors {
+					switch {
+					case ve.Field() == "plain_reset_session_token" && ve.Tag() == expectedTag1:
+						foundTokenErr = true
+					case ve.Field() == "password" && ve.Tag() == expectedTag2:
+						foundPasswordErr = true
+					}
+				}
+
+				if !(foundTokenErr && foundPasswordErr) {
+					t.Error("expected error on both plain_reset_session_token and password fields")
+				}
 			}
 		}
 
-		if !(foundTokenErr && foundPasswordErr) {
-			t.Error("expected error on both plain_reset_session_token and password fields")
-		}
 	})
 }
 
 // Send Verification Req
 func TestSendVerificationReqValidation(t *testing.T) {
 	t.Run("should pass validation", func(t *testing.T) {
-		for range validationTestsNum {
+		for _, val := range validEmails {
 			req := payloads.SendVerificationReq{
 				EmailFieldReq: payloads.EmailFieldReq{
-					Email: randomFrom(validEmails),
+					Email: val,
 				},
 			}
 
@@ -421,27 +351,10 @@ func TestSendVerificationReqValidation(t *testing.T) {
 
 			err := dataValidator.Struct(req)
 
-			if err == nil {
-				t.Fatal("expected not valid, got valid")
-			}
+			assertValidationFails(t, err, invalidField, expectedTag, val)
 
 			if logErr {
 				t.Logf("val: %s, error: %v", val, err)
-			}
-
-			validationErrors := parseValidationErr(t, err)
-
-			found := false
-
-			for _, ve := range validationErrors {
-				if ve.Field() == invalidField && ve.Tag() == expectedTag {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Errorf("expected error on field %s with tag %s not found", invalidField, expectedTag)
 			}
 		}
 	})

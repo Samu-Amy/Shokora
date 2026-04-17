@@ -3,7 +3,8 @@ package main
 // - OTP -
 
 var validOTPs = []string{
-	"000000", "000001", "123456", "999999", "555555", "111111", "666666", "777777", "888888", "222222",
+	"000000", "000001", "123456", "999999", "555555", "111111", "666666", "777777", "888888", "200002",
+	"654323", "872162", "432198", "215623", "213112", "984673", "213786", "281563", "197425", "218612",
 	"000000", "111111", "222222", "333333", "444444", "555555", "666666", "777777", "888888", "999999",
 	"100000", "200000", "300000", "400000", "500000", "600000", "700000", "800000", "900000", "050000",
 	"763296", "673296", "198329", "289173", "864327", "098412", "542134", "986759", "903272", "874236",
@@ -65,9 +66,8 @@ var validGoogleCodes = []string{
 }
 
 var notValidGoogleCodesValidation = map[string]string{
-	"":                 "required",   // vuoto
-	"invalid@code!#$%": "safe-chars", // caratteri non validi
-	// "code with spaces":  "", // contiene spazi // TODO: non deve contenere spazi?
+	"":                  "required",   // vuoto
+	"invalid😎@code!#$%": "safe-chars", // caratteri non validi
 	"code\nwithnewline": "safe-chars", // newline
 	"invalid©code":      "safe-chars", // carattere non valido
 }
