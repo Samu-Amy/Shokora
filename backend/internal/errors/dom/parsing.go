@@ -12,6 +12,9 @@ func ParseIntError(err error) error {
 	case IsDomainErr(err):
 		return err
 
+	case errors.Is(err, nil):
+		return nil
+
 	// Internal error (parse to domain error)
 	case errors.Is(err, interrors.IErrNotFound):
 		return ErrNotFound

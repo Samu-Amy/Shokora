@@ -107,7 +107,7 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 			// Check important data
 			if res.Data.VerificationId == nil {
 				if res.Data.User == nil {
-					t.Fatal("user not sent") // TODO: fix this error (response body: {"data":{"is_email_sent":false}})
+					t.Fatal("user not sent")
 				}
 
 				if res.Data.User.Email == "" {
