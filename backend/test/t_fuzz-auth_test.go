@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -95,6 +96,10 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 			t.Fatalf("Server error: %v", req)
 		}
 
+		// if w.Code >= 400 {
+		// 	t.Errorf("Error with code: %v", w.Code)
+		// }
+
 		if w.Code == 200 {
 
 			var res APIResponse[payloads.LoginUserRes]
@@ -113,6 +118,8 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 				if res.Data.User.Email == "" {
 					t.Fatalf("empty email on success:\nReq: %+v\nRes:%+v", req, res)
 				}
+
+				// TODO: check cookies
 			} else {
 
 				verificationType := getVerificationType(t, res.Data.VerificationId)
@@ -128,4 +135,102 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 	})
 }
 
-// TODO: testa anche google e google/callback, verifiche varie (tutti gli handler dell'auth)
+func FuzzGoogleLoginRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzGoogleLoginRoute -fuzztime=20s
+
+	f.Fuzz(func(t *testing.T, make []byte) {
+
+		// Make request
+		w := makeRequestWithPayload(t, testRouter, "GET", "/api/v1/auth/google", nil)
+
+		// - Checks -
+
+		// No server errors
+		if w.Code >= 500 {
+			t.Fatalf("Server error")
+		}
+
+		if w.Code >= 400 {
+			t.Errorf("Error with code: %v", w.Code)
+		}
+
+		// Correct response and data
+		if w.Code == 201 {
+			var res APIResponse[payloads.OAuthGoogleLoginRes]
+
+			err := json.Unmarshal(w.Body.Bytes(), &res)
+			if err != nil {
+				t.Fatalf("failed to unmarshal response body: %v", err)
+			}
+
+			// Check important data
+			if res.Data.Url == "" {
+				t.Fatalf("empty email on success:\nRes:%+v", res)
+			}
+
+			parsedURL, err := url.ParseRequestURI(res.Data.Url)
+			if err != nil {
+				t.Fatalf("invalid URL returned: %s\nErr: %v", res.Data.Url, err)
+			}
+
+			if parsedURL.Scheme != "https" {
+				t.Fatalf("non-https URL returned: %s", res.Data.Url)
+			}
+
+			if parsedURL.Host == "" {
+				t.Fatalf("URL without host: %s", res.Data.Url)
+			}
+		}
+	})
+}
+
+func FuzzGoogleCallbackRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzGoogleCallbackRoute -fuzztime=20s
+	f.Add("Or71zHGPKEDE89eOyxiWZwB0yUlyC12Uoz9Xfzat3PM", "4_0AY0e_g4kQ")
+
+	f.Fuzz(func(t *testing.T, state, code string) {
+
+		// Make request
+		req := payloads.OAuthGoogleCallbackReq{
+			State: state,
+			Code:  code,
+		}
+
+		w := makeRequestWithPayload(t, testRouter, "POST", "/api/v1/auth/google/callback", req)
+
+		// - Checks -
+
+		// No server errors
+		if w.Code >= 500 {
+			t.Fatalf("Server error: %v", req)
+		}
+
+		// Correct response and data
+		if w.Code == 201 {
+			// Check important data
+			if state == "" || code == "" {
+				t.Fatal("accepted empty value")
+			}
+
+			// - Without a valid code, it should only return not valid -
+
+			// var res APIResponse[payloads.RegisterUserRes]
+
+			// err := json.Unmarshal(w.Body.Bytes(), &res)
+			// if err != nil {
+			// 	t.Fatalf("failed to unmarshal response body: %v", err)
+			// }
+
+			//
+			// if res.Data.User.Email == "" {
+			// 	t.Fatalf("empty email on success:\nReq: %+v\nRes:%+v", req, res)
+			// }
+
+			// if res.Data.User.Role != 0 {
+			// 	t.Fatal("user created with role != 0")
+			// }
+
+			// if !res.Data.User.IsVerified {
+			// 	t.Errorf("user created as not verified") // usually it should be verified with Google
+			// }
+		}
+	})
+}

@@ -39,6 +39,10 @@ type LoginUserRes struct {
 // User != nil && VerificationID != nil -> verification required (user must be verified)
 // User == nil && VerificationID != nil -> 2fa required
 
+type OAuthGoogleLoginRes struct {
+	Url string `json:"url"`
+}
+
 /*
 The data required to set cookies for auth.
 Should not be send this to frontend (is not serializable)

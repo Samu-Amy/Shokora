@@ -14,7 +14,7 @@ type LoginUserReq struct {
 	PasswordFieldReq
 }
 
-type GoogleOAuthCallbackReq struct {
+type OAuthGoogleCallbackReq struct {
 	State string `json:"state" validate:"required,valid-base64-rawurl-32"` // base64
 	Code  string `json:"code" validate:"required,max=512,safe-chars"`      // 512 is just to avoid strings too long
 }

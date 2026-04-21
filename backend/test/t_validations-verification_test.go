@@ -10,10 +10,10 @@ import (
 // TODO: fix (controlla sia test che mock data)
 
 // Google OAuth Callback Req
-func TestGoogleOAuthCallbackReqValidation(t *testing.T) {
+func TestOAuthGoogleCallbackReqValidation(t *testing.T) {
 	t.Run("should pass validation", func(t *testing.T) {
 		for range validationTestsNum {
-			req := payloads.GoogleOAuthCallbackReq{
+			req := payloads.OAuthGoogleCallbackReq{
 				State: randomFrom(validBase64RawUrl32BytesString),
 				Code:  randomFrom(validGoogleCodes),
 			}
@@ -31,7 +31,7 @@ func TestGoogleOAuthCallbackReqValidation(t *testing.T) {
 		logErr := false
 
 		for val, expectedTag := range notValidBase64RawUrl32BytesString {
-			req := payloads.GoogleOAuthCallbackReq{
+			req := payloads.OAuthGoogleCallbackReq{
 				State: val,
 				Code:  randomFrom(validGoogleCodes),
 			}
@@ -51,7 +51,7 @@ func TestGoogleOAuthCallbackReqValidation(t *testing.T) {
 		logErr := false
 
 		for val, expectedTag := range notValidGoogleCodesValidation {
-			req := payloads.GoogleOAuthCallbackReq{
+			req := payloads.OAuthGoogleCallbackReq{
 				State: randomFrom(validBase64RawUrl32BytesString),
 				Code:  val,
 			}
@@ -72,7 +72,7 @@ func TestGoogleOAuthCallbackReqValidation(t *testing.T) {
 		for val1, expectedTag1 := range notValidBase64RawUrl32BytesString {
 			for val2, expectedTag2 := range notValidGoogleCodesValidation {
 
-				req := payloads.GoogleOAuthCallbackReq{
+				req := payloads.OAuthGoogleCallbackReq{
 					State: val1,
 					Code:  val2,
 				}

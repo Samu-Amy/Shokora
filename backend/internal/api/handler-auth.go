@@ -101,14 +101,14 @@ func (app *App) googleHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get OAuth url
-	oAuthUrl, err := app.service.Auth.GenerateGoogleOAuthUrl(ctx)
+	oAuthGoogleLoginRes, err := app.service.Auth.GenerateGoogleOAuthUrl(ctx)
 	if err != nil {
 		app.parseError(w, r, err)
 		return
 	}
 
 	//* Return OAuth url
-	if err := app.jsonResponse(w, http.StatusOK, map[string]string{"url": oAuthUrl}); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, oAuthGoogleLoginRes); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
@@ -118,7 +118,7 @@ func (app *App) googleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payload data
-	var payload payloads.GoogleOAuthCallbackReq
+	var payload payloads.OAuthGoogleCallbackReq
 
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)

@@ -14,30 +14,32 @@ import (
 )
 
 // Generate URL
-func (service *AuthService) GenerateGoogleOAuthUrl(ctx context.Context) (string, error) {
+func (service *AuthService) GenerateGoogleOAuthUrl(ctx context.Context) (*payloads.OAuthGoogleLoginRes, error) {
 
 	// Generate state
 	state, err := auth.GenerateBase64Token(32)
 	if err != nil {
 		service.logger.Warnw("Error generating state for Google OAuth ", "error", err)
-		return "", domerrors.ErrInternalError
+		return nil, domerrors.ErrInternalError
 	}
 
 	// Save state in db
 	err = service.oAuthStateRepo.Create(ctx, state)
 	if err != nil {
 		service.logger.Warnw("Error creating state for Google OAuth in db ", "error", err)
-		return "", domerrors.ParseIntError(err)
+		return nil, domerrors.ParseIntError(err)
 	}
 
 	// Generate url
-	oAuthUrl := service.config.Auth.GoogleOAuthConfig.AuthCodeURL(state)
+	oAuthGoogleLoginRes := &payloads.OAuthGoogleLoginRes{
+		Url: service.config.Auth.GoogleOAuthConfig.AuthCodeURL(state),
+	}
 
-	return oAuthUrl, nil
+	return oAuthGoogleLoginRes, nil
 }
 
 // Check and Authenticate user
-func (service *AuthService) LoginUserWithGoogleOAuth(ctx context.Context, payload payloads.GoogleOAuthCallbackReq) (*payloads.LoginUserRes, *payloads.AuthTokensDto, error) {
+func (service *AuthService) LoginUserWithGoogleOAuth(ctx context.Context, payload payloads.OAuthGoogleCallbackReq) (*payloads.LoginUserRes, *payloads.AuthTokensDto, error) {
 
 	var user *user_repo.User
 	var loginUserRes payloads.LoginUserRes
