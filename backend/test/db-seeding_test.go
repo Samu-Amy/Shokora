@@ -38,7 +38,7 @@ func seedUsersFuzz(t *testing.T, db *sql.DB, randomValue int64) {
 
 		// Create email, birthday and password
 		emailParts := strings.Split(validEmails[i], "@")
-		email := fmt.Sprintf("%s-%d-%d@%s", emailParts[0], randomValue, time.Now().UnixNano(), emailParts[1])
+		email := fmt.Sprintf("%s-%d@%s", emailParts[0], randomValue, emailParts[1])
 		strBirthday := validBirthdays[i]
 		pssw := validPasswords[i]
 

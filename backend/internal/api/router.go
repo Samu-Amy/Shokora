@@ -78,9 +78,7 @@ func (app *App) InitRouter() *chi.Mux {
 		r.Route("/auth", func(r chi.Router) {
 			// Auth
 			r.Post("/user", app.registerUserHandler)
-			r.Get("/user", app.loginUserHandler) // TODO: usare Get invece di Post (?)
-
-			r.Get("/logout", app.logoutUserHandler) // TODO: usare Get invece di Post (?)
+			r.Get("/user", app.loginUserHandler)
 
 			r.Get("/google", app.googleHandler)
 			r.Post("/google/callback", app.googleCallbackHandler)
@@ -123,6 +121,8 @@ func (app *App) InitRouter() *chi.Mux {
 			// TODO: controllo modifiche -> gli utenti possono modificare solo il proprio profilo (solo le info di base, non ruolo o altro (quelli modificabili solo da admin))
 
 			// - Basic User Routes -
+
+			r.Get("/auth/logout", app.logoutUserHandler)
 
 			r.Get("/me", app.getCurrentUser)
 			r.Patch("/update-password", app.updatePasswordHandler)

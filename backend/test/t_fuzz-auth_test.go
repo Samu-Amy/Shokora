@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
@@ -179,9 +181,123 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 	})
 }
 
+func FuzzLogoutUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLogoutUserRoute -fuzztime=20s
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+
+		// - Generate random number for case -
+		caseNum := customRand.Intn(5)
+
+		var (
+			needLogin = true
+			authMode  int // 0 valid, 1 invalid, 2 none, 3 patial, 4 partial
+			expected  int
+		)
+
+		switch caseNum {
+		case 1: // No Login
+			needLogin = false
+			expected = http.StatusUnauthorized
+
+		case 2: // Login and valid cookies
+			authMode = 0
+			expected = http.StatusNoContent
+
+		case 3: // Login and not valid cookies
+			authMode = 1
+			expected = http.StatusUnauthorized
+
+		case 4: // Login and no cookies
+			authMode = 2
+			expected = http.StatusUnauthorized
+
+		case 5: // Login and only access token
+			authMode = 3
+			expected = http.StatusUnauthorized
+
+		case 6: // Login and only refresh token
+			authMode = 4
+			expected = http.StatusUnauthorized
+
+		}
+
+		// - Login User -
+
+		var cookies []*http.Cookie
+
+		if needLogin {
+			// Random ID
+			workerID := rand.Int63()
+
+			seedUsersFuzz(t, db, workerID)
+
+			// Generate random data and create request
+			emailParts := strings.Split(randomFrom(validEmails), "@")
+			email := fmt.Sprintf("%s-%d@%s", emailParts[0], workerID, emailParts[1])
+
+			loginReq := makeLoginUserReq(email, randomFrom(validPasswords))
+
+			loginW := makeRequestWithPayload(t, testRouter, "GET", "/api/v1/auth/user", loginReq)
+			cookies = loginW.Result().Cookies()
+
+			if loginW.Code != 200 {
+				t.Skip("login failed, skip iteration")
+			}
+		}
+
+		// - Logout user -
+
+		// Make request
+		req := httptest.NewRequest("GET", "/api/v1/auth/logout", nil)
+
+		switch authMode {
+
+		case 0: // valid
+			for _, c := range cookies {
+				req.AddCookie(c)
+			}
+
+		case 1: // invalid
+			for _, c := range cookies {
+				c.Value = "garbage"
+				req.AddCookie(c)
+			}
+
+		case 3: // partial
+			if len(cookies) > 0 {
+				req.AddCookie(cookies[0])
+			}
+
+		case 4: // partial
+			if len(cookies) >= 1 {
+				req.AddCookie(cookies[1])
+			}
+		}
+
+		// Recorder
+		w := httptest.NewRecorder()
+
+		// Chiama il router
+		testRouter.ServeHTTP(w, req)
+
+		// - Checks -
+
+		// No server errors
+		if w.Code >= 500 {
+			t.Fatal("Server error")
+		}
+
+		// Case no user/cookies
+		// TODO: finisci
+		// if w.Code != http.StatusUnauthorized {
+		// 	t.Errorf("Expected unauthorized, got %d", w.Code)
+		// }
+	})
+}
+
 func FuzzGoogleLoginRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzGoogleLoginRoute -fuzztime=20s
 
-	f.Fuzz(func(t *testing.T, make []byte) {
+	f.Fuzz(func(t *testing.T, req []byte) {
 
 		// Make request
 		w := makeRequestWithPayload(t, testRouter, "GET", "/api/v1/auth/google", nil)
