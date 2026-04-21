@@ -9,22 +9,22 @@ import (
 
 const (
 	cookiePath             string = "/api"
-	accessTokenCookieName  string = "access_token"
-	refreshTokenCookieName string = "refresh_token"
+	AccessTokenCookieName  string = "access_token"
+	RefreshTokenCookieName string = "refresh_token"
 )
 
 func (app *App) setAuthCookies(w http.ResponseWriter, authTokensDto payloads.AuthTokensDto) {
 
-	accessCookie := newSecureCookie(accessTokenCookieName, authTokensDto.AccessToken, authTokensDto.AccessTokenExpiresAt)
-	refreshCookie := newSecureCookie(refreshTokenCookieName, authTokensDto.PlainRefreshToken, authTokensDto.RefreshTokenExpiresAt)
+	accessCookie := newSecureCookie(AccessTokenCookieName, authTokensDto.AccessToken, authTokensDto.AccessTokenExpiresAt)
+	refreshCookie := newSecureCookie(RefreshTokenCookieName, authTokensDto.PlainRefreshToken, authTokensDto.RefreshTokenExpiresAt)
 
 	http.SetCookie(w, &accessCookie)
 	http.SetCookie(w, &refreshCookie)
 }
 
 func (app *App) clearAuthCookies(w http.ResponseWriter) {
-	accessCookie := expiredSecureCookie(accessTokenCookieName)
-	refreshCookie := expiredSecureCookie(refreshTokenCookieName)
+	accessCookie := expiredSecureCookie(AccessTokenCookieName)
+	refreshCookie := expiredSecureCookie(RefreshTokenCookieName)
 
 	http.SetCookie(w, &accessCookie)
 	http.SetCookie(w, &refreshCookie)

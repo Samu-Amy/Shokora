@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Samu-Amy/Shokora/internal/api"
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	authservice "github.com/Samu-Amy/Shokora/internal/service/auth"
@@ -96,10 +97,6 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 			t.Fatalf("Server error: %v", req)
 		}
 
-		// if w.Code >= 400 {
-		// 	t.Errorf("Error with code: %v", w.Code)
-		// }
-
 		if w.Code == 200 {
 
 			var res APIResponse[payloads.LoginUserRes]
@@ -119,9 +116,56 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 					t.Fatalf("empty email on success:\nReq: %+v\nRes:%+v", req, res)
 				}
 
-				// TODO: check cookies
-			} else {
+				// Check cookies
+				cookies := w.Result().Cookies()
 
+				if len(cookies) <= 0 {
+					t.Fatal("no cookies set")
+				}
+
+				var foundAccess bool
+				var foundRefresh bool
+
+				for _, c := range cookies {
+					switch c.Name {
+
+					case api.AccessTokenCookieName:
+						foundAccess = true
+
+						if c.Value == "" {
+							t.Fatal("empty auth cookie")
+						}
+
+						if !c.HttpOnly {
+							t.Error("auth cookie not HttpOnly")
+						}
+
+						if !c.Secure {
+							t.Error("auth cookie not Secure")
+						}
+
+					case api.RefreshTokenCookieName:
+						foundRefresh = true
+
+						if c.Value == "" {
+							t.Fatal("empty auth cookie")
+						}
+
+						if !c.HttpOnly {
+							t.Error("auth cookie not HttpOnly")
+						}
+
+						if !c.Secure {
+							t.Error("auth cookie not Secure")
+						}
+					}
+				}
+
+				if !foundAccess || !foundRefresh {
+					t.Fatal("auth cookie not found")
+				}
+
+			} else {
 				verificationType := getVerificationType(t, res.Data.VerificationId)
 
 				if verificationType == auth.EmailVerification && res.Data.User == nil {

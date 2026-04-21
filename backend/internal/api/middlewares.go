@@ -32,13 +32,13 @@ func (app *App) authMiddleware(next http.Handler) http.Handler {
 
 		// Get Access Token
 		var accessToken string
-		accessCookie, err := r.Cookie(accessTokenCookieName)
+		accessCookie, err := r.Cookie(AccessTokenCookieName)
 		if err == nil {
 			accessToken = accessCookie.Value // The Access Token can be expired (and the cookie deleted), the important one is the refresh
 		}
 
 		// Get Refresh Token
-		refreshCookie, err := r.Cookie(refreshTokenCookieName)
+		refreshCookie, err := r.Cookie(RefreshTokenCookieName)
 		if err != nil {
 			app.unauthorizedError(w, r, domerrors.ErrUnauthorized)
 			return
