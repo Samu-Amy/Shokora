@@ -26,14 +26,14 @@ func makeRequestWithPayload(t *testing.T, router http.Handler, method, route str
 		t.Fatalf("failed to marshal request: %v", err)
 	}
 
-	// Crea richiesta HTTP
+	// Create HTTP Request
 	req := httptest.NewRequest(method, route, bytes.NewReader(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
 
 	// Recorder
 	w := httptest.NewRecorder()
 
-	// Chiama il router
+	// Call the router
 	router.ServeHTTP(w, req)
 
 	return w

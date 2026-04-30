@@ -15,8 +15,8 @@ const (
 
 func (app *App) setAuthCookies(w http.ResponseWriter, authTokensDto payloads.AuthTokensDto) {
 
-	accessCookie := newSecureCookie(AccessTokenCookieName, authTokensDto.AccessToken, authTokensDto.AccessTokenExpiresAt)
-	refreshCookie := newSecureCookie(RefreshTokenCookieName, authTokensDto.PlainRefreshToken, authTokensDto.RefreshTokenExpiresAt)
+	accessCookie := NewSecureCookie(AccessTokenCookieName, authTokensDto.AccessToken, authTokensDto.AccessTokenExpiresAt)
+	refreshCookie := NewSecureCookie(RefreshTokenCookieName, authTokensDto.PlainRefreshToken, authTokensDto.RefreshTokenExpiresAt)
 
 	http.SetCookie(w, &accessCookie)
 	http.SetCookie(w, &refreshCookie)
@@ -32,7 +32,7 @@ func (app *App) clearAuthCookies(w http.ResponseWriter) {
 
 // ----- UTILS -----
 
-func newSecureCookie(name, value string, expiration time.Time) http.Cookie {
+func NewSecureCookie(name, value string, expiration time.Time) http.Cookie {
 	return http.Cookie{
 		Name:     name,
 		Value:    value,

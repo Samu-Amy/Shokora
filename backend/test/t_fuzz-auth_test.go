@@ -182,13 +182,19 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 
 func FuzzLogoutUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLogoutUserRoute -fuzztime=20s
 
-	f.Add("Or71zHGPKEDE89eOyxiWZwB0yUlyC12Uoz9Xfzat3PM", 46, 58, 15*time.Minute, "testIssuer", "testAudience")
+	f.Add("Or71zHGPKEDE89eOyxiWZwB0yUlyC12Uoz9Xfzat3PM", 46, 58, 30*time.Minute, 15*time.Minute, "testIssuer", "testAudience")
 
-	f.Fuzz(func(t *testing.T, refreshToken string, userId, sessionId int64, jwtExp time.Duration, issuer, audience string) {
+	f.Fuzz(func(t *testing.T, refreshToken string, userId, sessionId int64, refreshExp, jwtExp time.Duration, issuer, audience string) {
+
+		// Random ID
+		workerID := rand.Int63()
+
+		seedUsersFuzz(t, db, workerID)
 
 		// Create JTW access token
 		timeNow := time.Now().UTC()
 		accessTokenExpiresAt := timeNow.Add(jwtExp)
+		refreshTokenExpiresAt := timeNow.Add(refreshExp)
 
 		claims := auth.UserClaims{
 			UserId:    userId,
@@ -211,72 +217,16 @@ func FuzzLogoutUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLo
 		}
 
 		// Create cookies
+		accessCookie := api.NewSecureCookie(api.AccessTokenCookieName, accessToken, accessTokenExpiresAt)
+		refreshCookie := api.NewSecureCookie(api.RefreshTokenCookieName, refreshToken, refreshTokenExpiresAt)
 
-		// Make request
+		// Create HTTP request
 		req := httptest.NewRequest("GET", "/api/v1/auth/logout", nil)
-
-		addedAccessCookie := false
-		addedRefreshCookie := false
-
-		if caseNum != 0 {
-			switch authMode {
-
-			case 0: // valid
-				for _, c := range cookies {
-					req.AddCookie(c)
-				}
-
-			case 1: // invalid
-				for _, c := range cookies {
-
-					newCookie := *c
-					newCookie.Value = "randomValue456"
-
-					req.AddCookie(&newCookie)
-
-					switch newCookie.Name {
-					case api.AccessTokenCookieName:
-						addedAccessCookie = true
-					case api.RefreshTokenCookieName:
-						addedRefreshCookie = true
-					}
-
-				}
-
-				if !addedAccessCookie || !addedRefreshCookie {
-					t.Errorf("Missing cookies, access: %v, refresh: %v", addedAccessCookie, addedRefreshCookie)
-				}
-
-			case 3: // partial (access)
-				for _, c := range cookies {
-					if c.Name == api.AccessTokenCookieName {
-						req.AddCookie(c)
-						addedAccessCookie = true
-					}
-				}
-
-				if !addedAccessCookie {
-					t.Error("Missing access cookies")
-				}
-
-			case 4: // partial (refresh)
-				for _, c := range cookies {
-					if c.Name == api.RefreshTokenCookieName {
-						req.AddCookie(c)
-						addedRefreshCookie = true
-					}
-				}
-
-				if !addedRefreshCookie {
-					t.Error("Missing refresh cookies")
-				}
-			}
-		}
 
 		// Recorder
 		w := httptest.NewRecorder()
 
-		// Chiama il router
+		// Call il router
 		testRouter.ServeHTTP(w, req)
 
 		// - Checks -

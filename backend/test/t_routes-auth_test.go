@@ -74,13 +74,13 @@ func TestRegisterUserRoute(t *testing.T) {
 		logRes := false
 
 		clearTestDB(db)
-		seedUsers(t, db)
+		users := seedUsers(t, db)
 
 		// Test register handler
 		for i := range min(seedUserNum, routesTestsNum, len(validEmails)) {
 
 			// Payload
-			firstName := randomFrom(validFirstNames)
+			firstName := randomFrom(validFirstNames) // TODO: usa dati casuali da users (non da mock data)
 			lastName := randomFrom(validLastNames)
 			birthday := randomFrom(validBirthdays)
 			email := validEmails[i]
