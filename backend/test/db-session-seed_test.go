@@ -1,13 +1,12 @@
 package main
 
 import (
+	"context"
 	"database/sql"
-	"testing"
 	"time"
 )
 
-func seedSessions(t *testing.T, db *sql.DB, users []User) map[int64]int64 {
-	t.Helper()
+func seedSessions(ctx context.Context, db *sql.DB, users []User) (map[int64]int64, error) {
 
 	query := `
 		INSERT INTO user_sessions (user_id, expires_at)
@@ -24,7 +23,7 @@ func seedSessions(t *testing.T, db *sql.DB, users []User) map[int64]int64 {
 
 		// Create user
 		err := db.QueryRowContext(
-			t.Context(),
+			ctx,
 			query,
 			user.Id,
 			time.Now().Add(24*time.Hour),
@@ -32,11 +31,11 @@ func seedSessions(t *testing.T, db *sql.DB, users []User) map[int64]int64 {
 			&sessionId,
 		)
 		if err != nil {
-			t.Fatalf("failed to insert user: %v", err)
+			return nil, err
 		}
 
 		sessions[user.Id] = sessionId
 	}
 
-	return sessions
+	return sessions, nil
 }

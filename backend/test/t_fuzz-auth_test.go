@@ -182,9 +182,11 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 
 func FuzzLogoutUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLogoutUserRoute -fuzztime=20s
 
-	f.Add("Or71zHGPKEDE89eOyxiWZwB0yUlyC12Uoz9Xfzat3PM", 46, 58, 30*time.Minute, 15*time.Minute, "testIssuer", "testAudience")
+	f.Add("Or71zHGPKEDE89eOyxiWZwB0yUlyC12Uoz9Xfzat3PM", 30*time.Minute, 15*time.Minute, "testIssuer", "testAudience") // TODO: issuer e audience non generati "a caso"?
 
-	f.Fuzz(func(t *testing.T, refreshToken string, userId, sessionId int64, refreshExp, jwtExp time.Duration, issuer, audience string) {
+	authState, err := seedAuthState(f.Context(), db) // TODO: continua
+
+	f.Fuzz(func(t *testing.T, refreshToken string, refreshExp, jwtExp time.Duration, issuer, audience string) {
 
 		// Random ID
 		workerID := rand.Int63()
@@ -222,6 +224,7 @@ func FuzzLogoutUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLo
 
 		// Create HTTP request
 		req := httptest.NewRequest("GET", "/api/v1/auth/logout", nil)
+		// TODO: continua e sistema
 
 		// Recorder
 		w := httptest.NewRecorder()

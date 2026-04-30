@@ -1,9 +1,9 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"strings"
-	"testing"
 	"time"
 
 	authservice "github.com/Samu-Amy/Shokora/internal/service/auth"
@@ -25,8 +25,7 @@ type User struct {
 	HasTwoAuth    bool
 }
 
-func seedUsers(t *testing.T, db *sql.DB) []User {
-	t.Helper()
+func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 
 	userQuery := `
 		INSERT INTO users (google_id, first_name, last_name, email, password, birthday, is_verified, user_role)
@@ -45,9 +44,9 @@ func seedUsers(t *testing.T, db *sql.DB) []User {
 	for i := range min(seedUserNum, len(validFirstNames), len(validLastNames), len(validBirthdays), len(validEmails), len(validPasswords)) {
 
 		// Start transaction
-		tx, err := db.BeginTx(t.Context(), nil)
+		tx, err := db.BeginTx(ctx, nil)
 		if err != nil {
-			t.Fatalf("failed to start transaction: %v", err)
+			return nil, err
 		}
 
 		// Create user and password
@@ -65,7 +64,7 @@ func seedUsers(t *testing.T, db *sql.DB) []User {
 		// Hash password
 		hashedPssw, err := testService.Auth.HashPassword(strings.TrimSpace(user.PlainPassword))
 		if err != nil {
-			t.Errorf("Error hashing password: %v", err)
+			return nil, err
 		}
 
 		// Parse birthday
@@ -73,13 +72,13 @@ func seedUsers(t *testing.T, db *sql.DB) []User {
 		if user.Birthday != "" {
 			birthday, err = authservice.ConvertBirthdayToTime(strings.TrimSpace(user.Birthday))
 			if err != nil {
-				t.Errorf("Error converting birthday: %v", err)
+				return nil, err
 			}
 		}
 
 		// Create user
 		err = tx.QueryRowContext(
-			t.Context(),
+			ctx,
 			userQuery,
 			nil,
 			user.FirstName,
@@ -94,28 +93,28 @@ func seedUsers(t *testing.T, db *sql.DB) []User {
 		)
 		if err != nil {
 			tx.Rollback()
-			t.Fatalf("failed to insert user: %v", err)
+			return nil, err
 		}
 
 		// Create User Settings
 		_, err = tx.ExecContext(
-			t.Context(),
+			ctx,
 			settingsQuery,
 			user.Id,
 			user.HasTwoAuth,
 		)
 		if err != nil {
 			tx.Rollback()
-			t.Fatalf("failed to insert user settings: %v", err)
+			return nil, err
 		}
 
 		err = tx.Commit()
 		if err != nil {
-			t.Fatalf("failed to commit transaction: %v", err)
+			return nil, err
 		}
 
 		users = append(users, user)
 	}
 
-	return users
+	return users, nil
 }

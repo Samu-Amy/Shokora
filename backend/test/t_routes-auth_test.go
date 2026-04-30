@@ -74,7 +74,10 @@ func TestRegisterUserRoute(t *testing.T) {
 		logRes := false
 
 		clearTestDB(db)
-		users := seedUsers(t, db)
+		users, err := seedUsers(t.Context(), db)
+		// if err != nil {
+		// TODO: implementa
+		// }
 
 		// Test register handler
 		for i := range min(seedUserNum, routesTestsNum, len(validEmails)) {

@@ -1,8 +1,8 @@
 package main
 
 import (
+	"context"
 	"database/sql"
-	"testing"
 )
 
 type AuthState struct {
@@ -10,15 +10,20 @@ type AuthState struct {
 	Sessions map[int64]int64 // UserId -> SessionId
 }
 
-func seedAuthState(t *testing.T, db *sql.DB) *AuthState {
-	t.Helper()
+func seedAuthState(ctx context.Context, db *sql.DB) (*AuthState, error) {
 
-	users := seedUsers(t, db)
+	users, err := seedUsers(ctx, db)
+	if err != nil {
+		return nil, err
+	}
 
-	sessions := seedSessions(t, db, users)
+	sessions, err := seedSessions(ctx, db, users)
+	if err != nil {
+		return nil, err
+	}
 
 	return &AuthState{
 		Users:    users,
 		Sessions: sessions,
-	}
+	}, nil
 }
