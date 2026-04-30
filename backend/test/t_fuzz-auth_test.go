@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -15,6 +13,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/auth"
 	authservice "github.com/Samu-Amy/Shokora/internal/service/auth"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Stress test con valori casuali per controllare panic/crash (da fare sulle route "complete" per verificare che i dati non creino problemi da qualche parte)
@@ -183,94 +182,94 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 
 func FuzzLogoutUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLogoutUserRoute -fuzztime=20s
 
-	f.Fuzz(func(t *testing.T, data []byte) {
+	f.Add("Or71zHGPKEDE89eOyxiWZwB0yUlyC12Uoz9Xfzat3PM", 46, 58, 15*time.Minute, "testIssuer", "testAudience")
 
-		// - Generate random number for case -
-		caseNum := customRand.Intn(5)
+	f.Fuzz(func(t *testing.T, refreshToken string, userId, sessionId int64, jwtExp time.Duration, issuer, audience string) {
 
-		var (
-			needLogin = true
-			authMode  int // 0 valid, 1 invalid, 2 none, 3 patial, 4 partial
-			expected  int
-		)
+		// Create JTW access token
+		timeNow := time.Now().UTC()
+		accessTokenExpiresAt := timeNow.Add(jwtExp)
 
-		switch caseNum {
-		case 1: // No Login
-			needLogin = false
-			expected = http.StatusUnauthorized
+		claims := auth.UserClaims{
+			UserId:    userId,
+			SessionId: sessionId,
+			RegisteredClaims: jwt.RegisteredClaims{
+				// Subject:   strconv.FormatInt(userId, 10),
+				ExpiresAt: jwt.NewNumericDate(accessTokenExpiresAt),
+				IssuedAt:  jwt.NewNumericDate(timeNow),
+				NotBefore: jwt.NewNumericDate(timeNow),
+				Issuer:    issuer,
+				Audience:  []string{audience},
+			},
+		}
 
-		case 2: // Login and valid cookies
-			authMode = 0
-			expected = http.StatusNoContent
-
-		case 3: // Login and not valid cookies
-			authMode = 1
-			expected = http.StatusUnauthorized
-
-		case 4: // Login and no cookies
-			authMode = 2
-			expected = http.StatusUnauthorized
-
-		case 5: // Login and only access token
-			authMode = 3
-			expected = http.StatusUnauthorized
-
-		case 6: // Login and only refresh token
-			authMode = 4
-			expected = http.StatusUnauthorized
+		// Generate Access Token (and add claims)
+		accessToken, err := testJwtAuthenticator.GenerateJWTToken(claims)
+		if err != nil {
+			t.Skip("error creating jwt token, skipping iteration")
 
 		}
 
-		// - Login User -
-
-		var cookies []*http.Cookie
-
-		if needLogin {
-			// Random ID
-			workerID := rand.Int63()
-
-			seedUsersFuzz(t, db, workerID)
-
-			// Generate random data and create request
-			emailParts := strings.Split(randomFrom(validEmails), "@")
-			email := fmt.Sprintf("%s-%d@%s", emailParts[0], workerID, emailParts[1])
-
-			loginReq := makeLoginUserReq(email, randomFrom(validPasswords))
-
-			loginW := makeRequestWithPayload(t, testRouter, "GET", "/api/v1/auth/user", loginReq)
-			cookies = loginW.Result().Cookies()
-
-			if loginW.Code != 200 {
-				t.Skip("login failed, skip iteration")
-			}
-		}
-
-		// - Logout user -
+		// Create cookies
 
 		// Make request
 		req := httptest.NewRequest("GET", "/api/v1/auth/logout", nil)
 
-		switch authMode {
+		addedAccessCookie := false
+		addedRefreshCookie := false
 
-		case 0: // valid
-			for _, c := range cookies {
-				req.AddCookie(c)
-			}
+		if caseNum != 0 {
+			switch authMode {
 
-		case 1: // invalid
-			for _, c := range cookies {
-				c.Value = "garbage"
-				req.AddCookie(c)
-			}
+			case 0: // valid
+				for _, c := range cookies {
+					req.AddCookie(c)
+				}
 
-		case 3: // partial
-			if len(cookies) > 0 {
-				req.AddCookie(cookies[0])
-			}
+			case 1: // invalid
+				for _, c := range cookies {
 
-		case 4: // partial
-			if len(cookies) >= 1 {
-				req.AddCookie(cookies[1])
+					newCookie := *c
+					newCookie.Value = "randomValue456"
+
+					req.AddCookie(&newCookie)
+
+					switch newCookie.Name {
+					case api.AccessTokenCookieName:
+						addedAccessCookie = true
+					case api.RefreshTokenCookieName:
+						addedRefreshCookie = true
+					}
+
+				}
+
+				if !addedAccessCookie || !addedRefreshCookie {
+					t.Errorf("Missing cookies, access: %v, refresh: %v", addedAccessCookie, addedRefreshCookie)
+				}
+
+			case 3: // partial (access)
+				for _, c := range cookies {
+					if c.Name == api.AccessTokenCookieName {
+						req.AddCookie(c)
+						addedAccessCookie = true
+					}
+				}
+
+				if !addedAccessCookie {
+					t.Error("Missing access cookies")
+				}
+
+			case 4: // partial (refresh)
+				for _, c := range cookies {
+					if c.Name == api.RefreshTokenCookieName {
+						req.AddCookie(c)
+						addedRefreshCookie = true
+					}
+				}
+
+				if !addedRefreshCookie {
+					t.Error("Missing refresh cookies")
+				}
 			}
 		}
 
@@ -287,58 +286,9 @@ func FuzzLogoutUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLo
 			t.Fatal("Server error")
 		}
 
-		// Case no user/cookies
-		// TODO: finisci
-		// if w.Code != http.StatusUnauthorized {
-		// 	t.Errorf("Expected unauthorized, got %d", w.Code)
-		// }
-	})
-}
-
-func FuzzGoogleLoginRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzGoogleLoginRoute -fuzztime=20s
-
-	f.Fuzz(func(t *testing.T, req []byte) {
-
-		// Make request
-		w := makeRequestWithPayload(t, testRouter, "GET", "/api/v1/auth/google", nil)
-
-		// - Checks -
-
-		// No server errors
-		if w.Code >= 500 {
-			t.Fatalf("Server error")
-		}
-
-		if w.Code >= 400 {
-			t.Errorf("Error with code: %v", w.Code)
-		}
-
-		// Correct response and data
-		if w.Code == 201 {
-			var res APIResponse[payloads.OAuthGoogleLoginRes]
-
-			err := json.Unmarshal(w.Body.Bytes(), &res)
-			if err != nil {
-				t.Fatalf("failed to unmarshal response body: %v", err)
-			}
-
-			// Check important data
-			if res.Data.Url == "" {
-				t.Fatalf("empty email on success:\nRes:%+v", res)
-			}
-
-			parsedURL, err := url.ParseRequestURI(res.Data.Url)
-			if err != nil {
-				t.Fatalf("invalid URL returned: %s\nErr: %v", res.Data.Url, err)
-			}
-
-			if parsedURL.Scheme != "https" {
-				t.Fatalf("non-https URL returned: %s", res.Data.Url)
-			}
-
-			if parsedURL.Host == "" {
-				t.Fatalf("URL without host: %s", res.Data.Url)
-			}
+		// Check response
+		if w.Code != expected {
+			t.Errorf("Expected %d, got %d (case: %d)", expected, w.Code, caseNum)
 		}
 	})
 }

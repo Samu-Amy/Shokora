@@ -86,12 +86,12 @@ func (app *App) unauthorizedError(w http.ResponseWriter, r *http.Request, err er
 
 	// Domain (custom) error
 	if domerrors.IsDomainErr(err) {
-		writeJSONError(w, http.StatusBadRequest, err.Error())
+		writeJSONError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	// Fallback
-	writeJSONError(w, http.StatusBadRequest, "unauthorized")
+	writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 }
 
 func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error) {
@@ -101,12 +101,12 @@ func (app *App) forbiddenError(w http.ResponseWriter, r *http.Request, err error
 
 	// Domain (custom) error
 	if domerrors.IsDomainErr(err) {
-		writeJSONError(w, http.StatusBadRequest, err.Error())
+		writeJSONError(w, http.StatusForbidden, err.Error())
 		return
 	}
 
 	// Fallback
-	writeJSONError(w, http.StatusBadRequest, "forbidden") // TODO: sostituisci con domainErrors (tanto le stringhe sono le stesse, almeno si centralizzano i messaggi di errore lì)
+	writeJSONError(w, http.StatusForbidden, "forbidden") // TODO: sostituisci con domainErrors (tanto le stringhe sono le stesse, almeno si centralizzano i messaggi di errore lì)
 }
 
 // ----- PARSE ERROR -----

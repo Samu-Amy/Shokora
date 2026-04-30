@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -281,6 +282,92 @@ func TestLoginUserRoute(t *testing.T) {
 			// Log response body
 			if logRes {
 				logResBody(t, w)
+			}
+		}
+	})
+}
+
+func TestLogoutUserRoute(t *testing.T) {
+
+	t.Run("should logout (valid cookies)", func(t *testing.T) {
+		// login
+		// logout with valid cookies
+		// assert 204
+	})
+
+	t.Run("should rotate the tokens (only refresh cookie)", func(t *testing.T) {
+		// assert ? (should work if not expired, using the refresh token to create the access token and rotate)
+	})
+
+	t.Run("should give unauthorized (only access cookie)", func(t *testing.T) {
+		// assert ?
+	})
+
+	t.Run("should give unauthorized (invalid cookies)", func(t *testing.T) {
+		// logout with corrupted cookies
+		// assert 401
+	})
+
+	t.Run("should give unauthorized (expired cookies)", func(t *testing.T) {
+		// logout with expired cookies
+		// assert 401
+	})
+
+	t.Run("should give unauthorized (no cookies)", func(t *testing.T) {
+		// logout without cookies
+		// assert 401
+	})
+
+	t.Run("should give unauthorized (access cookie with different algorithm in JWT)", func(t *testing.T) {
+		// logout without cookies
+		// assert 401
+	})
+}
+
+func TestGoogleLoginRoute(t *testing.T) {
+	t.Run("should create and return google login url", func(t *testing.T) {
+
+		// TODO: cambia (adatta agli altri test (checkResponseCode, ecc.))
+
+		// Make request
+		w := makeRequestWithPayload(t, testRouter, "GET", "/api/v1/auth/google", nil)
+
+		// - Checks -
+
+		// No server errors
+		if w.Code >= 500 {
+			t.Fatalf("Server error")
+		}
+
+		if w.Code != 201 {
+			t.Errorf("Error with code: %v", w.Code)
+		}
+
+		// Correct response and data
+		if w.Code == 201 {
+			var res APIResponse[payloads.OAuthGoogleLoginRes]
+
+			err := json.Unmarshal(w.Body.Bytes(), &res)
+			if err != nil {
+				t.Fatalf("failed to unmarshal response body: %v", err)
+			}
+
+			// Check important data
+			if res.Data.Url == "" {
+				t.Fatalf("empty email on success:\nRes:%+v", res)
+			}
+
+			parsedURL, err := url.ParseRequestURI(res.Data.Url)
+			if err != nil {
+				t.Fatalf("invalid URL returned: %s\nErr: %v", res.Data.Url, err)
+			}
+
+			if parsedURL.Scheme != "https" {
+				t.Fatalf("non-https URL returned: %s", res.Data.Url)
+			}
+
+			if parsedURL.Host == "" {
+				t.Fatalf("URL without host: %s", res.Data.Url)
 			}
 		}
 	})

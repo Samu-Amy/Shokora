@@ -9,6 +9,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api"
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/appconfig"
+	"github.com/Samu-Amy/Shokora/internal/auth"
 	"github.com/Samu-Amy/Shokora/internal/database"
 	"github.com/Samu-Amy/Shokora/internal/service"
 	"github.com/Samu-Amy/Shokora/internal/store"
@@ -27,7 +28,7 @@ Per runnare i test:
 
 // Constants
 const (
-	activateLogger = false // Useful for debugging when test don't pass
+	activateLogger = true // Useful for debugging when test don't pass
 
 	routesTestsNum     = 25
 	validationTestsNum = 50
@@ -43,6 +44,7 @@ var customRand *rand.Rand // TODO: usa questo per generare valori pseudo-casuali
 var dataValidator *validator.Validate
 var testStore *store.Storage
 var db *sql.DB
+var testJwtAuthenticator *auth.JWTAuthenticator
 var testService *service.Service
 var testRouter *chi.Mux
 
@@ -69,7 +71,7 @@ func TestMain(m *testing.M) {
 	mailer := appconfig.GetMailerFromConfig(configs)
 
 	// - Authenticators -
-	jwtAuthenticator := appconfig.GetJWTAuthenticatorFromConfig(configs)
+	testJwtAuthenticator = appconfig.GetJWTAuthenticatorFromConfig(configs)
 
 	tokenAuthenricator := appconfig.GetTokenAuthenticatorFromConfig(configs)
 
@@ -92,7 +94,7 @@ func TestMain(m *testing.M) {
 
 	// - Service -
 	authServiceConfig := appconfig.GetAuthServiceConfig(configs)
-	testService = service.NewService(txManager, testStore, mailer, logger, jwtAuthenticator, tokenAuthenricator, authServiceConfig)
+	testService = service.NewService(txManager, testStore, mailer, logger, testJwtAuthenticator, tokenAuthenricator, authServiceConfig)
 
 	// - Rate Limiter -
 	rateLimiter := appconfig.GetFixedWindowLimiterFromConfig(configs)
