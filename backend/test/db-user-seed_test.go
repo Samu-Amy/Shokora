@@ -27,12 +27,14 @@ type User struct {
 
 func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 
+	committed := false
+
 	userQuery := `
 		INSERT INTO users (google_id, first_name, last_name, email, password, birthday, is_verified, user_role)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		ON CONFLICT (email)
 		DO UPDATE SET email = EXCLUDED.email
-		RETURNING id, (xmax = 0) AS is_new
+		RETURNING id
 	`
 
 	settingsQuery := `
@@ -43,14 +45,19 @@ func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 
 	users := make([]User, 0)
 
+	// Start transaction
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
+		}
+	}()
+
 	// Create users in db
 	for i := range min(seedUserNum, len(validFirstNames), len(validLastNames), len(validBirthdays), len(validEmails), len(validPasswords)) {
-
-		// Start transaction
-		tx, err := db.BeginTx(ctx, nil)
-		if err != nil {
-			return nil, err
-		}
 
 		// Create user and password
 		user := User{
@@ -67,7 +74,7 @@ func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 		// Hash password
 		hashedPssw, err := testService.Auth.HashPassword(strings.TrimSpace(user.PlainPassword))
 		if err != nil {
-			tx.Rollback()
+			// tx.Rollback()
 			return nil, err
 		}
 
@@ -76,12 +83,10 @@ func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 		if user.Birthday != "" {
 			birthday, err = authservice.ConvertBirthdayToTime(strings.TrimSpace(user.Birthday))
 			if err != nil {
-				tx.Rollback()
+				// tx.Rollback()
 				return nil, err
 			}
 		}
-
-		isNew := true
 
 		// Create User
 		err = tx.QueryRowContext(
@@ -97,10 +102,9 @@ func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 			user.Role,
 		).Scan(
 			&user.Id,
-			&isNew,
 		)
 		if err != nil {
-			tx.Rollback()
+			// tx.Rollback()
 			return nil, err
 		}
 
@@ -112,25 +116,20 @@ func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 			user.HasTwoAuth,
 		)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				tx.Rollback()
-				continue
-			} else {
-				tx.Rollback()
-				return nil, err
-			}
-		}
-
-		err = tx.Commit()
-		if err != nil {
-			tx.Rollback()
+			// tx.Rollback()
 			return nil, err
 		}
 
-		if isNew {
-			users = append(users, user)
-		}
+		users = append(users, user)
 	}
+
+	// Commit transaction
+	err = tx.Commit()
+	if err != nil {
+		// tx.Rollback()
+		return nil, err
+	}
+	committed = true
 
 	return users, nil
 }

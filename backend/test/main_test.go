@@ -11,6 +11,7 @@ import (
 	"github.com/Samu-Amy/Shokora/internal/api/payloads"
 	"github.com/Samu-Amy/Shokora/internal/appconfig"
 	"github.com/Samu-Amy/Shokora/internal/auth"
+	"github.com/Samu-Amy/Shokora/internal/config"
 	"github.com/Samu-Amy/Shokora/internal/database"
 	"github.com/Samu-Amy/Shokora/internal/service"
 	"github.com/Samu-Amy/Shokora/internal/store"
@@ -49,6 +50,8 @@ var testJwtAuthenticator *auth.JWTAuthenticator
 var testService *service.Service
 var testRouter *chi.Mux
 
+var configs config.Config
+
 var authState *AuthState
 
 var err error
@@ -60,7 +63,7 @@ func TestMain(m *testing.M) {
 	customRand = rand.New(rand.NewSource(randSeed))
 
 	// - App and DB Config -
-	configs := appconfig.NewTestConfig()
+	configs = appconfig.NewTestConfig()
 
 	// - Logger -
 	var logger *zap.SugaredLogger
@@ -118,8 +121,11 @@ func TestMain(m *testing.M) {
 	clearTestDB(db)
 	authState, err = seedAuthState(context.Background(), db)
 	if err != nil {
-		logger.Warnf("Error seeding db: %v", err)
-		panic(err)
+		logger.Fatal("Error seeding db: %v", err)
+	}
+
+	if len(authState.Users) == 0 {
+		logger.Fatal("AuthState Users length == 0")
 	}
 
 	code := m.Run()

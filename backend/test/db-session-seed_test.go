@@ -17,6 +17,8 @@ type RefreshToken struct {
 
 func seedRefreshTokens(ctx context.Context, db *sql.DB, users []User) (Sessions, error) {
 
+	committed := false
+
 	sessionQuery := `
 		INSERT INTO user_sessions (user_id, expires_at)
 		VALUES ($1, $2)
@@ -30,13 +32,18 @@ func seedRefreshTokens(ctx context.Context, db *sql.DB, users []User) (Sessions,
 
 	sessions := make(map[int64]RefreshToken)
 
-	for _, user := range users {
-
-		// Start transaction
-		tx, err := db.BeginTx(ctx, nil)
-		if err != nil {
-			return nil, err
+	// Start transaction
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
 		}
+	}()
+
+	for _, user := range users {
 
 		// Create Session
 		var sessionId int64
@@ -45,19 +52,19 @@ func seedRefreshTokens(ctx context.Context, db *sql.DB, users []User) (Sessions,
 			ctx,
 			sessionQuery,
 			user.Id,
-			time.Now().Add(24*time.Hour),
+			time.Now().Add(configs.Auth.Token.RefreshTokenExp),
 		).Scan(
 			&sessionId,
 		)
 		if err != nil {
-			tx.Rollback()
+			// tx.Rollback()
 			return nil, err
 		}
 
 		// Create Refresh Token
 		plainToken, err := auth.GenerateBase64Token(32)
 		if err != nil {
-			tx.Rollback()
+			// tx.Rollback()
 			return nil, err
 		}
 
@@ -72,13 +79,7 @@ func seedRefreshTokens(ctx context.Context, db *sql.DB, users []User) (Sessions,
 			nil,
 		)
 		if err != nil {
-			tx.Rollback()
-			return nil, err
-		}
-
-		err = tx.Commit()
-		if err != nil {
-			tx.Rollback()
+			// tx.Rollback()
 			return nil, err
 		}
 
@@ -87,6 +88,14 @@ func seedRefreshTokens(ctx context.Context, db *sql.DB, users []User) (Sessions,
 			PlainToken: plainToken,
 		}
 	}
+
+	// Commit transaction
+	err = tx.Commit()
+	if err != nil {
+		// tx.Rollback()
+		return nil, err
+	}
+	committed = true
 
 	return sessions, nil
 }
