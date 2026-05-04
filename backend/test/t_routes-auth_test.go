@@ -290,7 +290,7 @@ func TestLoginUserRoute(t *testing.T) {
 	})
 }
 
-func TestLogoutUserRoute(t *testing.T) {
+func TestLogoutUserRoute(t *testing.T) { // TODO: questi test vanno fatti per il middleware in generale (non logout route)
 
 	t.Run("should logout (valid cookies)", func(t *testing.T) {
 		// login

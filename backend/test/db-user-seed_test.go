@@ -76,7 +76,7 @@ func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 			}
 		}
 
-		// Create user
+		// Create User
 		err = tx.QueryRowContext(
 			ctx,
 			userQuery,

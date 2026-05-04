@@ -7,7 +7,7 @@ import (
 
 type AuthState struct {
 	Users    []User
-	Sessions map[int64]int64 // UserId -> SessionId
+	Sessions Sessions
 }
 
 func seedAuthState(ctx context.Context, db *sql.DB) (*AuthState, error) {
@@ -17,7 +17,7 @@ func seedAuthState(ctx context.Context, db *sql.DB) (*AuthState, error) {
 		return nil, err
 	}
 
-	sessions, err := seedSessions(ctx, db, users)
+	sessions, err := seedRefreshTokens(ctx, db, users)
 	if err != nil {
 		return nil, err
 	}

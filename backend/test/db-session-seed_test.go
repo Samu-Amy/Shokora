@@ -4,37 +4,87 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/Samu-Amy/Shokora/internal/auth"
 )
 
-func seedSessions(ctx context.Context, db *sql.DB, users []User) (map[int64]int64, error) {
+type Sessions = map[int64]RefreshToken
 
-	query := `
+type RefreshToken struct {
+	SessionId  int64
+	PlainToken string
+}
+
+func seedRefreshTokens(ctx context.Context, db *sql.DB, users []User) (Sessions, error) {
+
+	sessionQuery := `
 		INSERT INTO user_sessions (user_id, expires_at)
 		VALUES ($1, $2)
 		RETURNING id
 	`
 
-	sessions := make(map[int64]int64)
+	refreshTokenQuery := `
+		INSERT INTO refresh_tokens (session_id, token_hash, expires_at, replaces)
+		VALUES ($1, $2, $3, $4)
+	`
 
-	// Create users in db
+	sessions := make(map[int64]RefreshToken)
+
 	for _, user := range users {
 
+		// Start transaction
+		tx, err := db.BeginTx(ctx, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		// Create Session
 		var sessionId int64
 
-		// Create user
-		err := db.QueryRowContext(
+		err = tx.QueryRowContext(
 			ctx,
-			query,
+			sessionQuery,
 			user.Id,
 			time.Now().Add(24*time.Hour),
 		).Scan(
 			&sessionId,
 		)
 		if err != nil {
+			tx.Rollback()
 			return nil, err
 		}
 
-		sessions[user.Id] = sessionId
+		// Create Refresh Token
+		plainToken, err := auth.GenerateBase64Token(32)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		tokenHash := auth.HashBase64Token(plainToken)
+
+		_, err = tx.ExecContext(
+			ctx,
+			refreshTokenQuery,
+			sessionId,
+			tokenHash,
+			time.Now().Add(30*time.Minute).UTC(),
+			nil,
+		)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		err = tx.Commit()
+		if err != nil {
+			return nil, err
+		}
+
+		sessions[user.Id] = RefreshToken{
+			SessionId:  sessionId,
+			PlainToken: plainToken,
+		}
 	}
 
 	return sessions, nil
