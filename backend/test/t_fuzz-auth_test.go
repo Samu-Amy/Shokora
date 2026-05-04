@@ -1,9 +1,9 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
-	"math/rand"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -70,23 +70,21 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 
 	f.Fuzz(func(t *testing.T, email, password string) {
 
-		// Random ID
-		workerID := rand.Int63()
-
-		seedUsersFuzz(t, db, workerID)
+		// Seed db
+		authState, err := seedAuthState(context.Background(), db)
+		if err != nil {
+			t.Fatalf("Couldn't seed db, %v", err)
+		}
 
 		// Use some valid (generated with seeding) data
 		if customRand.Float32() < 0.3 { // ~ 30% use valid email
-			i := customRand.Intn(min(seedUserNum, len(validEmails), len(validPasswords)))
 
-			emailParts := strings.Split(validEmails[i], "@")
-			email = fmt.Sprintf("%s-%d-%d@%s", emailParts[0], workerID, time.Now().UnixNano(), emailParts[1])
-			t.Log("Valid Email tested")
+			// Get a random user and his session
+			i := customRand.Intn(len(authState.Users))
+			user := authState.Users[i]
 
-			if customRand.Float32() < 0.5 { // ~ 50% use valid password for the chosen email
-				password = validPasswords[i]
-				t.Log("Valid Password tested")
-			}
+			email = user.Email
+			password = user.PlainPassword
 		}
 
 		// Make request
@@ -182,52 +180,75 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 
 func FuzzLogoutUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLogoutUserRoute -fuzztime=20s
 
-	f.Add("Or71zHGPKEDE89eOyxiWZwB0yUlyC12Uoz9Xfzat3PM")
+	f.Add("Or71zHGPKEDE89eOyxiWZwB0yUlyC12Uoz9Xfzat3PM", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30")
 
-	authState, err := seedAuthState(f.Context(), db)
-	if err != nil {
-		f.Fatal("Couldn't seed db")
-	}
+	f.Fuzz(func(t *testing.T, fuzzRefreshToken, fuzzAccessToken string) {
 
-	f.Fuzz(func(t *testing.T, refreshToken string, refreshExp, jwtExp time.Duration, issuer, audience string) {
+		validCase := false
 
-		// Random ID
-		workerID := rand.Int63()
-
-		seedUsersFuzz(t, db, workerID)
+		var accessCookie http.Cookie
+		var refreshCookie http.Cookie
 
 		// Create JTW access token
 		timeNow := time.Now().UTC()
-		accessTokenExpiresAt := timeNow.Add(jwtExp)
-		refreshTokenExpiresAt := timeNow.Add(refreshExp)
+		accessTokenExpiresAt := timeNow.Add(15 * time.Minute)
+		refreshTokenExpiresAt := timeNow.Add(24 * time.Hour)
 
-		claims := auth.UserClaims{
-			UserId:    userId,
-			SessionId: sessionId,
-			RegisteredClaims: jwt.RegisteredClaims{
-				// Subject:   strconv.FormatInt(userId, 10),
-				ExpiresAt: jwt.NewNumericDate(accessTokenExpiresAt),
-				IssuedAt:  jwt.NewNumericDate(timeNow),
-				NotBefore: jwt.NewNumericDate(timeNow),
-				Issuer:    issuer,
-				Audience:  []string{audience},
-			},
+		if customRand.Float32() < 0.3 {
+			// Valid cookies
+
+			validCase = true
+
+			// Seed db
+			authState, err := seedAuthState(context.Background(), db)
+			if err != nil {
+				t.Fatalf("Couldn't seed db, %v", err)
+			}
+
+			// Get a random user and his session
+			i := customRand.Intn(len(authState.Users))
+			user := authState.Users[i]
+
+			session, ok := authState.Sessions[user.Id]
+			if !ok {
+				t.Fatal("session not found")
+			}
+
+			claims := auth.UserClaims{
+				UserId:    user.Id,
+				SessionId: session.Id,
+				RegisteredClaims: jwt.RegisteredClaims{
+					// Subject:   strconv.FormatInt(userId, 10),
+					ExpiresAt: jwt.NewNumericDate(accessTokenExpiresAt),
+					IssuedAt:  jwt.NewNumericDate(timeNow),
+					NotBefore: jwt.NewNumericDate(timeNow),
+					Issuer:    "Shokora",
+					Audience:  []string{"Shokora"},
+				},
+			}
+
+			// Generate Access Token (and add claims)
+			accessToken, err := testJwtAuthenticator.GenerateJWTToken(claims)
+			if err != nil {
+				t.Skip("error creating jwt token, skipping iteration")
+
+			}
+
+			// Create cookies
+			accessCookie = api.NewSecureCookie(api.AccessTokenCookieName, accessToken, accessTokenExpiresAt)
+			refreshCookie = api.NewSecureCookie(api.RefreshTokenCookieName, session.PlainToken, refreshTokenExpiresAt)
+
+		} else {
+			// Invalid cookies
+
+			accessCookie = api.NewSecureCookie(api.AccessTokenCookieName, fuzzAccessToken, accessTokenExpiresAt)
+			refreshCookie = api.NewSecureCookie(api.RefreshTokenCookieName, fuzzRefreshToken, refreshTokenExpiresAt)
 		}
-
-		// Generate Access Token (and add claims)
-		accessToken, err := testJwtAuthenticator.GenerateJWTToken(claims)
-		if err != nil {
-			t.Skip("error creating jwt token, skipping iteration")
-
-		}
-
-		// Create cookies
-		accessCookie := api.NewSecureCookie(api.AccessTokenCookieName, accessToken, accessTokenExpiresAt)
-		refreshCookie := api.NewSecureCookie(api.RefreshTokenCookieName, refreshToken, refreshTokenExpiresAt)
 
 		// Create HTTP request
 		req := httptest.NewRequest("GET", "/api/v1/auth/logout", nil)
-		// TODO: continua e sistema
+		req.AddCookie(&accessCookie)
+		req.AddCookie(&refreshCookie)
 
 		// Recorder
 		w := httptest.NewRecorder()
@@ -243,9 +264,9 @@ func FuzzLogoutUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLo
 		}
 
 		// Check response
-		// if w.Code != expected {
-		// 	t.Errorf("Expected %d, got %d (case: %d)", expected, w.Code, caseNum)
-		// }
+		if validCase && w.Code >= 400 {
+			t.Fatalf("valid tokens rejected: %d", w.Code)
+		}
 	})
 }
 

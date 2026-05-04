@@ -74,10 +74,10 @@ func TestRegisterUserRoute(t *testing.T) {
 		logRes := false
 
 		clearTestDB(db)
-		users, err := seedUsers(t.Context(), db)
-		// if err != nil {
-		// TODO: implementa
-		// }
+		_, err := seedUsers(t.Context(), db) // TODO: sostituisci '_' con user ed usalo
+		if err != nil {
+			t.Fatal("Couldn't seed db")
+		}
 
 		// Test register handler
 		for i := range min(seedUserNum, routesTestsNum, len(validEmails)) {
@@ -158,7 +158,7 @@ func TestLoginUserRoute(t *testing.T) {
 		logRes := false
 
 		clearTestDB(db)
-		seedUsers(t, db)
+		// seedUsers(t, db) // TODO: sistema (usa nuovo seedUsers)
 
 		// Test login handler
 		for i := range min(seedUserNum, routesTestsNum, len(validEmails)) {
@@ -254,7 +254,7 @@ func TestLoginUserRoute(t *testing.T) {
 		logRes := false
 
 		clearTestDB(db)
-		seedUsers(t, db)
+		// seedUsers(t, db) // TODO: sistema (usa nuovo seedUsers)
 
 		// Test login handler
 		for i := range min(seedUserNum, routesTestsNum, len(validEmails)) {

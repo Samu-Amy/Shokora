@@ -11,7 +11,7 @@ import (
 type Sessions = map[int64]RefreshToken
 
 type RefreshToken struct {
-	SessionId  int64
+	Id         int64
 	PlainToken string
 }
 
@@ -78,11 +78,12 @@ func seedRefreshTokens(ctx context.Context, db *sql.DB, users []User) (Sessions,
 
 		err = tx.Commit()
 		if err != nil {
+			tx.Rollback()
 			return nil, err
 		}
 
 		sessions[user.Id] = RefreshToken{
-			SessionId:  sessionId,
+			Id:         sessionId,
 			PlainToken: plainToken,
 		}
 	}

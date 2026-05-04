@@ -30,12 +30,15 @@ func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 	userQuery := `
 		INSERT INTO users (google_id, first_name, last_name, email, password, birthday, is_verified, user_role)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		RETURNING id
+		ON CONFLICT (email)
+		DO UPDATE SET email = EXCLUDED.email
+		RETURNING id, (xmax = 0) AS is_new
 	`
 
 	settingsQuery := `
 		INSERT INTO user_settings (user_id, two_factor_auth)
 		VALUES ($1, $2)
+		ON CONFLICT (user_id) DO NOTHING
 	`
 
 	users := make([]User, 0)
@@ -64,6 +67,7 @@ func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 		// Hash password
 		hashedPssw, err := testService.Auth.HashPassword(strings.TrimSpace(user.PlainPassword))
 		if err != nil {
+			tx.Rollback()
 			return nil, err
 		}
 
@@ -72,9 +76,12 @@ func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 		if user.Birthday != "" {
 			birthday, err = authservice.ConvertBirthdayToTime(strings.TrimSpace(user.Birthday))
 			if err != nil {
+				tx.Rollback()
 				return nil, err
 			}
 		}
+
+		isNew := true
 
 		// Create User
 		err = tx.QueryRowContext(
@@ -90,6 +97,7 @@ func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 			user.Role,
 		).Scan(
 			&user.Id,
+			&isNew,
 		)
 		if err != nil {
 			tx.Rollback()
@@ -104,16 +112,24 @@ func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 			user.HasTwoAuth,
 		)
 		if err != nil {
-			tx.Rollback()
-			return nil, err
+			if err == sql.ErrNoRows {
+				tx.Rollback()
+				continue
+			} else {
+				tx.Rollback()
+				return nil, err
+			}
 		}
 
 		err = tx.Commit()
 		if err != nil {
+			tx.Rollback()
 			return nil, err
 		}
 
-		users = append(users, user)
+		if isNew {
+			users = append(users, user)
+		}
 	}
 
 	return users, nil
