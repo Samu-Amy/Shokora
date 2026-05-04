@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -69,12 +68,6 @@ func FuzzLoginUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLog
 	f.Add("mario@example.com", "Password%123!")
 
 	f.Fuzz(func(t *testing.T, email, password string) {
-
-		// Seed db
-		authState, err := seedAuthState(context.Background(), db)
-		if err != nil {
-			t.Fatalf("Couldn't seed db, %v", err)
-		}
 
 		// Use some valid (generated with seeding) data
 		if customRand.Float32() < 0.3 { // ~ 30% use valid email
@@ -198,12 +191,6 @@ func FuzzLogoutUserRoute(f *testing.F) { // go test .\test\ -run=^$ -fuzz=FuzzLo
 			// Valid cookies
 
 			validCase = true
-
-			// Seed db
-			authState, err := seedAuthState(context.Background(), db)
-			if err != nil {
-				t.Fatalf("Couldn't seed db, %v", err)
-			}
 
 			// Get a random user and his session
 			i := customRand.Intn(len(authState.Users))

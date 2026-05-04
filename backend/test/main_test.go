@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"math/rand"
 	"os"
@@ -28,25 +29,27 @@ Per runnare i test:
 
 // Constants
 const (
-	activateLogger = true // Useful for debugging when test don't pass
+	activateLogger = true //* Useful for debugging when test don't pass
 
 	routesTestsNum     = 25
 	validationTestsNum = 50
 
-	randSeed int64 = 42 // TODO: cambia il seed per testare diversi casi
+	randSeed int64 = 42 //* cambia il seed per testare diversi casi
 
 	// DB Seeding
 	seedUserNum = 15
 )
 
 // Services to use in test
-var customRand *rand.Rand // TODO: usa questo per generare valori pseudo-casuali (con casualità ma anche riproducibilità)
+var customRand *rand.Rand //* usa questo per generare valori pseudo-casuali (con casualità ma anche riproducibilità)
 var dataValidator *validator.Validate
 var testStore *store.Storage
 var db *sql.DB
 var testJwtAuthenticator *auth.JWTAuthenticator
 var testService *service.Service
 var testRouter *chi.Mux
+
+var authState *AuthState
 
 var err error
 
@@ -113,11 +116,11 @@ func TestMain(m *testing.M) {
 
 	// - DB Actions -
 	clearTestDB(db)
-	// err = seedUsers(db)
-	// if err != nil {
-	// 	logger.Warnf("Error seeding db: %v", err)
-	// 	panic(err)
-	// }
+	authState, err = seedAuthState(context.Background(), db)
+	if err != nil {
+		logger.Warnf("Error seeding db: %v", err)
+		panic(err)
+	}
 
 	code := m.Run()
 
