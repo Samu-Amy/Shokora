@@ -7,6 +7,30 @@ import (
 
 // ----- DATA -----
 
+// - Users -
+
+var validUsers = []User{
+	{
+		FirstName:     "Mario",
+		LastName:      "Villa",
+		Email:         "mario.villa@gmail.com",
+		PlainPassword: "hyaA69$hsdlK32-s",
+		Birthday:      "05-06",
+		Role:          user.RoleCustomer,
+		IsVerified:    true,
+		HasTwoAuth:    false,
+	},
+	{
+		FirstName:     "Nicola",
+		LastName:      "Rossi",
+		Email:         "nicolarossi@hotmail.com",
+		PlainPassword: "jhsa897&%$acJe",
+		IsVerified:    false,
+		HasTwoAuth:    false,
+	},
+	// TODO: continua
+}
+
 // - First Name -
 
 var validFirstNames = []string{
@@ -154,60 +178,60 @@ var notValidEmailsValidation = map[string]string{
 // - Password -
 
 var validPasswords = []string{
-	"Password123!",                                 // lettere maiuscole, minuscole, numeri, simbolo
-	"jus tletter sabcd",                            // solo lettere minuscole
-	"UPPERCASELE TTERS12",                          // maiuscole + numeri
-	"mixedCASEpassword",                            // maiuscole e minuscole
-	"complex!Pass#01",                              // lettere + numeri + simboli
-	"shortB utGood12!",                             // vicino a 12 caratteri
-	"LongPasswordExample1234567890!",               // lunga, sicura
-	"onlylowercaseletters",                         // solo lettere minuscole
-	"MiXeD12 456g",                                 // mix lettere/numeri
-	"Symbols!@#Only12",                             // solo simboli + numeri + lettere
-	"JustLettersLONGname",                          // lettere lunghe
-	"1234abcd5678efgh",                             // lettere e numeri
-	"Mix3dC ASE!@#",                                // lettere, numeri e simboli
-	"abcdefgHIJKLMN",                               // lettere maiuscole e minuscole
-	"abcdefgh12345678",                             // minuscole + numeri
-	"ONLYUPPERCASELETTERS",                         // solo maiuscole
-	"!@#ComplexSymbol12",                           // simboli + lettere + numeri
-	"lowerUPPER123",                                // mix semplice
-	"SomeRandomPass2024",                           // lettere e numeri
-	"SymbolsAndLet ters!@#",                        // mix
-	"PasswordWithLONGText1234567890",               // lunga
-	"abcDEF123!@#",                                 // mix corto
-	"justlowercaseletters2",                        // minuscole + numero
-	"UPPERa ndlower123",                            // mix maiuscole/minuscole/numeri
-	"Special$$Symbols123",                          // simboli + numeri + lettere
-	"SimplepassWord12",                             // semplice
-	"AnotherGoodPass!@",                            // simboli + lettere
-	"lowercasewithnumber1",                         // minuscole + numero
-	"UPPERCASEWI THSYMBOLS!@",                      // maiuscole + simboli
-	"RandomLongPasswordExample123!",                // lunga e sicura
-	"MiXeDletters123!",                             // mix corto
-	"PasswordMinimal12",                            // vicino a 12 caratteri
-	"ComplexLONGPasswordWith123Symbols!@#",         // lunga, sicura
-	"JustLe ttersWithUppercase",                    // lettere + maiuscole
-	"lowercaseandUPPER12",                          // mix semplice
-	"MixedWith123Symbols!@",                        // mix medio
-	"LowerUPPERS ymbols123",                        // mix
-	"AnotherPass123456",                            // lettere + numeri
-	"ShortSym!@#12",                                // vicino a 12 caratteri
-	"LongPasswordWithLettersNumbersAndSymbols123!", // molto lunga
-	"lettersnumbers123",                            // semplice
-	"UPPERlower123!",                               // corto, mix
-	"Symbols 123!@#",                               // simboli + numeri
-	"RandomPassWith12345",                          // lettere + numeri
-	"JustLetters12345",                             // lettere + numeri
-	"LowerCaseOnlyabcd",                            // minuscole
-	"UpperCASEOnlyABCD",                            // maiuscole
-	"MixedLettersW ith!@#",                         // mix simboli + lettere
-	"SafePassword2026!",                            // semplice ma sicura
-	"VeryLo ngPasswordWithLetters123!@#",           // lunga e sicura
-	"PassWith Space12!",                            // spazio interno (IMPORTANTE)
+	"Password123!",                                  // lettere maiuscole, minuscole, numeri, simbolo
+	"jus tletter sabcd",                             // solo lettere minuscole
+	"UPPERCASELE TTERS12",                           // maiuscole + numeri
+	"mixedCASEpassword",                             // maiuscole e minuscole
+	"complex!Pass#01",                               // lettere + numeri + simboli
+	"shortB utGood12!",                              // vicino a 12 caratteri
+	"LongPasswordExample1234567890!",                // lunga, sicura
+	"onlylowercaseletters",                          // solo lettere minuscole
+	"MiXeD12 456g",                                  // mix lettere/numeri
+	"Symbols!@#Only12",                              // solo simboli + numeri + lettere
+	"JustLettersLONGname",                           // lettere lunghe
+	"1234abcd5678efgh",                              // lettere e numeri
+	"Mix3dC ASE!@#",                                 // lettere, numeri e simboli
+	"abcdefgHIJKLMN",                                // lettere maiuscole e minuscole
+	"abcdefgh12345678",                              // minuscole + numeri
+	"ONLYUPPERCASELETTERS",                          // solo maiuscole
+	"!@#ComplexSymbol12",                            // simboli + lettere + numeri
+	"lowerUPPER123",                                 // mix semplice
+	"SomeRandomPass2024",                            // lettere e numeri
+	"SymbolsAndLet ters!@#",                         // mix
+	"PasswordWithLONGText1234567890",                // lunga
+	"abcDEF123!@#",                                  // mix corto
+	"justlowercaseletters2",                         // minuscole + numero
+	"UPPERa ndlower123",                             // mix maiuscole/minuscole/numeri
+	"Special$$Symbols123",                           // simboli + numeri + lettere
+	"SimplepassWord12",                              // semplice
+	"AnotherGoodPass!@",                             // simboli + lettere
+	"lowercasewithnumber1",                          // minuscole + numero
+	"UPPERCASEWI THSYMBOLS!@",                       // maiuscole + simboli
+	"RandomLongPasswordExample123!",                 // lunga e sicura
+	"MiXeDletters123!",                              // mix corto
+	"PasswordMinimal12",                             // vicino a 12 caratteri
+	"ComplexLONGPasswordWith123Symbols!@#",          // lunga, sicura
+	"JustLe ttersWithUppercase",                     // lettere + maiuscole
+	"lowercaseandUPPER12",                           // mix semplice
+	"MixedWith123Symbols!@",                         // mix medio
+	"LowerUPPERS ymbols123",                         // mix
+	"AnotherPass123456",                             // lettere + numeri
+	"ShortSym!@#12",                                 // vicino a 12 caratteri
+	"LongPasswordWithLettersNumbersAndSymbols-123!", // molto lunga
+	"lettersnumbers123",                             // semplice
+	"UPPERlower123!",                                // corto, mix
+	"Symbols 123!@#",                                // simboli + numeri
+	"RandomPassWith12345",                           // lettere + numeri
+	"JustLetters12345",                              // lettere + numeri
+	"LowerCaseOnlyabcd",                             // minuscole
+	"UpperCASEOnlyABCD",                             // maiuscole
+	"MixedLettersW ith!@#",                          // mix simboli + lettere
+	"SafePassword2026!",                             // semplice ma sicura
+	"VeryLo ngPasswordWithLetters123!@#",            // lunga e sicura
+	"PassWith Space12!",                             // spazio interno (IMPORTANTE)
 	"ValidPasswordWith~Tilde123",
-	"Back\\Slash123!!",
-	"Quotes\"Test123!!",
+	"Back\\Slash123!!",  // TODO: dovrebbe non essere valida (?)
+	"Quotes\"Test123!!", // TODO: dovrebbe non essere valida (?)
 	"Brackets[]{}123!!",
 	"Pipe|Symbol123!!",
 	"MixOfAll!@#123ABCdef",

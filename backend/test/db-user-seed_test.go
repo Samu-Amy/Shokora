@@ -57,19 +57,19 @@ func seedUsers(ctx context.Context, db *sql.DB) ([]User, error) {
 	}()
 
 	// Create users in db
-	for i := range min(seedUserNum, len(validFirstNames), len(validLastNames), len(validBirthdays), len(validEmails), len(validPasswords)) {
+	for _, user := range validUsers {
 
 		// Create user and password
-		user := User{
-			FirstName:     strings.TrimSpace(validFirstNames[i]),
-			LastName:      strings.TrimSpace(validLastNames[i]),
-			Email:         strings.TrimSpace(validEmails[i]),
-			PlainPassword: validPasswords[i],
-			Birthday:      validBirthdays[i],
-			IsVerified:    userVerified[i],
-			Role:          userRoles[i],
-			HasTwoAuth:    userTwoFactorAuth[i],
-		}
+		// user := User{
+		// 	FirstName:     strings.TrimSpace(validFirstNames[i]),
+		// 	LastName:      strings.TrimSpace(validLastNames[i]),
+		// 	Email:         strings.TrimSpace(validEmails[i]),
+		// 	PlainPassword: validPasswords[i],
+		// 	Birthday:      validBirthdays[i],
+		// 	IsVerified:    userVerified[i],
+		// 	Role:          userRoles[i],
+		// 	HasTwoAuth:    userTwoFactorAuth[i],
+		// }
 
 		// Hash password
 		hashedPssw, err := testService.Auth.HashPassword(strings.TrimSpace(user.PlainPassword))
